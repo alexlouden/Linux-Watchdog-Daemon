@@ -147,12 +147,13 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
                    icp = (struct icmphdr *) (packet + (((struct ip *) packet)->ip_hl << 2));
 
                    if (icp->type == ICMP_ECHOREPLY && icp->un.echo.id == pid) {
-			/* got one back, that'll do it for now */
+			if (from.sin_addr.s_addr == ((struct sockaddr_in *) &to)->sin_addr.s_addr) {
 #if USE_SYSLOG
-			if (verbose && logtick && ticker == 1)
-				syslog(LOG_INFO, "got answer from target %s", target);
+				if (verbose && logtick && ticker == 1)
+					syslog(LOG_INFO, "got answer from target %s", target);
 #endif
-			return (ENOERR);
+				return (ENOERR);
+			}
                     }
 		}
 	    }
