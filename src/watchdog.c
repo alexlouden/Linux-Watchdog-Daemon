@@ -93,7 +93,7 @@ static int repair(char *rbinary, int result)
 {
     pid_t child_pid;
     char parm[5];
-    char ret;
+    int ret;
 
     /* no binary given, we have to reboot */
     if (rbinary == NULL)

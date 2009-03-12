@@ -7,7 +7,7 @@
 # (C) Michael Meskes <meskes@usa.net> Mon Jun 23 13:40:15 CEST 1997
 # Placed under GPL.
 # Improvements, and modification for Redhat by Marc Merlin 
-# <marcsoft@magic.metwire.com>
+# <marcsoft@merlins.org>
 
 #
 # who to send mail to

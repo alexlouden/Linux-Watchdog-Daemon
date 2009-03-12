@@ -280,3 +280,9 @@ Fri Feb 19 21:33:26 CET 1999
 Sun Feb 28 13:05:11 CET 1999
 
 	- Released 4.4.
+
+Sat Apr 10 14:30:59 CEST 1999
+
+	- Added RedHat patches by Marc Merlin.
+	- Made ret an int variable.
+	- Include stdio.h in src/umount.c.

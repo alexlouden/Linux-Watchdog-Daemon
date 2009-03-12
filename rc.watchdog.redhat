@@ -3,7 +3,16 @@
 # chkconfig: 12345 02 98
 # description: A software watchdog
 #
-# rc file author: Marc Merlin <marcsoft@magic.metawire.com>
+# rc file author: Marc Merlin <marcsoft@merlins.org>
+
+# Note that even though chkconfig says that this should be run at runlevel 1,
+# RH by default won't do this, so the RPM applies an ugly patch to 
+# /etc/rc.d/init.d/single so that if you go from RL 3 to RL 1, watchdog is
+# restarted anyway (if it's not, it can cause the kernel to reboot your machine
+# depending on whether your kernel was compiled with CONFIG_WATCHDOG_NOWAYOUT)
+#
+# I have filed a bug with RH about this, and I hope they will change their
+# single script to allow for other scripts to be run in RL 1.
 
 # Source function library.
 . /etc/rc.d/init.d/functions
@@ -26,10 +35,14 @@ case "$1" in
   stop)
 	echo -n "Stopping software watchdog: "
 	killproc watchdog
-        # If you compiled with CONFIG_WATCHDOG_NOWAYOUT, you may not want to
-        # remove the module as sometimes /etc/rc.d/init.d/ halt will hang on
-        # umounting some  remote nfs  partition, and you  may then  want the
-        # kernel to reboot by itself. If not, uncomment the following:
+        # If you compiled your kernel with CONFIG_WATCHDOG_NOWAYOUT, you may
+        # not want  to remove the module  as sometimes /etc/rc.d/init.d/halt
+        # will hang on umounting some remote nfs partition or for some other
+        # reason, and you may then want the kernel to reboot by itself.
+        # However, this means that if you stop watchdog, your system has one
+        # minute to reboot cleanly, or it will be rebooted by the kernel. If
+        # this behavior  isn't what you  want, just uncomment  the following
+        # lines
 	#rmmod softdog &>/dev/null
 	#rmmod pcwd &>/dev/null
 	#rmmod acquirewdt &>/dev/null
@@ -46,6 +59,7 @@ case "$1" in
   *)
 	echo "Usage: watchdog {start|stop|status|restart|reload}"
 	exit 1
+	;;
 esac
 
 exit 0
