@@ -20,7 +20,7 @@
 
 int check_memory(void)
 {
-    char buf[400], *ptr1, *ptr2;
+    char buf[512], *ptr1, *ptr2;
     int free, res;
 
     /* is the memory file open? */
@@ -77,12 +77,12 @@ int check_memory(void)
 
 #if USE_SYSLOG
     if (verbose)
-	syslog(LOG_INFO, "currently there are %d KB of free memory available", free);
+	syslog(LOG_INFO, "currently there are %d kB of free memory available", free);
 #endif				/* USE_SYSLOG */
 
-    if (free < minpages * EXEC_PAGESIZE) {
+    if (free * 1024 < minpages * EXEC_PAGESIZE) {
 #if USE_SYSLOG
-	syslog(LOG_ERR, "memory %d KB is less than %d pages", free, minpages);
+	syslog(LOG_ERR, "memory %d kB is less than %d pages", free, minpages);
 #endif				/* USE_SYSLOG */
 	return (ENOMEM);
     }

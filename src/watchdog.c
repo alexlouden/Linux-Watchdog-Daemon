@@ -64,7 +64,7 @@ int verbose = FALSE;
 pid_t pid;
 int softboot = FALSE, watchdog = -1, load = -1, mem = -1, temp = -1, tint = 10, schedprio = 1;
 char *tempname = NULL, *devname = NULL, *admin = "root", *progname;
-int maxload1 = 0, maxload5 = 0, maxload15 = 0, minpages = 1;
+int maxload1 = 0, maxload5 = 0, maxload15 = 0, minpages = 0;
 int maxtemp = 120;
 
 #if defined(_POSIX_MEMLOCK)
@@ -633,15 +633,17 @@ int main(int argc, char *const argv[])
 #endif				/* USE_SYSLOG */
 	}
     }
-    
-    /* open the memory info file */
-    mem = open("/proc/meminfo", O_RDONLY);
-    if (mem == -1) {
+
+    if (minpages > 0) {
+	/* open the memory info file */
+	mem = open("/proc/meminfo", O_RDONLY);
+	if (mem == -1) {
 #if USE_SYSLOG
-	syslog(LOG_ERR, "cannot open /proc/meminfo (errno = %d = '%m')", errno);
+		syslog(LOG_ERR, "cannot open /proc/meminfo (errno = %d = '%m')", errno);
 #else				/* USE_SYSLOG */
-	perror(progname);
+		perror(progname);
 #endif				/* USE_SYSLOG */
+	}
     }
     
     if (tempname != NULL && no_act == FALSE) {

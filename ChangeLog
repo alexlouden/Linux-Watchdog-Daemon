@@ -321,3 +321,9 @@ Sun Dec 19 13:18:35 CET 1999
 Mon Dec 20 14:54:58 CET 1999
 
 	- Released 5.0.
+
+Mon Dec 27 17:07:51 CET 1999
+
+	- Fixed silly calculation bug in memory check.
+	- Disable memory check for default setup.
+	- Released 5.1.
