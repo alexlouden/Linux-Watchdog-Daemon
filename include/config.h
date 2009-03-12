@@ -61,7 +61,7 @@
 
 #define PACKAGE 1
 #define MAJOR_VERSION 4
-#define MINOR_VERSION 2
+#define MINOR_VERSION 3
 
 /* path to sendmail */
 #define PATH_SENDMAIL "/usr/sbin/sendmail"
@@ -76,7 +76,7 @@
 #define TIMER_MARGIN 60
 
 /* config file path */
-#define CONFIG_FILENAME "$CONFIG_FILENAME"
+#define CONFIG_FILENAME "/etc/watchdog.conf"
 
 /* config file line length */
 #define CONFIG_LINE_LEN 80

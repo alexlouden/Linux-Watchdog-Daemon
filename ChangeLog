@@ -250,5 +250,15 @@ Fri Jan 22 17:30:41 CET 1999
 
 Sat Jan 30 08:58:47 CET 1999
 
-	- Releases 4.2.
+	- Released 4.2.
 
+Mon Feb  1 18:16:04 CET 1999
+
+	- Fixed autoconf bug so CONFIG_FILENAME default is correct.
+	- Added info about zombie process to docs.
+
+Fri Feb  5 07:33:47 CET 1999
+
+	- Removed remount call so the one reported hang cannot happen
+	  anymore. This call wasn't really needed anyway.
+	- Released 4.3.

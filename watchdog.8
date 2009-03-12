@@ -126,6 +126,10 @@ system relies on an NFS mounted filesystem you might try this option.
 However, in such a case the sync option may not work if the NFS server is
 not answering.
 
+Watchdog will try periodically to fork itself to see whether the process
+table is full. This process will leave a zombie process until watchdog wakes
+up again and cathes it.
+
 In ping mode watchdog tries to ping the given addresses. These addresses do
 not have to be a single machine. It is possible to ping to a broadcast
 address instead to see if at least one machine in a subnet is still living.

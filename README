@@ -37,6 +37,11 @@ no problem with the 900 pages which is not so much anyway.
 
 Of course this is not needed for machines running on low load.
 
+Don't be surprised if you see any zombie processes laying around. This is
+normal. They will be removed the next time watchdog wakes up. Of course a
+new zombie is created then, too. This zombie process is a result of the
+process table check.
+
 Michael
 meskes@debian.org
 

@@ -42,13 +42,14 @@
 
 extern void umount_all(void *);
 extern int ifdown(void);
+#if 0
 extern int mount_one(char *, char *, char *, char *, int, int);
+static struct mntent rootfs;
+#endif
 
 #if defined(_POSIX_MEMLOCK)
 extern int mlocked, realtime;
 #endif
-
-static struct mntent rootfs;
 
 jmp_buf ret2dog;
 
@@ -159,7 +160,9 @@ static void mnt_off()
 	    if (quotactl(QCMD(Q_QUOTAOFF, USRQUOTA), mnt->mnt_fsname, 0, (caddr_t) 0) < 0)
 		perror(mnt->mnt_fsname);
 
-	/* while we´re at it we add the remount option */
+#if 0
+	/* not needed anymore */
+	/* while we're at it we add the remount option */
 	if (strcmp(mnt->mnt_dir, "/") == 0) {
 		/* save entry if root partition */
 		rootfs.mnt_freq = mnt->mnt_freq;
@@ -187,6 +190,7 @@ static void mnt_off()
 		} else
 			sprintf(rootfs.mnt_opts, "%s,remount,ro", mnt->mnt_opts);
 	}
+#endif
     }
     endmntent(fp);
 }
@@ -417,10 +421,13 @@ void do_shutdown(int errorcode)
     if (setjmp(ret2dog) == 0)
 	umount_all(NULL);
 
+#if 0
+    /* with the more recent version of mount code, this is not needed anymore */
     /* remount / read-only */
     if (setjmp(ret2dog) == 0)
 	mount_one(rootfs.mnt_fsname, rootfs.mnt_dir, rootfs.mnt_type,
 		  rootfs.mnt_opts, rootfs.mnt_freq, rootfs.mnt_passno);
+#endif
 
     /* shut down interfaces (also taken from sysvinit source */
     ifdown();
