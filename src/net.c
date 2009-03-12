@@ -43,7 +43,7 @@ static int in_cksum(unsigned short *addr, int len)
     return (answer);
 }
 
-int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *packet, int time)
+int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *packet, int time, int count)
 {
     int i;
     unsigned char outpack[MAXPACKET];
@@ -51,8 +51,8 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
     if (target == NULL)
 	return (ENOERR);
 
-    /* try at most three times */
-    for (i = 0; i < 3; i++) {
+    /* try at "ping-count" times */
+    for (i = 0; i < count; i++) {
 
 	struct sockaddr_in from;
 	int fromlen, fdmask, j;
@@ -95,7 +95,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 
 	} else {
 	    /* set the timeout value */
-	    timeout.tv_sec = time;
+	    timeout.tv_sec = time / count;
 	    timeout.tv_usec = 0;
 
 	    /* wait for reply */

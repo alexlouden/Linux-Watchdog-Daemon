@@ -20,7 +20,7 @@
 
 int check_memory(void)
 {
-    char buf[512], *ptr1, *ptr2;
+    char buf[1024], *ptr1, *ptr2;
     int free, res;
 
     /* is the memory file open? */

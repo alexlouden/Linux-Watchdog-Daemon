@@ -340,9 +340,9 @@ void do_shutdown(int errorcode)
 	    }
 
 	    if (errorcode == ETOOHOT)
-		fprintf(ph, "It is too hot to keep on working. The system will be halted!\n");
+		fprintf(ph, "Message from watchdog:\nIt is too hot to keep on working. The system will be halted!\n");
 	    else
-	    	fprintf(ph, "The system will be rebooted because of error %d!\n", errorcode);
+	    	fprintf(ph, "Message from watchdog:\nThe system will be rebooted because of error %d!\n", errorcode);
 	    if (ferror(ph) != 0) {
 #if USE_SYSLOG
 		syslog(LOG_ERR, "cannot send mail (errno = %d)", errno);

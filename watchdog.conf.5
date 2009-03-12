@@ -17,6 +17,16 @@ drivers expects a write command every minute. Otherwise the system will be
 rebooted. Default value is 10 seconds. An interval of more than a minute can
 only be used with the -f commandline option.
 .TP
+logtick = <logtick>
+If you enable verbose logging, a message is written into the syslog or a
+logfile. While this is nice, it is not necessary to get a message every
+10 seconds which really fills up disk and needs CPU. logtick allows adjustment
+of the number of intervals skipped before a log message is written. If you
+use logtick = 60 and interval = 10, every 10 minutes (600 seconds) is a
+message written. This may make the exact time of a crash harder to find but
+greatly reduces disk usage and administrator nerves if you're looking for a
+particular syslog entry in between of watchdog messages.
+.TP
 max-load-1 = <load1>
 Set the maximal allowed load average for a 1 minute span. Once this load
 average is reached the system is rebooted. Default value is 0. That means

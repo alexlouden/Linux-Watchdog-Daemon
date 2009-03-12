@@ -48,7 +48,7 @@ int verbose = FALSE;
 #define	FILENAME	"file"
 #define INTERFACE	"interface"
 #define INTERVAL	"interval"
-#define LOGTICK		"logtick"
+#define LOGTICK     "logtick"
 #define MAXLOAD1	"max-load-1"
 #define MAXLOAD5	"max-load-5"
 #define MAXLOAD15	"max-load-15"

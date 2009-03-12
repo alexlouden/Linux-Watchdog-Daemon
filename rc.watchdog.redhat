@@ -4,6 +4,7 @@
 # description: A software watchdog
 #
 # rc file author: Marc Merlin <marcsoft@merlins.org>
+#                 Henning P. Schmiedehausen <hps@tanstaafl.de>
 
 # Note that even though chkconfig says that this should be run at runlevel 1,
 # RH by default won't do this, so the RPM applies an ugly patch to 
@@ -17,18 +18,29 @@
 # Source function library.
 . /etc/rc.d/init.d/functions
 
-test -x /usr/sbin/watchdog || exit 0
+[ -x /usr/sbin/watchdog -a -e /etc/watchdog.conf ] || exit 0
+
+VERBOSE="no"
+if [ -f /etc/sysconfig/watchdog ]; then
+    . /etc/sysconfig/watchdog
+fi
 
 # See how we were called.
 case "$1" in
   start)
-	echo -n "Starting sofware watchdog: "
+	echo -n "Starting software watchdog: "
 	# For some people it is a module, for others not. We force it because
 	# for kernels < 2.1, we need kerneld, and it's not running yet.
+
 	modprobe softdog &>/dev/null
 	modprobe pcwd &>/dev/null
 	modprobe acquirewdt &>/dev/null
+
+	if [ ${VERBOSE}="yes" ]; then
+	    daemon watchdog -v
+	else
 	daemon watchdog
+        fi
 	echo
 	touch /var/lock/subsys/watchdog
 	;;

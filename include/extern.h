@@ -52,7 +52,7 @@ int check_file_stat(struct list *);
 int check_file_table(void);
 int keep_alive(void);
 int check_load(void);
-int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *packet, int time);
+int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *packet, int time, int count);
 int check_temp(void);
 int check_bin(char *);
 int check_pidfile(struct list *);

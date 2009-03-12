@@ -327,3 +327,27 @@ Mon Dec 27 17:07:51 CET 1999
 	- Fixed silly calculation bug in memory check.
 	- Disable memory check for default setup.
 	- Released 5.1.
+
+Sat May  6 17:01:37 MEST 2000
+
+	- added /etc/sysconfig/watchdog to the rc.watchdog.redhat script
+	- added some ifdefs to include/mount_constants.h for compilation on
+	  RedHat 6.2 without some warnings about redefined symbols
+	- added "logtick" option to the watchdog binary (I wanted to do this
+	  for a very long time -- hps)
+
+Mon Jul 24 16:49:11 PDT 2000
+
+	- added patch by Hisaaki Shibata <shibata@luky.org> to add number of
+	  times a ping is tried to config file
+
+Son Mar 25 14:18:45 CEST 2001
+
+	- Made watchdog work with kernel 2.4.
+	- Send a more verbose email.
+	- Made watchdog compile with latest libc6.
+
+Thu May 10 14:19:57 CEST 2001
+
+	- Finally released 5.2.
+

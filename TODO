@@ -5,3 +5,6 @@ I found no way to reproduce this I see no chance to fix it.
 
 Call repair script with two parameter (error message + filename).
 
+Make softboot configurable via watchdog.conf.
+
+Test which applications are running.
