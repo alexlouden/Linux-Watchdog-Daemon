@@ -51,6 +51,7 @@ static struct mntent rootfs;
 #if defined(_POSIX_MEMLOCK)
 extern int mlocked, realtime;
 #endif /* _POSIX_MEMLOCK */
+extern volatile sig_atomic_t _running;
 
 jmp_buf ret2dog;
 
@@ -78,7 +79,7 @@ static void log_end()
 static void close_all()
 {
     if (watchdog != -1) {
-        if ( write(watchdog, "V", 1) < 0 ) {
+        if (write(watchdog, "V", 1) < 0 ) {
 		int err = errno;
 #if USE_SYSLOG
 		syslog(LOG_ERR, "write watchdog device gave error %d = '%m'!", err);
@@ -129,8 +130,15 @@ static void close_all()
     }
 }
 
+
+void sigterm_handler(int arg)
+{
+    _running = 0;
+}
+
+
 /* on exit we close the device and log that we stop */
-void terminate(int arg)
+void terminate(void)
 {
 #if defined(_POSIX_MEMLOCK)
     if (realtime == TRUE && mlocked == TRUE)

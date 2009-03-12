@@ -44,6 +44,7 @@
 
 int watchdog = -1, tint = 10, schedprio = 1;
 char *devname = NULL, *progname = NULL;
+volatile sig_atomic_t _running = 1;
 
 #if defined(_POSIX_MEMLOCK)
 int mlocked = FALSE, realtime = FALSE;
@@ -92,8 +93,12 @@ static void close_all()
         }
 }
 
+void sigterm_handler(int arg) {
+    _running = 0;
+}
+
 /* on exit we close the device and log that we stop */
-void terminate(int arg) {
+void terminate(void) {
 #if defined(_POSIX_MEMLOCK)
     if ( realtime == TRUE && mlocked == TRUE ) {
         /* unlock all locked pages */
@@ -279,7 +284,7 @@ int main(int argc, char *const argv[])
     /* this daemon has no other function than writing to this device 
      * i.e. if there is no device given we better punt */
     if ( devname == NULL )
-	terminate(0);
+	terminate();
 
     /* open the device */
     watchdog = open(devname, O_WRONLY);
@@ -300,9 +305,9 @@ int main(int argc, char *const argv[])
         (void) fclose(fp);
     }
 
-    /* set signal term to call terminate() */
+    /* set signal term to call sigterm_handler() */
     /* to make sure watchdog device is closed */
-    signal(SIGTERM, terminate);
+    signal(SIGTERM, sigterm_handler);
 
 #if defined(_POSIX_MEMLOCK)
     if ( realtime == TRUE ) {
@@ -334,7 +339,7 @@ int main(int argc, char *const argv[])
 #endif
 
     /* main loop: update after <tint> seconds */
-    while ( 1 ) {
+    while ( _running ) {
         if ( write(watchdog, "\0", 1) < 0 ) {
             int err = errno;
 #if USE_SYSLOG
@@ -349,6 +354,9 @@ int main(int argc, char *const argv[])
 
         count++;
     }
+
+    terminate();
+    /* not reached */
 }
 
 

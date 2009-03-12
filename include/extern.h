@@ -66,4 +66,5 @@ int check_iface(struct list *);
 int check_memory(void);
 
 void do_shutdown(int errorcode);
-void terminate(int arg);
+void sigterm_handler(int arg);
+void terminate(void);

@@ -456,4 +456,6 @@ Thu, 12 Mar 2009 14:36:01 +0100
 
 	- Added patch by Lon Hohberger <lhh@redhat.com> to allow configuration
 	  of timeouts.
+	- Added another patch by Lon Hohberger <lhh@redhat.com> to make sure
+	  signal handler does not call not-signal safe functions.
 

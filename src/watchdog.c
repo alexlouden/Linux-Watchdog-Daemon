@@ -45,6 +45,8 @@ static int no_act = FALSE;
 int verbose = FALSE;
 #endif				/* USE_SYSLOG */
 
+volatile sig_atomic_t _running = 1;
+
 #define ADMIN		"admin"
 #define CHANGE		"change"
 #define DEVICE		"watchdog-device"
@@ -784,9 +786,9 @@ int main(int argc, char *const argv[])
 	fprintf(fp, "%d\n", pid = getpid());
 	(void) fclose(fp);
     }
-    /* set signal term to call terminate() */
-    /* to make sure watchdog device is closed */
-    signal(SIGTERM, terminate);
+    /* set signal term to set our run flag to 0 so that */
+    /* we make sure watchdog device is closed when receiving SIGTERM */
+    signal(SIGTERM, sigterm_handler);
 
 #if defined(_POSIX_MEMLOCK)
     if (realtime == TRUE) {
@@ -815,7 +817,7 @@ int main(int argc, char *const argv[])
 #endif
 
     /* main loop: update after <tint> seconds */
-    while (1) {
+    while (_running) {
 	wd_action(keep_alive(), rbinary, NULL);
 
 	/* sync system if we have to */
@@ -865,4 +867,7 @@ int main(int argc, char *const argv[])
 	}
 #endif				/* USE_SYSLOG */
     }
+
+    terminate();
+    /* not reached */
 }
