@@ -1,23 +1,24 @@
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 #include <errno.h>
 #include <unistd.h>
 #include "extern.h"
 #include "watch_err.h"
 
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 #include <syslog.h>
 #endif
-
-#if defined(USE_SYSLOG)
-static int templevel1 = MAXTEMP * 9 / 10, have1 = FALSE;
-static int templevel2 = MAXTEMP * 95 / 100, have2 = FALSE;
-static int templevel3 = MAXTEMP * 98 / 100, have3 = FALSE;
-#endif				/* USE_SYSLOG */
 
 int check_temp(void)
 {
     unsigned char temperature;
+#if USE_SYSLOG
+    int templevel1 = maxtemp * 9 / 10, have1 = FALSE;
+    int templevel2 = maxtemp * 95 / 100, have2 = FALSE;
+    int templevel3 = maxtemp * 98 / 100, have3 = FALSE;
+#endif				/* USE_SYSLOG */
 
     /* is the temperature device open? */
     if (temp == -1)
@@ -27,8 +28,8 @@ int check_temp(void)
     if (read(temp, &temperature, sizeof(temperature)) < 0) {
 	int err = errno;
 
-#if defined(USE_SYSLOG)
-	syslog(LOG_ERR, "read %s gave errno = %d", err, tempname);
+#if USE_SYSLOG
+	syslog(LOG_ERR, "read %s gave errno = %d = '%m'", err, tempname);
 #else				/* USE_SYSLOG */
 	perror(progname);
 #endif				/* USE_SYSLOG */
@@ -37,7 +38,7 @@ int check_temp(void)
 
 	return (ENOERR);
     }
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
     if (verbose)
 	syslog(LOG_INFO, "current temperature is %d", temperature);
 
@@ -69,7 +70,7 @@ int check_temp(void)
 #endif				/* USE_SYSLOG */
 
     if (temperature >= maxtemp) {
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 	syslog(LOG_ERR, "it is too hot inside (temperature = %d)", temperature);
 #else				/* USE_SYSLOG */
 	fprintf(stderr, "%s: it is too hot inside (temperature = %d\n", progname, temperature);

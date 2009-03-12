@@ -1,4 +1,6 @@
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 #include <errno.h>
 #include <sys/time.h>
@@ -8,7 +10,7 @@
 #include "extern.h"
 #include "watch_err.h"
 
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 #include <syslog.h>
 #endif
 
@@ -74,15 +76,15 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 
 	    /* if our kernel tells us the network is unreachable we are done */
 	    if (err == ENETUNREACH) {
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 		syslog(LOG_ERR, "network is unreachable (target: %s)", target);
 #endif				/* USE_SYSLOG */
 
 		return (ENETUNREACH);
 
 	    } else {
-#if defined(USE_SYSLOG)
-		syslog(LOG_ERR, "sendto gave errno = %d\n", err);
+#if USE_SYSLOG
+		syslog(LOG_ERR, "sendto gave errno = %d = '%m'\n", err);
 #else				/* USE_SYSLOG */
 		perror(progname);
 #endif				/* USE_SYSLOG */
@@ -108,8 +110,8 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 		    int err = errno;
 
 		    if (err != EINTR)
-#if defined(USE_SYSLOG)
-			syslog(LOG_ERR, "recvfrom gave errno = %d\n", err);
+#if USE_SYSLOG
+			syslog(LOG_ERR, "recvfrom gave errno = %d = '%m'\n", err);
 #else				/* USE_SYSLOG */
 			perror(progname);
 #endif				/* USE_SYSLOG */
@@ -129,7 +131,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 	    }
 	}
     }
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
     syslog(LOG_ERR, "network is unreachable (target: %s)", target);
 #endif				/* USE_SYSLOG */
     return (ENETUNREACH);

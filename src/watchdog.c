@@ -5,7 +5,9 @@
 /* meskes@debian.org                                         */
 /*                                                           */
 /*************************************************************/
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 #include <errno.h>
 #include <fcntl.h>
@@ -18,10 +20,9 @@
 #include <arpa/inet.h>
 #include <sys/mman.h>
 #include <sys/wait.h>
-
-#if defined __GLIBC__
 #include <string.h>
-#else				/* __GLIBC__ */
+
+#if !defined(__GLIBC__)		/* __GLIBC__ */
 extern char *basename(const char *);
 #endif				/* __GLIBC__ */
 
@@ -30,54 +31,13 @@ extern char *basename(const char *);
 #include "watch_err.h"
 #include "extern.h"
 
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 #include <syslog.h>
 #endif				/* USE_SYSLOG */
 
-#if !defined(PIDFILE)
-#define PIDFILE "/var/run/watchdog.pid"
-#endif				/* !PIDFILE */
-
-#if !defined(DEVNAME)
-#define DEVNAME NULL
-#endif				/* !DEVNAME */
-
-#if !defined(TEMPNAME)
-#define TEMPNAME NULL
-#endif				/* !TEMPNAME */
-
-#if !defined(SLEEP_INTERVAL)
-#define SLEEP_INTERVAL 10
-#endif				/* !SLEEP_INTERVAL */
-
-#if !defined(MAXLOAD)
-#define MAXLOAD 12
-#endif				/* !MAXLOAD */
-
-#if !defined(MINLOAD)
-#define MINLOAD 2
-#endif				/* !MINLOAD */
-
-#if !defined(SYSADMIN)
-#define SYSADMIN "root"
-#endif				/*!SYSADMIN */
-
-#if !defined(CONFIG_FILENAME)
-#define CONFIG_FILENAME "/etc/watchdog.conf"
-#endif				/* !CONFIG_FILENAME */
-
-#if !defined(CONFIG_LINE_LEN)
-#define CONFIG_LINE_LEN 80
-#endif				/* !CONFIG_LINE_LEN */
-
-
-#if !defined(SCHEDULE_PRIORITY)
-#define SCHEDULE_PRIORITY 1
-#endif				/*!SCHEDULE_PRIORITY */
-
 static int no_act = FALSE;
 
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 int verbose = FALSE;
 #endif				/* USE_SYSLOG */
 
@@ -89,26 +49,28 @@ int verbose = FALSE;
 #define MAXLOAD1	"max-load-1"
 #define MAXLOAD5	"max-load-5"
 #define MAXLOAD15	"max-load-15"
-#define CMAXTEMP	"max-temperature"
+#define MAXTEMP		"max-temperature"
 #define PING		"ping"
+#define PRIORITY	"priority"
+#define REALTIME	"realtime"
 #define REPAIRBIN	"repair-binary"
 #define TEMP		"temperature-device"
 #define TESTBIN		"test-binary"
 
 pid_t pid;
-int softboot = FALSE, watchdog = -1, load = -1, temp = -1, tint = SLEEP_INTERVAL;
-char *tempname = TEMPNAME, *devname = DEVNAME, *admin = SYSADMIN, *progname;
-int maxload1 = MAXLOAD, maxload5 = MAXLOAD * 3 / 4, maxload15 = MAXLOAD / 2;
-int maxtemp = MAXTEMP;
+int softboot = FALSE, watchdog = -1, load = -1, temp = -1, tint = 10, schedprio = 1;
+char *tempname = NULL, *devname = NULL, *admin = "root", *progname;
+int maxload1 = 12, maxload5 = 9, maxload15 = 6;
+int maxtemp = 120;
 
-#if defined(REALTIME) && defined(_POSIX_MEMLOCK)
-int mlocked = FALSE;
+#if defined(_POSIX_MEMLOCK)
+int mlocked = FALSE, realtime = FALSE;
 #endif
 
 static void usage(void)
 {
     fprintf(stderr, "%s version %d.%d, usage:\n", progname, MAJOR_VERSION, MINOR_VERSION);
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
     fprintf(stderr, "%s [-i <interval> [-f]] [-l <max load avg>] [-v] [-s] [-b] [-m <max temperature>]\n", progname);
 #else				/* USE_SYSLOG */
     fprintf(stderr, "%s [-i <interval> [-f]] [-l <max load avg>] [-v] [-b] [-m <max temperature>]\n", progname);
@@ -150,7 +112,7 @@ static int repair(char *rbinary, int result)
 	int err = errno;
 
 	if (errno == EAGAIN) {	/* process table full */
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 	    syslog(LOG_ERR, "process table is full!");
 #endif				/* USE_SYSLOG */
 	    return (EREBOOT);
@@ -162,8 +124,8 @@ static int repair(char *rbinary, int result)
     if (waitpid(child_pid, &result, 0) != child_pid) {
 	int err = errno;
 
-#if defined(USE_SYSLOG)
-	syslog(LOG_ERR, "child %d does not exist (errno = %d)", child_pid, err);
+#if USE_SYSLOG
+	syslog(LOG_ERR, "child %d does not exist (errno = %d = '%m')", child_pid, err);
 #else				/* USE_SYSLOG */
 	perror(progname);
 #endif				/* USE_SYSLOG */
@@ -174,7 +136,7 @@ static int repair(char *rbinary, int result)
     /* check result */
     ret = WEXITSTATUS(result);
     if (ret != 0) {
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 	syslog(LOG_ERR, "repair binary returned %d", ret);
 #endif				/* USE_SYSLOG */
 
@@ -223,7 +185,7 @@ static void add_list(struct list **list, char *name)
 	exit(1);
     }
     new->name = name;
-    memset((char *) (&(new->parameter)), '\0', sizeof(union options));
+    memset((char *) (&(new->parameter)), '\0', sizeof(union wdog_options));
 
     if (*list == NULL)
 	*list = new;
@@ -233,12 +195,16 @@ static void add_list(struct list **list, char *name)
     }
 }
 
-static void spool(char *line, int *i, int offset)
+static int spool(char *line, int *i, int offset)
 {
     for ((*i) += offset; line[*i] == ' ' || line[*i] == '\t'; (*i)++);
     if (line[*i] == '=')
 	(*i)++;
     for (; line[*i] == ' ' || line[*i] == '\t'; (*i)++);
+    if (line[*i] == '\0')
+    	return(1);
+    else
+    	return(0);
 }
 
 static void read_config(char *filename, char *progname)
@@ -281,16 +247,15 @@ static void read_config(char *filename, char *progname)
 
 	    /* now check for an option */
 	    if (strncmp(line + i, FILENAME, strlen(FILENAME)) == 0) {
-		spool(line, &i, strlen(FILENAME));
-		if (strlen(line + i) == 0)
+	    	
+		if (spool(line, &i, strlen(FILENAME)))
 		    fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 		else
 		    add_list(&file, strdup(line + i));
 	    } else if (strncmp(line + i, CHANGE, strlen(CHANGE)) == 0) {
 		struct list *ptr;
 
-		spool(line, &i, strlen(CHANGE));
-		if (strlen(line + i) == 0)
+		if (spool(line, &i, strlen(CHANGE)))
 		    continue;
 
 		if (!file) {	/* no file entered yet */
@@ -303,61 +268,77 @@ static void read_config(char *filename, char *progname)
 
 		file->parameter.file.mtime = atoi(line + i);
 	    } else if (strncmp(line + i, PING, strlen(PING)) == 0) {
-		spool(line, &i, strlen(PING));
-		if (strlen(line + i) == 0)
+		if (spool(line, &i, strlen(PING)))
 		    fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 		else
 		    add_list(&target, strdup(line + i));
+	    } else if (strncmp(line + i, REALTIME, strlen(REALTIME)) == 0) {
+		(void)spool(line, &i, strlen(REALTIME));
+		realtime = (strncmp(line + i, "yes", 3) == 0) ? TRUE : FALSE;
+	    } else if (strncmp(line + i, PRIORITY, strlen(PRIORITY)) == 0) {
+		if (spool(line, &i, strlen(PRIORITY)))
+		    fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
+		else
+		    schedprio = atol(line + i);
 	    } else if (strncmp(line + i, REPAIRBIN, strlen(REPAIRBIN)) == 0) {
-		spool(line, &i, strlen(REPAIRBIN));
-		rbinary = strdup(line + i);
-		if (strlen(rbinary) == 0)
-		    rbinary = NULL;
+		if (spool(line, &i, strlen(REPAIRBIN)))
+			rbinary = NULL;
+		else
+			rbinary = strdup(line + i);
 	    } else if (strncmp(line + i, TESTBIN, strlen(TESTBIN)) == 0) {
-		spool(line, &i, strlen(TESTBIN));
-		tbinary = strdup(line + i);
-		if (strlen(tbinary) == 0)
-		    tbinary = NULL;
+		if (spool(line, &i, strlen(TESTBIN)))
+			tbinary = NULL;
+		else
+			tbinary = strdup(line + i);
 	    } else if (strncmp(line + i, ADMIN, strlen(ADMIN)) == 0) {
-		spool(line, &i, strlen(ADMIN));
-		if (strlen(line + i) == 0)
-		    fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
+		if (spool(line, &i, strlen(ADMIN)))
+			admin = NULL;
 		else
-		    admin = strdup(line + i);
+			admin = strdup(line + i);
 	    } else if (strncmp(line + i, INTERVAL, strlen(INTERVAL)) == 0) {
-		spool(line, &i, strlen(INTERVAL));
-		if (strlen(line + i) == 0)
+		if (spool(line, &i, strlen(INTERVAL)))
 		    fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 		else
-		    tint = atol(strdup(line + i));
+		    tint = atol(line + i);
 	    } else if (strncmp(line + i, DEVICE, strlen(DEVICE)) == 0) {
-		spool(line, &i, strlen(DEVICE));
-		devname = strdup(line + i);
-		if (strlen(devname) == 0)
-		    devname = NULL;
+		if (spool(line, &i, strlen(DEVICE)))
+			devname = NULL;
+		else
+			devname = strdup(line + i);
 	    } else if (strncmp(line + i, TEMP, strlen(TEMP)) == 0) {
-		spool(line, &i, strlen(TEMP));
-		tempname = strdup(line + i);
-		if (strlen(tempname) == 0)
-		    tempname = NULL;
-	    } else if (strncmp(line + i, CMAXTEMP, strlen(CMAXTEMP)) == 0) {
-		spool(line, &i, strlen(CMAXTEMP));
-		maxtemp = atol(strdup(line + i));
-	    } else if (strncmp(line + i, MAXLOAD1, strlen(MAXLOAD1)) == 0) {
-		spool(line, &i, strlen(MAXLOAD1));
-		maxload1 = atol(strdup(line + i));
-		if (!gotload5)
-		    maxload5 = maxload1 * 3 / 4;
-		if (!gotload15)
-		    maxload15 = maxload1 / 2;
-	    } else if (strncmp(line + i, MAXLOAD5, strlen(MAXLOAD5)) == 0) {
-		spool(line, &i, strlen(MAXLOAD5));
-		maxload5 = atol(strdup(line + i));
-		gotload5 = TRUE;
+		if (spool(line, &i, strlen(TEMP)))
+			tempname = NULL;
+		else
+			tempname = strdup(line + i);
+	    } else if (strncmp(line + i, MAXTEMP, strlen(MAXTEMP)) == 0) {
+		if (spool(line, &i, strlen(MAXTEMP)))
+			fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
+		else
+			maxtemp = atol(line + i);
 	    } else if (strncmp(line + i, MAXLOAD15, strlen(MAXLOAD15)) == 0) {
-		spool(line, &i, strlen(MAXLOAD15));
-		maxload15 = atol(strdup(line + i));
-		gotload15 = TRUE;
+		if (spool(line, &i, strlen(MAXLOAD15)))
+			fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
+		else {
+			maxload15 = atol(line + i);
+			gotload15 = TRUE;
+		}
+	    } else if (strncmp(line + i, MAXLOAD1, strlen(MAXLOAD1)) == 0) {
+		if (spool(line, &i, strlen(MAXLOAD1)))
+			fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
+		else {
+			maxload1 = atol(line + i);
+			if (!gotload5)
+			    maxload5 = maxload1 * 3 / 4;
+			if (!gotload15)
+			    maxload15 = maxload1 / 2;
+		}
+	    } else if (strncmp(line + i, MAXLOAD5, strlen(MAXLOAD5)) == 0) {
+		if (spool(line, &i, strlen(MAXLOAD5)))
+			fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
+		else {
+			maxload5 = atol(line + i);
+			gotload5 = TRUE;
+		}
 	    } else {
 		fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 	    }
@@ -380,12 +361,12 @@ int main(int argc, char *const argv[])
 {
     FILE *fp;
     int c, force = FALSE, sync_it = FALSE;
-    int hold = 48 * 1024;
+    int hold;
     char *filename = CONFIG_FILENAME;
     struct list *act;
     pid_t child_pid;
 
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
     char log[256], *opts = "d:i:n:fsvbql:p:t:c:r:m:a:";
     struct option long_options[] =
     {
@@ -444,7 +425,7 @@ int main(int argc, char *const argv[])
 	case 'q':
 	    no_act = TRUE;
 	    break;
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 	case 'v':
 	    verbose = TRUE;
 	    break;
@@ -471,6 +452,7 @@ int main(int argc, char *const argv[])
 	fprintf(stderr, "To force this load average use the -f option.\n");
 	exit(1);
     }
+    
     /* set up pinging if in network mode */
     if (target != NULL) {
 	for (act = target; act != NULL; act = act->next) {
@@ -501,8 +483,15 @@ int main(int argc, char *const argv[])
 		perror(progname);
 		exit(1);
 	    }
+	    
+	    /* this is necessary for broadcast pings to work */
+	    (void) setsockopt(net->sock_fp, SOL_SOCKET, SO_BROADCAST, (char *)&hold, sizeof(hold));
+    
+	    hold = 48 * 1024;
 	    (void) setsockopt(net->sock_fp, SOL_SOCKET, SO_RCVBUF, (char *) &hold,
 			      sizeof(hold));
+
+	    act->parameter.net = *net;
 	}
     }
     /* make sure we're on the root partition */
@@ -534,7 +523,7 @@ int main(int argc, char *const argv[])
 #endif				/* !DEBUG */
 
     /* now we're free */
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 #if !defined(DEBUG)
     /* Okay, we're a daemon     */
     /* but we're still attached to the tty */
@@ -550,35 +539,33 @@ int main(int argc, char *const argv[])
     /* Log the starting message */
     openlog(progname, LOG_PID, LOG_DAEMON);
     sprintf(log, "starting daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
-    sprintf(log + strlen(log), " int=%ds sync=%s soft=%s mla=%d ping=",
+    
+    sprintf(log + strlen(log), " int=%ds realtime=%s sync=%s soft=%s mla=%d ping=",
 	    tint,
+	    realtime ? "yes" : "no",
 	    sync_it ? "yes" : "no",
 	    softboot ? "yes" : "no",
 	    maxload1);
-
+	    
     if (target == NULL)
-	sprintf(log + strlen(log), "none ");
+            sprintf(log + strlen(log), "none ");
     else
-	for (act = target; act != NULL; act = act->next)
-	    sprintf(log + strlen(log), "%s%c", act->name, (act->next != NULL) ? ',' : ' ');
-
+            for (act = target; act != NULL; act = act->next)
+            	sprintf(log + strlen(log), "%s%c", act->name, (act->next != NULL) ? ',' : ' ');
+	                                        
     sprintf(log + strlen(log), "file=");
     if (file == NULL)
-	sprintf(log + strlen(log), "none ");
+            sprintf(log + strlen(log), "none ");
     else
-	for (act = file; act != NULL; act = act->next)
-	    sprintf(log + strlen(log), "%s:%d%c", act->name, act->parameter.file.mtime, (act->next != NULL) ? ',' : ' ');
+            for (act = file; act != NULL; act = act->next)
+                sprintf(log + strlen(log), "%s:%d%c", act->name, act->parameter.file.mtime, (act->next != NULL) ? ',' : ' ');
 
     sprintf(log + strlen(log), "test=%s repair=%s alive=%s temp=%s to=%s no_act=%s",
 	    (tbinary == NULL) ? "none" : tbinary,
 	    (rbinary == NULL) ? "none" : rbinary,
 	    (devname == NULL) ? "none" : devname,
 	    (tempname == NULL) ? "none" : tempname,
-#if defined(SENDTOADMIN)
-	    admin,
-#else
-	    "noone",
-#endif				/* SENDTOADMIN */
+	    (admin == NULL) ? "noone" : admin,
 	    (no_act == TRUE) ? "yes" : "no");
     syslog(LOG_INFO, log);
 #endif				/* USE_SYSLOG */
@@ -588,8 +575,8 @@ int main(int argc, char *const argv[])
     if (devname != NULL && no_act == FALSE) {
 	watchdog = open(devname, O_WRONLY);
 	if (watchdog == -1) {
-#if defined(USE_SYSLOG)
-	    syslog(LOG_ERR, "cannot open %s (errno = %d)", devname, errno);
+#if USE_SYSLOG
+	    syslog(LOG_ERR, "cannot open %s (errno = %d = '%m')", devname, errno);
 #else				/* USE_SYSLOG */
 	    perror(progname);
 #endif				/* USE_SYSLOG */
@@ -600,8 +587,8 @@ int main(int argc, char *const argv[])
     /* open the load average file */
     load = open("/proc/loadavg", O_RDONLY);
     if (load == -1) {
-#if defined(USE_SYSLOG)
-	syslog(LOG_ERR, "cannot open /proc/loadavg (errno = %d)", errno);
+#if USE_SYSLOG
+	syslog(LOG_ERR, "cannot open /proc/loadavg (errno = %d = '%m')", errno);
 #else				/* USE_SYSLOG */
 	perror(progname);
 #endif				/* USE_SYSLOG */
@@ -610,8 +597,8 @@ int main(int argc, char *const argv[])
 	/* open the temperature file */
 	temp = open(tempname, O_RDONLY);
 	if (temp == -1) {
-#if defined(USE_SYSLOG)
-	    syslog(LOG_ERR, "cannot open %s (errno = %d)", tempname, errno);
+#if USE_SYSLOG
+	    syslog(LOG_ERR, "cannot open %s (errno = %d = '%m')", tempname, errno);
 #else				/* USE_SYSLOG */
 	    perror(progname);
 #endif				/* USE_SYSLOG */
@@ -627,27 +614,29 @@ int main(int argc, char *const argv[])
     /* to make sure watchdog device is closed */
     signal(SIGTERM, terminate);
 
-#if defined(REALTIME) && defined(_POSIX_MEMLOCK)
-    /* lock all actual and future pages into memory */
-    if (mlockall(MCL_CURRENT | MCL_FUTURE) != 0) {
-#if defined(USE_SYSLOG)
-	syslog(LOG_ERR, "cannot lock realtime memory (errno = %d)", errno);
+#if defined(_POSIX_MEMLOCK)
+    if (realtime == TRUE) {
+	    /* lock all actual and future pages into memory */
+	    if (mlockall(MCL_CURRENT | MCL_FUTURE) != 0) {
+#if USE_SYSLOG
+		syslog(LOG_ERR, "cannot lock realtime memory (errno = %d = '%m')", errno);
 #else				/* USE_SYSLOG */
-	perror(progname);
+		perror(progname);
 #endif
-    } else {
-	struct sched_param sp;
+	    } else {
+		struct sched_param sp;
 
-	/* now set the scheduler */
-	sp.sched_priority = SCHEDULE_PRIORITY;
-	if (sched_setscheduler(0, SCHED_RR, &sp) != 0) {
-#if defined(USE_SYSLOG)
-	    syslog(LOG_ERR, "cannot set scheduler (errno = %d)", errno);
+		/* now set the scheduler */
+		sp.sched_priority = schedprio;
+		    if (sched_setscheduler(0, SCHED_RR, &sp) != 0) {
+#if USE_SYSLOG
+		    syslog(LOG_ERR, "cannot set scheduler (errno = %d = '%m')", errno);
 #else				/* USE_SYSLOG */
-	    perror(progname);
+		    perror(progname);
 #endif
-	} else
-	    mlocked = TRUE;
+		} else
+		    mlocked = TRUE;
+	    }
     }
 #endif
 
@@ -681,7 +670,7 @@ int main(int argc, char *const argv[])
 	/* finally sleep some seconds */
 	sleep(tint);
 
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 	/* do verbose logging */
 	if (verbose) {
 	    count++;

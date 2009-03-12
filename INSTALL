@@ -15,25 +15,41 @@ problem.
 
 Okay, if you want to install it manually:
 
-1) Edit the Makefile, if you have to. Note, that you can disable keep alive
-   support and temperature checking by not providing a device name in the
-   Makefile. However, you may still re-enable it at run time by giving the
-   corresponding commandline option. If you enable temperature checking or
-   keep alive support without having the corresponding device you will get
-   an error message every time watchdog is started. This message can be
-   safely ignored, since watchdog will then disable temperature checking or  
-   keep alive support and keep on working.
+$ ./configure
+$ make
+$ su
+# make install
 
-2) Run make install as root.
+There are several options available which can be listed by running
 
-3) If you don't have the device execute 'mknod /dev/watchdog c 10 130' as
-   root. This is done automatically by the post-installation script for
-   Debian users. 
+$ ./configure --help
 
-4) Edit your boot procedure to start /usr/sbin/watchdog at boot time. The
-   Debian bootfile is included in rc.watchdog.
+We only list some options here which are generally useful.
 
-That's it.
+Symbols: 
 
+    *cl - can be overridden in the command line
+    *cf - can be overridden in the config file
+
+  --with-sleep-interval=sec         (default 10)       *cl *cf
+
+    This allows you to set the default number of seconds which watchdog
+	will sleep before acting again. 
+  
+  --with-sysadmin=email             (default root)     *cf
+    
+    If watchdog attempts to reboot a machine, it will try to send an email out
+	before that. You can set the email address of the recipient with this
+    option.
+  
+  --with-maxload=int                (default 12)       *cf
+
+    If the load average reaches this point, the machine will reboot.
+
+  --with-watchdog=path              (default /dev/watchdog) *cf
+  --with-temperature=path           (default /dev/temperature) *cf
+
+    Sets the path for the respective device. 
+    
 Enjoy
 Michael

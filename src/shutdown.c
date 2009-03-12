@@ -1,4 +1,6 @@
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 #include <dirent.h>
 #include <errno.h>
@@ -10,6 +12,7 @@
 #include <signal.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <utmp.h>
 #include <sys/mman.h>
 #include <sys/param.h>
@@ -29,24 +32,20 @@
 
 #include <unistd.h>
 
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 #include <syslog.h>
 #endif				/* USE_SYSLOG */
 
-#if !defined(PATH_SENDMAIL)
-#define PATH_SENDMAIL _PATH_SENDMAIL
-#endif				/* PATH_SENDMAIL */
-
-#if !defined(RANDOM_SEED)
-#define RANDOM_SEED "/var/run/random-seed"
-#endif				/* !RANDOM_SEED */
+#ifndef NSIG
+#define NSIG _NSIG
+#endif
 
 extern void umount_all(void *);
 extern int ifdown(void);
 extern int mount_one(char *, char *, char *, char *, int, int);
 
-#if defined(REALTIME) && defined(_POSIX_MEMLOCK)
-extern int mlocked;
+#if defined(_POSIX_MEMLOCK)
+extern int mlocked, realtime;
 #endif
 
 static struct mntent rootfs;
@@ -63,7 +62,7 @@ typedef struct _proc_ {
 /* write a log entry on exit */
 static void log_end()
 {
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
     /* Log the closinging message */
     syslog(LOG_INFO, "stopping daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
     closelog();
@@ -77,21 +76,21 @@ static void log_end()
 static void close_all()
 {
     if (watchdog != -1 && close(watchdog) == -1) {
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 	syslog(LOG_ALERT, "cannot close %s", devname);
 #else				/* USE_SYSLOG */
 	perror(progname);
 #endif				/* USE_SYSLOG */
     }
     if (load != -1 && close(load) == -1) {
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 	syslog(LOG_ALERT, "cannot close /proc/loadavg");
 #else				/* USE_SYSLOG */
 	perror(progname);
 #endif				/* USE_SYSLOG */
     }
     if (temp != -1 && close(temp) == -1) {
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 	syslog(LOG_ALERT, "cannot close /dev/temperature");
 #else				/* USE_SYSLOG */
 	perror(progname);
@@ -102,12 +101,12 @@ static void close_all()
 /* on exit we close the device and log that we stop */
 void terminate(int arg)
 {
-#if defined(REALTIME) && defined(_POSIX_MEMLOCK)
-    if (mlocked == TRUE)
+#if defined(_POSIX_MEMLOCK)
+    if (realtime == TRUE && mlocked == TRUE)
     {
 	/* unlock all locked pages */
 	if (munlockall() != 0) {
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 		syslog(LOG_ERR, "cannot unlock realtime memory (errno = %d)", errno);
 #else				/* USE_SYSLOG */
 		perror(progname);
@@ -126,7 +125,7 @@ static void panic(void)
     /* if we are still alive, we just exit */
     close_all();
     fprintf(stderr, "WATCHDOG PANIC: Still alive after sleeping %d seconds!\n", 4 * TIMER_MARGIN);
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
     openlog(progname, LOG_PID, LOG_DAEMON);
     syslog(LOG_ALERT, "still alive after sleeping %d seconds", 4 * TIMER_MARGIN);
     closelog();
@@ -160,32 +159,33 @@ static void mnt_off()
 	    if (quotactl(QCMD(Q_QUOTAOFF, USRQUOTA), mnt->mnt_fsname, 0, (caddr_t) 0) < 0)
 		perror(mnt->mnt_fsname);
 
-	/* save entry if root partition */
-	rootfs.mnt_freq = mnt->mnt_freq;
-	rootfs.mnt_passno = mnt->mnt_passno;
-
-	rootfs.mnt_fsname = strdup(mnt->mnt_fsname);
-	rootfs.mnt_dir = strdup(mnt->mnt_dir);
-	rootfs.mnt_type = strdup(mnt->mnt_type);
-
-	/* did we get enough memory? */
-	if (rootfs.mnt_fsname == NULL || rootfs.mnt_dir == NULL || rootfs.mnt_type == NULL) {
-#if defined(USE_SYSLOG)
-	    syslog(LOG_ERR, "out of memory");
-#else				/* USE_SYSLOG */
-	    fprintf(stderr, "%s: out of memory\n", progname);
-#endif
-	}
 	/* while we´re at it we add the remount option */
 	if (strcmp(mnt->mnt_dir, "/") == 0) {
-	    if ((rootfs.mnt_opts = malloc(strlen(mnt->mnt_opts) + strlen("remount,ro") + 2)) == NULL) {
-#if defined(USE_SYSLOG)
-		syslog(LOG_ERR, "out of memory");
+		/* save entry if root partition */
+		rootfs.mnt_freq = mnt->mnt_freq;
+		rootfs.mnt_passno = mnt->mnt_passno;
+
+		rootfs.mnt_fsname = strdup(mnt->mnt_fsname);
+		rootfs.mnt_dir = strdup(mnt->mnt_dir);
+		rootfs.mnt_type = strdup(mnt->mnt_type);
+
+		/* did we get enough memory? */
+		if (rootfs.mnt_fsname == NULL || rootfs.mnt_dir == NULL || rootfs.mnt_type == NULL) {
+#if USE_SYSLOG
+		    syslog(LOG_ERR, "out of memory");
 #else				/* USE_SYSLOG */
-		fprintf(stderr, "%s: out of memory\n", progname);
+		    fprintf(stderr, "%s: out of memory\n", progname);
 #endif
-	    } else
-		sprintf(rootfs.mnt_opts, "%s,remount,ro", mnt->mnt_opts);
+		}
+
+		if ((rootfs.mnt_opts = malloc(strlen(mnt->mnt_opts) + strlen("remount,ro") + 2)) == NULL) {
+#if USE_SYSLOG
+			syslog(LOG_ERR, "out of memory");
+#else				/* USE_SYSLOG */
+			fprintf(stderr, "%s: out of memory\n", progname);
+#endif
+		} else
+			sprintf(rootfs.mnt_opts, "%s,remount,ro", mnt->mnt_opts);
 	}
     }
     endmntent(fp);
@@ -206,7 +206,7 @@ static int readproc()
 
     /* Open the /proc directory. */
     if ((dir = opendir("/proc")) == NULL) {
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 	syslog(LOG_ERR, "cannot opendir /proc");
 #else				/* USE_SYSLOG */
 	perror(progname);
@@ -224,7 +224,7 @@ static int readproc()
 
 	/* Get a PROC struct . */
 	if ((p = (PROC *) calloc(1, sizeof(PROC))) == NULL) {
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 	    syslog(LOG_ERR, "out of memory");
 #else				/* USE_SYSLOG */
 	    fprintf(stderr, "%s: out of memory\n", progname);
@@ -289,15 +289,14 @@ void do_shutdown(int errorcode)
     /* first close the open files */
     close_all();
 
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
     /* now tell syslog what's happening */
     syslog(LOG_ALERT, "shutting down the system because of error %d", errorcode);
     closelog();
 #endif				/* USE_SYSLOG */
 
-#if defined(SENDTOADMIN)
     /* if we will halt the system we should try to tell a sysadmin */
-    if (errorcode == ETOOHOT) {
+    if (admin != NULL && errorcode == ETOOHOT) {
 	/* send mail to the system admin */
 	FILE *ph;
 	char exe[128];
@@ -305,7 +304,7 @@ void do_shutdown(int errorcode)
 	sprintf(exe, "%s -i %s", PATH_SENDMAIL, admin);
 	ph = popen(exe, "w");
 	if (ph == NULL) {
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 	    syslog(LOG_ERR, "cannot start %s (errno = %d)", PATH_SENDMAIL, errno);
 #endif				/* USE_SYSLOG */
 	} else {
@@ -317,7 +316,7 @@ void do_shutdown(int errorcode)
 
 	    fprintf(ph, "To: %s\n", admin);
 	    if (ferror(ph) != 0) {
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 		syslog(LOG_ERR, "cannot send mail (errno = %d)", errno);
 #endif				/* USE_SYSLOG */
 	    }
@@ -327,25 +326,24 @@ void do_shutdown(int errorcode)
 	    else
 		fprintf(ph, "Subject: %s is going down!\n\n", myname);
 	    if (ferror(ph) != 0) {
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 		syslog(LOG_ERR, "cannot send mail (errno = %d)", errno);
 #endif				/* USE_SYSLOG */
 	    }
 	    fprintf(ph, "It is too hot to keep on working. The system will be halted!\n");
 	    if (ferror(ph) != 0) {
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 		syslog(LOG_ERR, "cannot send mail (errno = %d)", errno);
 #endif				/* USE_SYSLOG */
 	    }
 	    if (pclose(ph) == -1) {
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 		syslog(LOG_ERR, "cannot finish mail (errno = %d)", errno);
 #endif				/* USE_SYSLOG */
 	    }
 	    /* finally give the system a little bit of time to deliver */
 	}
     }
-#endif				/* SENDTOADMIN */
 
     sleep(10);			/* make sure log is written and mail is send */
 
@@ -363,7 +361,7 @@ void do_shutdown(int errorcode)
     close(255);
 
     /* Ignore all signals. */
-    for (i = 1; i < _NSIG; i++)
+    for (i = 1; i < NSIG; i++)
 	signal(i, SIG_IGN);
 
     /* Stop init; it is insensitive to the signals sent by the kernel. */

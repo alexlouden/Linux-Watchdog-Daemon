@@ -32,7 +32,7 @@
 #include "loop.h"
 #include "fstab.h"
 
-#ifdef HAVE_NFS
+#if HAVE_NFS
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <netdb.h>
@@ -61,7 +61,7 @@ int umount_verbose = 0;
 /* True if ruid != euid.  */
 int umount_suid = 0;
 
-#ifdef HAVE_NFS
+#if HAVE_NFS
 static int xdr_dir(XDR *xdrsp, char *dirp)
 {
       return (xdr_string(xdrsp, &dirp, MNTPATHLEN));
@@ -186,7 +186,7 @@ umount_one (const char *spec, const char *node, const char *type,
   if (isroot)
     umount_nomtab++;
 
-#ifdef HAVE_NFS
+#if HAVE_NFS
   /* Ignore any RPC errors, so that you can umount the filesystem
      if the server is down.  */
   if (strcasecmp(type, "nfs") == 0)

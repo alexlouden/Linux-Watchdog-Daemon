@@ -99,10 +99,11 @@ only 10 seconds so it triggers the device early enough.
 
 Under high system load watchdog might be swapped out of memory and may fail
 to make it back in in time. Under these circumstances the Linux kernel will
-hard reset the machine. To make sure you won't get unnecassary reboots
-make sure you have the variable REALTIME defined in the Makefile at compile
-time. It adds real time support to watchdog. Thus it will lock itself into
-memeory and there should be no problem even under the highest of loads.
+hard reset the machine. To make sure you won't get unnecassary reboots make
+sure you have the variable 'realtime' set to yes in the config file
+watchdog.conf. It adds real time support to watchdog. Thus it will lock
+itself into memeory and there should be no problem even under the highest of
+loads.
 
 Also you can specify a maximal allowed load average. Once this load average
 is reached the system is rebooted. You may specify maximal load averages for

@@ -38,6 +38,10 @@
  * Improve support for noncanonical names in /etc/fstab.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
@@ -53,7 +57,7 @@
 
 #include "mount_constants.h"
 #include "sundries.h"
-#include "mntent.h"
+#include "wd_mntent.h"
 #include "fstab.h"
 #include "lomount.h"
 #include "loop.h"
@@ -690,7 +694,7 @@ try_mount_one (char *spec0, char *node0, char *type0, char *opts0,
   }
 
   if (!fake && type && streq (type, "nfs")) {
-#ifdef HAVE_NFS
+#if HAVE_NFS
     mnt_err = nfsmount (spec, node, &flags, &extra_opts, &mount_opts, bg);
     if (mnt_err)
       return mnt_err;
@@ -1082,7 +1086,7 @@ mount_all (string_list types, char *options) {
 			      sprintf(major, "#%x", DISKMAJOR(statbuf.st_rdev));
 			      g = major;
 			 }
-#ifdef HAVE_NFS
+#if HAVE_NFS
 			 if (strcmp(mc->mnt_type, "nfs") == 0) {
 			      g = xstrdup(mc->mnt_fsname);
 			      colon = strchr(g, ':');

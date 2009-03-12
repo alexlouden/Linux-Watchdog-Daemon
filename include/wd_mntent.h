@@ -1,4 +1,7 @@
- #include <mntent.h>		/* for struct mntent */
+#ifndef WD_MNTENT_H
+#define WD_MNTENT_H
+
+#include <mntent.h>		/* for struct mntent */
 
 #define ERR_MAX 5
 
@@ -14,3 +17,5 @@ mntFILE *my_setmntent (const char *file, char *mode);
 void my_endmntent (mntFILE *mfp);
 int my_addmntent (mntFILE *mfp, struct mntent *mnt);
 struct mntent *my_getmntent (mntFILE *mfp);
+
+#endif

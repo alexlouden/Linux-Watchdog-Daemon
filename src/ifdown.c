@@ -5,6 +5,10 @@
  */
 char *v_ifdown = "@(#)ifdown.c  1.10  21-Apr-1997  miquels@cistron.nl";
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

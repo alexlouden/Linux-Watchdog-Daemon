@@ -1,9 +1,13 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <unistd.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
-#include "mntent.h"
+#include "wd_mntent.h"
 #include "fstab.h"
 #include "sundries.h"		/* for xmalloc() etc */
 

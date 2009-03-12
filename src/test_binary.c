@@ -1,4 +1,6 @@
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 #include <errno.h>
 #include <unistd.h>
@@ -6,7 +8,7 @@
 #include "extern.h"
 #include "watch_err.h"
 
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 #include <syslog.h>
 #endif
 
@@ -32,7 +34,7 @@ int check_bin(char *tbinary)
 	int err = errno;
 
 	if (errno == EAGAIN) {	/* process table full */
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 	    syslog(LOG_ERR, "process table is full!");
 #endif				/* USE_SYSLOG */
 	    return (EREBOOT);
@@ -60,7 +62,7 @@ int check_bin(char *tbinary)
 	/* if one of the scripts returns an error code just return that code */
 	res = WEXITSTATUS(result);
 	if (res != 0) {
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 	    syslog(LOG_ERR, "test binary returned %d", res);
 #endif				/* USE_SYSLOG */
 	    return (res);
@@ -69,8 +71,9 @@ int check_bin(char *tbinary)
 	/* in fact if an old one hangs around we already got an error */
 	/* message in earlier rounds */
 	if (ret == 0 && child_pid != 0) {
-#if defined(USE_SYSLOG)
-	    syslog(LOG_ERR, "child %d did not exit immediately (error = %d)", child_pid, err);
+#if USE_SYSLOG
+	    errno = err;
+	    syslog(LOG_ERR, "child %d did not exit immediately (error = %d = '%m')", child_pid, err);
 #else				/* USE_SYSLOG */
 	    perror(progname);
 #endif				/* USE_SYSLOG */

@@ -216,3 +216,39 @@ Wed Okt 21 13:33:21 CEST 1998
 Tue Okt 27 20:49:23 MEZ 1998
 
 	- Released 4.1.
+
+Mon Nov 23 09:33:20 MEZ 1998
+
+	- Changed union name in extern.h from options to wdog_options to be
+	  able to compile on libc5 systems.
+
+Tue Nov 24 14:32:41 MEZ 1998
+
+	- Added patches by Sascha Schumann <sas@schell.de> for libc5
+	  compatibility.
+
+Thu Jan 14 13:43:53 CET 1999
+
+	- Fixed the bug in read_config that caused the max-load-15 line to
+	  be read as max-load-1 = 5.
+
+Thu Jan 14 14:17:35 CET 1999
+
+	- And fixed another silly bug that caused network mode to not work
+	  anymore.
+
+Wed Jan 20 21:03:30 CET 1999
+
+	- Switched to GNU autoconf, work done by Sascha Schumann
+	  <sas@schell.de>.
+
+Fri Jan 22 17:30:41 CET 1999
+
+	- Restructured the configuration management. No need to specify
+	  compile time defaults for parameters changeable via
+	  /etc/watchdog.conf.
+
+Sat Jan 30 08:58:47 CET 1999
+
+	- Releases 4.2.
+

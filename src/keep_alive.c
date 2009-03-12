@@ -1,4 +1,6 @@
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 #include <errno.h>
 #include <sys/syslog.h>
@@ -16,8 +18,8 @@ int keep_alive(void)
     if (write(watchdog, "\0", 1) < 0) {
 	int err = errno;
 
-#if defined(USE_SYSLOG)
-	syslog(LOG_ERR, "write watchdog device gave error %d!", err);
+#if USE_SYSLOG
+	syslog(LOG_ERR, "write watchdog device gave error %d = '%m'!", err);
 #endif
 	if (softboot)
 	    return (err);

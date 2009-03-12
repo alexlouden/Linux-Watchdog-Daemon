@@ -18,11 +18,16 @@
  *          as published by the Free Software Foundation; either version
  *          2 of the License, or (at your option) any later version.
  */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #if defined(__alpha__)
 #include <errno.h>
 #include <sys/types.h>
 #include <syscall.h>
-#include <asm/unistd.h>
+#include <unistd.h>
 
 int quotactl(int cmd, const char * special, int id, caddr_t addr)
 {

@@ -19,7 +19,7 @@ struct filemode
 	int mtime;
 };
 
-union options
+union wdog_options
 {
         struct pingmode net;
         struct filemode file;
@@ -28,7 +28,7 @@ union options
 struct list
 {
         char *name;
-        union options parameter;
+        union wdog_options parameter;
         struct list *next;
 };
 
@@ -38,15 +38,7 @@ struct list
 #define MAXICMPLEN      76
 #define MAXPACKET       (65536 - 60 - 8)        /* max packet size */
 
-#if !defined(MAXTEMP)
-#define MAXTEMP 120
-#endif                          /* !MAXTEMP */
-
-#if !defined(TIMER_MARGIN)
-#define TIMER_MARGIN 60
-#endif                          /* !TIMER_MARGIN */
-
-#define TRUE 1
+#define TRUE  1
 #define FALSE 0
 
 /* function prototypes */

@@ -1,0 +1,26 @@
+Watchdog developer and credits list
+===================================
+
+Michael Meskes <meskes@debian.org>
+
+- Maintainer and overall author
+- Original Debian patches
+
+Sascha Schumann <sas@schell.de>
+
+- GNU automake/autoconf support
+- some compatibility patches
+
+Johnie Ingram <johnie@debian.org>
+
+- more Debian patches
+
+Marc Merlin <marc.merlin@magic.metawire.com>
+
+- redHat Patches
+
+Miquel van Smoorenburg <miquels@cistron.nl>
+
+- The stuff borrowed from sysvinit
+
+Several people who worked on mount/umount

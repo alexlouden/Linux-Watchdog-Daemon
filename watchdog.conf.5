@@ -25,15 +25,17 @@ minimal value of 2, you have to use the -f commandline option.
 .TP
 max-load-5 = <load5>
 Set the maximal allowed load average for a 5 minute span. Once this load
-average is reached the system is rebooted. Default value is 9. Be careful
-not to this parameter too low. To set a value less then the predefined
-minimal value of 2, you have to use the -f commandline option.
+average is reached the system is rebooted. Default value is 9 resp.
+3/4*max-load-1. Be careful not to this parameter too low. To set a value
+less then the predefined minimal value of 2, you have to use the -f
+commandline option.
 .TP
 max-load-15 = <load15>
 Set the maximal allowed load average for a 15 minute span. Once this load
-average is reached the system is rebooted. Default value is 6. Be careful
-not to this parameter too low. To set a value less then the predefined
-minimal value of 2, you have to use the -f commandline option.
+average is reached the system is rebooted. Default value is 6 resp.
+1/2*max-load-1. Be careful not to this parameter too low. To set a value
+less then the predefined minimal value of 2, you have to use the -f
+commandline option.
 .TP
 max-temperature = <temp>
 Set the maximal allowed temperature. Once this temperature is reached the
@@ -76,7 +78,15 @@ system.
 .TP
 admin = <mail-address>
 Email address to send admin mail to. That is, who shall be notified that the
-machine is being halted.
+machine is being halted. Default is 'root'. If you want to disable
+notification via email just set admin to en empty string.
+.TP
+realtime = <yes|no>
+If set to yes watchdog will lock itself into memory so it is never swapped
+out.
+.TP
+priority = <schedule priority>
+Set the schedule priority for realtime mode.
 .TP
 .SH FILES
 .nf

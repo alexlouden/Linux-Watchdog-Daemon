@@ -1,4 +1,6 @@
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 #include <errno.h>
 #include <stdio.h>
@@ -8,7 +10,7 @@
 #include "extern.h"
 #include "watch_err.h"
 
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 #include <syslog.h>
 #endif
 
@@ -25,8 +27,8 @@ int check_load(void)
     if (lseek(load, 0, SEEK_SET) < 0) {
 	int err = errno;
 
-#if defined(USE_SYSLOG)
-	syslog(LOG_ERR, "lseek /proc/loadavg gave errno = %d", err);
+#if USE_SYSLOG
+	syslog(LOG_ERR, "lseek /proc/loadavg gave errno = %d = '%m'", err);
 #else				/* USE_SYSLOG */
 	perror(progname);
 #endif				/* USE_SYSLOG */
@@ -39,8 +41,8 @@ int check_load(void)
     if (read(load, buf, sizeof(buf)) < 0) {
 	int err = errno;
 
-#if defined(USE_SYSLOG)
-	syslog(LOG_ERR, "read /proc/loadavg gave errno = %d", err);
+#if USE_SYSLOG
+	syslog(LOG_ERR, "read /proc/loadavg gave errno = %d = '%m'", err);
 #else				/* USE_SYSLOG */
 	perror(progname);
 #endif				/* USE_SYSLOG */
@@ -62,7 +64,7 @@ int check_load(void)
     if (ptr != NULL)
 	avg15 = atoi(ptr);
     else {
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 	syslog(LOG_ERR, "/proc/loadavg does not contain any data (read = %s)", buf);
 #else				/* USE_SYSLOG */
 	perror(progname);
@@ -73,13 +75,13 @@ int check_load(void)
 	return (ENOERR);
     }
 
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
     if (verbose)
 	syslog(LOG_INFO, "current load is %d %d %d", avg1, avg5, avg15);
 #endif				/* USE_SYSLOG */
 
     if (avg1 > maxload1 || avg5 > maxload5 || avg15 > maxload15) {
-#if defined(USE_SYSLOG)
+#if USE_SYSLOG
 	syslog(LOG_ERR, "loadavg %d %d %d > %d %d %d!", avg1, avg5, avg15,
 	       maxload1, maxload5, maxload15);
 #endif				/* USE_SYSLOG */

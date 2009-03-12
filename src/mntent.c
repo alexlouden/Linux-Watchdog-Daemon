@@ -1,10 +1,14 @@
 /* Private version of the libc *mntent() routines. */
 /* Note slightly different prototypes. */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <string.h>		/* for index */
 #include <ctype.h>		/* for isdigit */
-#include "mntent.h"
+#include "wd_mntent.h"
 #include "sundries.h"		/* for xmalloc */
 
 /* Unfortunately the classical Unix /etc/mtab and /etc/fstab
