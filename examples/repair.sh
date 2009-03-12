@@ -44,8 +44,18 @@ case $1 in
 #
 	
 100|101)
-	ifconfig eth0 down
-	ifconfig lo down
+	if [ -f /etc/rc.d/init.d/network ]; then
+		# Redhat
+		/etc/rc.d/init.d/network stop
+	else
+		ifconfig |
+		awk '/Link/ {print $1}' |
+		while read device
+		do
+			ifconfig ${device} down 
+		done
+	fi
+
 	ethmodule=`grep eth0 /etc/conf.modules | grep "^alias" | cut -f 3 -d' '`
 	if [ -n $ethmodule ]
 	then
@@ -59,11 +69,27 @@ case $1 in
 #		handles this
 #
 		modprobe $ethmodule
+	if [ -f /etc/rc.d/init.d/network ]; then
+	    # Redhat
+	    /etc/rc.d/init.d/network stop
+	else
 	fi
 #
 #	bring it back up
 #
-	/etc/init.d/network
+if [ -f /etc/init.d/network ]; then
+    # Debian
+    /etc/init.d/network    
+elif [ -f /etc/rc.d/init.d/network ]; then
+    # Redhat
+    /etc/rc.d/init.d/network start
+else
+    echo "Couldn't find network script to relaunch networking. Please edit $0" | logger -i -t repair -p daemon.info 
+    exit $1
+fi
+
+
+
 #
 #	create log entry
 #

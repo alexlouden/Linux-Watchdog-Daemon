@@ -17,13 +17,20 @@
  * 960324: aeb - added some changes from Rob Leslie <rob@mars.org>
  * 960823: aeb - also try umount(spec) when umount(node) fails
  * 970307: aeb - canonise names from fstab
+ * 970726: aeb - remount read-only in cases where umount fails
  */
 
 #include <unistd.h>
+#include <getopt.h>
+#include <string.h>
+#include <errno.h>
 #include <sys/stat.h>
+#include <sys/mount.h>
+#include "mount_constants.h"
 #include "sundries.h"
 #include "lomount.h"
 #include "loop.h"
+#include "fstab.h"
 
 #ifdef HAVE_NFS
 #include <sys/socket.h>
@@ -36,24 +43,23 @@
 #include <arpa/inet.h>
 #endif
 
-#if 0 /* WATCHDOG */
+
 #ifdef notyet
 /* Nonzero for force umount (-f).  This needs kernel support we don't have.  */
 int force = 0;
 #endif
 
+/* When umount fails, attempt a read-only remount (-r). */
+int remount = 0;
+
 /* Don't write a entry in /etc/mtab (-n).  */
-int nomtab = 0;
+int umount_nomtab = 0;
 
 /* Nonzero for chatty (-v).  This is a nonstandard flag (not in BSD).  */
-int verbose = 0;
+int umount_verbose = 0;
 
 /* True if ruid != euid.  */
-int suid = 0;
-#else /* WATCHDOG */
-static int nomtab = 0;
-static int verbose = 0;
-#endif /* WATCHDOG */
+int umount_suid = 0;
 
 #ifdef HAVE_NFS
 static int xdr_dir(XDR *xdrsp, char *dirp)
@@ -94,13 +100,18 @@ nfs_umount_rpc_call(const char *spec, const char *opts)
 
       if (hostname[0] >= '0' && hostname[0] <= '9')
 	   saddr.sin_addr.s_addr = inet_addr(hostname);
-      else
+      else {
 	   if ((hostp = gethostbyname(hostname)) == NULL) {
-		fprintf(stderr, "mount: can't get address for %s\n",
+		fprintf(stderr, "umount: can't get address for %s\n",
 			hostname);
 		return 1;
-	   } else
-		memcpy(&saddr.sin_addr, hostp->h_addr, hostp->h_length);
+	   }
+	   if (hostp->h_length > sizeof(struct in_addr)) {
+		fprintf(stderr, "umount: got bad hostp->h_length\n");
+		hostp->h_length = sizeof(struct in_addr);
+	   }
+	   memcpy(&saddr.sin_addr, hostp->h_addr, hostp->h_length);
+      }
 
       saddr.sin_family = AF_INET;
       saddr.sin_port = 0;
@@ -163,8 +174,6 @@ umount_one (const char *spec, const char *node, const char *type,
   int umnt_err, umnt_err2;
   int isroot;
   int res;
-  struct mntent *mnt;
-
 
   /* Special case for root.  As of 0.99pl10 we can (almost) unmount root;
      the kernel will remount it readonly so that we can carry on running
@@ -175,7 +184,7 @@ umount_one (const char *spec, const char *node, const char *type,
   isroot = (streq (node, "/") || streq (node, "root")
 	                      || streq (node, "rootfs"));
   if (isroot)
-    nomtab++;
+    umount_nomtab++;
 
 #ifdef HAVE_NFS
   /* Ignore any RPC errors, so that you can umount the filesystem
@@ -184,9 +193,6 @@ umount_one (const char *spec, const char *node, const char *type,
 	  nfs_umount_rpc_call(spec, opts);
 #endif
  
-  if (!nomtab)
-	  lock_mtab ();
-
 
   umnt_err = umnt_err2 = 0;
   res = umount (node);
@@ -196,7 +202,7 @@ umount_one (const char *spec, const char *node, const char *type,
 	  been deleted or renamed, so if node fails, also try spec. */
        /* if (umnt_err == ENOENT || umnt_err == EINVAL) */
        if (umnt_err != EBUSY && strcmp(node, spec)) {
-	    if (verbose)
+	    if (umount_verbose)
 		 printf ("could not umount %s - trying %s instead\n",
 			 node, spec);
 	    res = umount (spec);
@@ -208,25 +214,43 @@ umount_one (const char *spec, const char *node, const char *type,
        }
   }
 
+  if (res < 0 && remount && (umnt_err == EBUSY || umnt_err2 == EBUSY)) {
+       /* Umount failed - let us try a remount */
+       res=mount(spec, node, NULL, MS_MGC_VAL | MS_REMOUNT | MS_RDONLY, NULL);
+       if (res == 0) {
+	    struct mntent remnt;
+	    fprintf(stderr, "umount: %s busy - remounted read-only\n", spec);
+	    remnt.mnt_type = remnt.mnt_fsname = NULL;
+	    remnt.mnt_dir = xstrdup(node);
+	    remnt.mnt_opts = "ro";
+	    update_mtab(node, &remnt);
+	    return 0;
+       } else if (errno != EBUSY) { 	/* hmm ... */
+	    perror("remount");
+	    fprintf(stderr, "umount: could not remount %s read-only\n",
+		    spec);
+       }
+  }
+
   if (res >= 0) {
       /* Umount succeeded, update mtab.  */
-      if (verbose)
+      if (umount_verbose)
 	printf ("%s umounted\n", spec);
 
-      if (!nomtab) {
+      if (!umount_nomtab && mtab_is_writable()) {
+	  struct mntentchn *mc;
 				/* Special stuff for loop devices */
-	  open_mtab("r");
-	  if ((mnt = getmntfile (spec)) ||
-	      (mnt = getmntfile (node))) {
+
+	  if ((mc = getmntfile (spec)) || (mc = getmntfile (node))) {
 	     char *opts;
 
 	     /* old style mtab line? */
-	     if (streq(mnt->mnt_type, "loop"))
+	     if (streq(mc->mnt_type, "loop"))
 		if (del_loop(spec))
 		      goto fail;
 
 	     /* new style mtab line? */
-	     opts = mnt->mnt_opts ? xstrdup(mnt->mnt_opts) : "";
+	     opts = mc->mnt_opts ? xstrdup(mc->mnt_opts) : "";
 	     for (opts = strtok (opts, ","); opts; opts = strtok (NULL, ",")) {
 		 if (!strncmp(opts, "loop=", 5)) {
 		     if (del_loop(opts+5))
@@ -237,25 +261,22 @@ umount_one (const char *spec, const char *node, const char *type,
 	  } else {
 	      /* maybe spec is a loop device? */
 	      /* no del_loop() - just delete it from mtab */
-	      if ((mnt = getmntoptfile (spec)) != NULL)
-		node = mnt->mnt_dir;
+	      if ((mc = getmntoptfile (spec)) != NULL)
+		node = mc->mnt_dir;
 	  }
-	  close_mtab();
 
 				/* Non-loop stuff */
 	  update_mtab (node, NULL);
-	  unlock_mtab ();
       }
       return 0;
   }
 
 fail:
   /* Umount or del_loop failed, complain, but don't die.  */
-  if (!nomtab) {
+  if (!umount_nomtab) {
       /* remove obsolete entry */
       if (umnt_err == EINVAL || umnt_err == ENOENT)
 	  update_mtab (node, NULL);
-      unlock_mtab ();
   }
 
   if (umnt_err2)
@@ -270,48 +291,25 @@ fail:
    slurp in the entire file before we start.  This isn't too bad, because
    in any case it's important to umount mtab entries in reverse order
    to mount, e.g. /usr/spool before /usr.  */
-#if 0 /* WATCHDOG */
-static
-#endif /* WATCHDOG */
 int
-umount_all (string_list types)
-{
-  string_list spec_list = NULL;
-  string_list node_list = NULL;
-  string_list type_list = NULL;
-  string_list opts_list = NULL;
-  struct mntent *mnt;
-  int errors;
+umount_all (string_list types) {
+     struct mntentchn *mc, *hd;
+     int errors = 0;
 
-  open_mtab ("r");
+     hd = mtab_head();
+     if (!hd->prev)
+	  die (2, "umount: cannot find list of filesystems to unmount");
+     for (mc = hd->prev; mc != hd; mc = mc->prev) {
+	  if (matching_type (mc->mnt_type, types)) {
+	       errors |= umount_one (mc->mnt_fsname, mc->mnt_dir,
+				     mc->mnt_type, mc->mnt_opts);
+	  }
+     }
 
-  while ((mnt = getmntent (F_mtab)))
-    if (matching_type (mnt->mnt_type, types))
-      {
-	spec_list = cons (xstrdup (mnt->mnt_fsname), spec_list);
-	node_list = cons (xstrdup (mnt->mnt_dir), node_list);
-        type_list = cons (xstrdup (mnt->mnt_type), type_list);
-	opts_list = cons (xstrdup (mnt->mnt_opts), opts_list);
-      }
-
-  close_mtab ();
-
-  errors = 0;
-  while (spec_list != NULL)
-    {
-      errors |= umount_one (car (spec_list), car (node_list),
-			    car (type_list), car (opts_list));
-      spec_list = cdr (spec_list);
-      node_list = cdr (node_list);
-      type_list = cdr (type_list);
-      opts_list = cdr (opts_list);
-    }
-
-  sync ();
-  return errors;
+     sync ();
+     return errors;
 }
 
-#if 0 /* WATCHDOG */
 extern char version[];
 static struct option longopts[] =
 {
@@ -319,41 +317,40 @@ static struct option longopts[] =
   { "force", 0, 0, 'f' },
   { "help", 0, 0, 'h' },
   { "no-mtab", 0, 0, 'n' },
-  { "verbose", 0, 0, 'v' },
+  { "umount_verbose", 0, 0, 'v' },
   { "version", 0, 0, 'V' },
+  { "read-only", 0, 0, 'r' },
   { "types", 1, 0, 't' },
   { NULL, 0, 0, 0 }
 };
 
-char *usage_string = "\
+char *umount_usage_string = "\
 usage: umount [-hV]\n\
-       umount -a [-n] [-v] [-t vfstypes]\n\
-       umount [-n] [-v] special | node...\n\
+       umount -a [-r] [-n] [-v] [-t vfstypes]\n\
+       umount [-r] [-n] [-v] special | node...\n\
 ";
 
 static void
 usage (FILE *fp, int n)
 {
-  fprintf (fp, "%s", usage_string);
+  fprintf (fp, "%s", umount_usage_string);
   exit (n);
 }
 
-int mount_quiet = 0;
+int umount_mount_quiet = 0;
 
 int
-main (int argc, char *argv[])
+this_was_main_int_mount_c (int argc, char *argv[])
 {
   int c;
   int all = 0;
   string_list types = NULL;
   string_list options;
-  struct mntent *mnt;
-  struct mntent mntbuf;
-  struct mntent *fs;
+  struct mntentchn *mc, *fs;
   char *file;
   int result = 0;
 
-  while ((c = getopt_long (argc, argv, "afhnvVt:", longopts, NULL)) != EOF)
+  while ((c = getopt_long (argc, argv, "afhnrvVt:", longopts, NULL)) != EOF)
     switch (c) {
       case 'a':			/* umount everything */
 	++all;
@@ -369,10 +366,13 @@ main (int argc, char *argv[])
 	usage (stdout, 0);
 	break;
       case 'n':
-	++nomtab;
+	++umount_nomtab;
+	break;
+      case 'r':			/* remount read-only if umount fails */
+	++remount;
 	break;
       case 'v':			/* make noise */
-	++verbose;
+	++umount_verbose;
 	break;
       case 'V':			/* version */
 	printf ("umount: %s\n", version);
@@ -389,73 +389,61 @@ main (int argc, char *argv[])
 
   if (getuid () != geteuid ())
     {
-      suid = 1;
-      if (all || types || nomtab)
+      umount_suid = 1;
+      if (all || types || umount_nomtab)
 	die (2, "umount: only root can do that");
     }
 
   argc -= optind;
   argv += optind;
 
-  if (all)
-    result = umount_all (types);
-  else if (argc < 1)
-    usage (stderr, 2);
-  else while (argc--)
-    {
-      file = canonicalize (*argv); /* mtab paths are canonicalized */
-      if (verbose > 1)
-	printf("Trying to umount %s\n", file);
+  if (all) {
+       if (types == NULL)
+	  types = parse_list(xstrdup("noproc"));
+       result = umount_all (types);
+  } else if (argc < 1) {
+       usage (stderr, 2);
+  } else while (argc--) {
+       file = canonicalize (*argv); /* mtab paths are canonicalized */
+       if (umount_verbose > 1)
+	  printf("Trying to umount %s\n", file);
 
-      open_mtab ("r");
-      mnt = getmntfile (file);
-      if (mnt)
-	{
-	  /* Copy the structure and strings because they're in static areas. */
-	  mntbuf = *mnt;
-	  mnt = &mntbuf;
-	  mnt->mnt_fsname = xstrdup (mnt->mnt_fsname);
-	  mnt->mnt_dir = xstrdup (mnt->mnt_dir);
-	}
-      else if (verbose)
-	printf("Could not find %s in mtab\n", file);
-      close_mtab ();
+       mc = getmntfile (file);
+       if (!mc && umount_verbose)
+	  printf("Could not find %s in mtab\n", file);
 
-      if (suid)
-	{
-	  if (!mnt)
+       if (umount_suid) {
+	  if (!mc)
 	    die (2, "umount: %s is not mounted (according to mtab)", file);
 	  if (!(fs = getfsspec (file)) && !(fs = getfsfile (file)))
 	    die (2, "umount: %s is not in the fstab (and you are not root)",
 		 file);
-	  if ((!streq (mnt->mnt_fsname, fs->mnt_fsname) &&
-	       !streq (mnt->mnt_fsname, canonicalize (fs->mnt_fsname)))
-	      || (!streq (mnt->mnt_dir, fs->mnt_dir) &&
-		  !streq (mnt->mnt_dir, canonicalize (fs->mnt_dir)))) {
+	  if ((!streq (mc->mnt_fsname, fs->mnt_fsname) &&
+	       !streq (mc->mnt_fsname, canonicalize (fs->mnt_fsname)))
+	      || (!streq (mc->mnt_dir, fs->mnt_dir) &&
+		  !streq (mc->mnt_dir, canonicalize (fs->mnt_dir)))) {
 	    die (2, "umount: %s mount disagrees with the fstab", file);
 	  }
 	  options = parse_list (fs->mnt_opts);
-	  while (options)
-	    {	
+	  while (options) {
 	      if (streq (car (options), "user"))
 		break;
 	      options = cdr (options);
-	    }
+	  }
 	  if (!options)
 	    die (2, "umount: only root can unmount %s from %s",
 		 fs->mnt_fsname, fs->mnt_dir);
-	}
+       }
 
-      if (mnt)
-	 result = umount_one (xstrdup(mnt->mnt_fsname), xstrdup(mnt->mnt_dir),
-			      xstrdup(mnt->mnt_type), xstrdup(mnt->mnt_opts));
-      else
-	 result = umount_one (*argv, *argv, *argv, *argv);
+       if (mc)
+	    result = umount_one (xstrdup(mc->mnt_fsname), xstrdup(mc->mnt_dir),
+				 xstrdup(mc->mnt_type), xstrdup(mc->mnt_opts));
+       else
+	    result = umount_one (*argv, *argv, *argv, *argv);
 
-      argv++;
+       argv++;
 
-    }
+  }
   exit (result);
 }
 
-#endif /* WATCHDOG */

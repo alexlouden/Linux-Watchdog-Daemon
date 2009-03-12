@@ -18,6 +18,7 @@
 
 /*
  * We know more than the kernel. Override the kernel defines.
+ * Check at runtime whether the running kernel can handle the new stuff.
  */
 #define NFS_MOUNT_VERSION	3
 

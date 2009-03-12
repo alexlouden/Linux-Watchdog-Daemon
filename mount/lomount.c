@@ -12,18 +12,17 @@
 #include <string.h>
 #include <ctype.h>
 #include <fcntl.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
-#include <linux/fs.h>
-#if defined(__GLIBC__)
-#define _SOCKETBITS_H
-typedef unsigned int socklen_t;
-#endif /* __GLIBC */
-#include "sundries.h"		/* for xstrdup */
+
 #include "loop.h"
 #include "lomount.h"
+
+char *xstrdup (const char *s);		/* not: #include "sundries.h" */
+void error (const char *fmt, ...);	/* idem */
 
 #ifdef LOOP_SET_FD
 struct crypt_type_struct {
@@ -137,17 +136,17 @@ find_unused_loop_device (void)
       if (loop_known == 1)
 	error(
 "mount: Could not find any loop device.\n"
-"       Maybe /dev/loop# has a wrong major number?\n");
+"       Maybe /dev/loop# has a wrong major number?");
       else if (loop_known == -1)
 	error(
 "mount: Could not find any loop device, and, according to %s,\n"
 "       this kernel does not know about the loop device.\n"
-"       (If so, then recompile or `insmod loop.o'.)\n", PROC_DEVICES);
+"       (If so, then recompile or `insmod loop.o'.)", PROC_DEVICES);
       else
 	error(
 "mount: Could not find any loop device. Maybe this kernel does not know\n"
 "       about the loop device (then recompile or `insmod loop.o'), or\n"
-"       maybe /dev/loop# has the wrong major number?\n");
+"       maybe /dev/loop# has the wrong major number?");
     } else
       error("mount: could not find any free loop device");
     return 0;
@@ -161,11 +160,14 @@ set_loop (const char *device, const char *file, int offset,
   int fd, ffd, mode, i;
   char *pass;
 
-  mode = *loopro ? O_RDONLY : O_RDWR;
-  if ((ffd = open (file, mode)) < 0 && !*loopro
-      && (errno != EROFS || (ffd = open (file, mode = O_RDONLY)) < 0)) {
-    perror (file);
-    return 1;
+  mode = (*loopro ? O_RDONLY : O_RDWR);
+  if ((ffd = open (file, mode)) < 0) {
+       if (!*loopro && errno == EROFS)
+	    ffd = open (file, mode = O_RDONLY);
+       if (ffd < 0) {
+	    perror (file);
+	    return 1;
+       }
   }
   if ((fd = open (device, mode)) < 0) {
     perror (device);
@@ -177,7 +179,7 @@ set_loop (const char *device, const char *file, int offset,
   loopinfo.lo_name[LO_NAME_SIZE - 1] = 0;
   if (encryption && (loopinfo.lo_encrypt_type = crypt_type (encryption))
       < 0) {
-    fprintf (stderr, "Unsupported encryption type %s", encryption);
+    fprintf (stderr, "Unsupported encryption type %s\n", encryption);
     return 1;
   }
   loopinfo.lo_offset = offset;
@@ -224,7 +226,7 @@ set_loop (const char *device, const char *file, int offset,
   }
   close (fd);
   close (ffd);
-  if (verbose > 1)
+  if (mount_verbose > 1)
     printf("set_loop(%s,%s,%d): success\n", device, file, offset);
   return 0;
 }
@@ -244,7 +246,7 @@ del_loop (const char *device)
     return 1;
   }
   close (fd);
-  if (verbose > 1)
+  if (mount_verbose > 1)
     printf("del_loop(%s): success\n", device);
   return 0;
 }
@@ -257,7 +259,8 @@ mutter(void) {
 }  
 
 int
-set_loop (const char *device, const char *file, int offset, const char *encryption) {
+set_loop (const char *device, const char *file, int offset,
+	  const char *encryption, int *loopro) {
   mutter();
   return 1;
 }

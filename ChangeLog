@@ -159,3 +159,42 @@ Tue Dec  2 10:02:43 CET 1997
           much problems.
 	- Released version 3.3.
 
+Tue Dez 30 11:35:03 CET 1997
+
+	- Reorganized watchdog source files. 
+	- Implemented no-action option.
+
+Fri Jan  2 16:30:56 CET 1998
+
+	- Made watchdog a real-time application.
+	- To enable this I had to change the process-table check code so no
+	  hang can occur there.
+
+Thu Sep 10 17:22:32 CEST 1998
+
+	- Updated mount code to version 2.8 something.
+
+Fri Sep 11 16:22:28 CEST 1998
+
+	- Updated test binary stuff to make sure it won't reboot the system
+	  if binary runs for too long.
+
+Tue Sep 15 13:28:35 CEST 1998
+
+	- Allow multiple filenames resp. ip-addresses.
+
+Fri Sep 18 16:10:56 CEST 1998
+
+	- Move all options with arguments to watchdog.conf and added long
+	  options for the remaining ones.
+	- Added option -c to add config file name.
+
+Mon Sep 21 13:16:15 CEST 1998
+
+	- Output file modification time in verbose mode.
+	- Added check for constant changing of a file.
+
+Mon Sep 21 15:23:54 CEST 1998
+
+	- Updated man pages.
+

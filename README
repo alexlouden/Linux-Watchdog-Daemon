@@ -28,6 +28,15 @@ for the program to be able to hard reset the system unless you have a
 hardware watchdog of course. Make sure you don't compile watchdog with a
 different timer margin than the kernel driver.
 
+As of version 4.0 watchdog is able to make itself a real-time application.
+It will lock all its pages in memory and set it´s scheduler to round-robin.
+This will take up to 900 pages of memory but guarantees you that watchdog
+will get its share of processor time. If you ever experienced a hard reset
+just because watchdog wasn´t scheduled for a minute, you will probably have
+no problem with the 900 pages which is not so much anyway.
+
+Of course this is not needed for machines running on low load.
+
 Michael
 meskes@debian.org
 

@@ -23,3 +23,9 @@
  */
  
 #include <asm/types.h>
+
+/*
+ * to get PAGESIZE, needed by swap.h in 2.1.* kernel
+ */
+ 
+#include <asm/page.h>
