@@ -452,3 +452,8 @@ Tue,  3 Mar 2009 14:59:55 +0100
 	- Added patch by Enrique Zanardi <ezanardi@atlantux.com> to
 	  check for the source of the ping reply packets.
 
+Thu, 12 Mar 2009 14:36:01 +0100
+
+	- Added patch by Lon Hohberger <lhh@redhat.com> to allow configuration
+	  of timeouts.
+

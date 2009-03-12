@@ -23,6 +23,7 @@
 #include <arpa/inet.h>
 #include <sys/mman.h>
 #include <sys/wait.h>
+#include <linux/watchdog.h>
 #define __USE_GNU
 #include <string.h>
 
@@ -47,6 +48,7 @@ int verbose = FALSE;
 #define ADMIN		"admin"
 #define CHANGE		"change"
 #define DEVICE		"watchdog-device"
+#define DEVICE_TIMEOUT	"watchdog-timeout"
 #define	FILENAME	"file"
 #define INTERFACE	"interface"
 #define INTERVAL	"interval"
@@ -74,6 +76,7 @@ int tint = 10, logtick = 1, ticker = 1, schedprio = 1;
 int maxload1 = 0, maxload5 = 0, maxload15 = 0, minpages = 0;
 int maxtemp = 120, hbstamps = 300, lastts, nrts;
 int pingcount = 3;
+int devtimeout = 0;
 char *tempname = NULL, *devname = NULL, *admin = "root", *progname;
 char *timestamps, *heartbeat;
 time_t timeout = 0;
@@ -368,6 +371,11 @@ static void read_config(char *filename, char *progname)
 			devname = NULL;
 		else
 			devname = strdup(line + i);
+	    } else if (strncmp(line + i, DEVICE_TIMEOUT, strlen(DEVICE_TIMEOUT)) == 0) {
+		if (spool(line, &i, strlen(DEVICE_TIMEOUT)))
+			fprintf(stderr, "Ignoring invalid line in config file: %s ", line);
+		else
+			devtimeout = atol(line + i);
 	    } else if (strncmp(line + i, TEMP, strlen(TEMP)) == 0) {
 		if (spool(line, &i, strlen(TEMP)))
 			tempname = NULL;
@@ -672,6 +680,17 @@ int main(int argc, char *const argv[])
 #endif				/* USE_SYSLOG */
 	    /* do not exit here per default */
 	    /* we can use watchdog even if there is no watchdog device */
+	}
+	if (devtimeout > 0) {
+	    /* Set the watchdog hard-stop timeout; default = unset (use
+	       driver default) */
+	    if (ioctl(watchdog, WDIOC_SETTIMEOUT, &devtimeout) < 0) {
+#if USE_SYSLOG
+            	syslog(LOG_ERR, "cannot set timeout %s (errno = %d = '%m')", devtimeout, errno);
+#else				
+            	perror(progname);
+#endif			   
+	    }
 	}
     }
 
