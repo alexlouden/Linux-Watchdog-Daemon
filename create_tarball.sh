@@ -18,5 +18,5 @@ automake --add-missing --copy
 autoconf
 rm -rf autom4te.cache
 cd ..
-tar --exclude CVS -zcf watchdog-$major.$minor.tar.gz watchdog-$major.$minor && rm -r watchdog-$major.$minor
+tar --exclude CVS --exclude .git -zcf watchdog-$major.$minor.tar.gz watchdog-$major.$minor && rm -r watchdog-$major.$minor
 
