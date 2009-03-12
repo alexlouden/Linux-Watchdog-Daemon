@@ -4,6 +4,7 @@
 
 #include <errno.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <sys/wait.h>
 #include "extern.h"
 #include "watch_err.h"

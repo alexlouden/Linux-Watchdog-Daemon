@@ -1,0 +1,14 @@
+Template: watchdog/run
+Type: boolean
+Default: true
+_Description: Start watchdog at boot time?
+ Please specify whether watchdog should be started as part of the boot
+ process. This can be changed later by editing /etc/default/watchdog.
+
+Template: watchdog/restart
+Type: boolean
+Default: false
+_Description: Restart watchdog on upgrades?
+ If your kernel is configured with the CONFIG_WATCHDOG_NOWAYOUT option,
+ restarting watchdog will cause a spurious reboot (the kernel will think
+ the watchdog daemon crashed).

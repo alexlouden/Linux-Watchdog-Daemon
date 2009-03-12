@@ -56,7 +56,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 
 	struct sockaddr_in from;
 	int fromlen, fdmask, j;
-	struct timeval timeout;
+	struct timeval timeout, dtimeout;
 	struct icmphdr *icp = (struct icmphdr *) outpack;
 
 	/* setup a ping message */
@@ -94,49 +94,66 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 	    }
 
 	} else {
+            gettimeofday(&timeout, NULL);
 	    /* set the timeout value */
-	    timeout.tv_sec = time / count;
-	    timeout.tv_usec = 0;
+            timeout.tv_sec += time / count;
 
 	    /* wait for reply */
 	    fdmask = 1 << sock_fp;
-	    if (select(sock_fp + 1, (fd_set *) & fdmask, (fd_set *) NULL,
-		       (fd_set *) NULL, &timeout) >= 1) {
-
-		/* read reply */
-		fromlen = sizeof(from);
-		if (recvfrom(sock_fp, (char *) packet, DATALEN + MAXIPLEN + MAXICMPLEN, 0,
-			     (struct sockaddr *) &from, &fromlen) < 0) {
-		    int err = errno;
-
-		    if (err != EINTR)
+            while(1) {
+               gettimeofday(&dtimeout, NULL);
+               dtimeout.tv_sec = timeout.tv_sec - dtimeout.tv_sec;
+               dtimeout.tv_usec = timeout.tv_usec - dtimeout.tv_usec;
+               if (dtimeout.tv_usec < 0) {
+                       dtimeout.tv_sec += dtimeout.tv_usec / 1000000 - 1;
+                       dtimeout.tv_usec -= (dtimeout.tv_usec / 1000000 - 1) * 1000000;
+               }
+               if (dtimeout.tv_sec <= 0 && dtimeout.tv_usec <= 0)
+                   break;
 #if USE_SYSLOG
-			syslog(LOG_ERR, "recvfrom gave errno = %d = '%m'\n", err);
+               if (verbose && logtick && ticker == 1)
+                   syslog(LOG_ERR, "ping select timeout = %d seconds and %d useconds\n", dtimeout.tv_sec, dtimeout.tv_usec);
+#endif /* USE_SYSLOG */
+
+            	   if (select(sock_fp + 1, (fd_set *) & fdmask, (fd_set *) NULL,
+                      (fd_set *) NULL, &dtimeout) >= 1) {
+
+                   /* read reply */
+                   fromlen = sizeof(from);
+                   if (recvfrom(sock_fp, (char *) packet, DATALEN + MAXIPLEN + MAXICMPLEN, 0,
+			     (struct sockaddr *) &from, &fromlen) < 0) {
+                       int err = errno;
+
+                       if (err != EINTR)
+#if USE_SYSLOG
+                           syslog(LOG_ERR, "recvfrom gave errno = %d = '%m'\n", err);
 #else				/* USE_SYSLOG */
-			perror(progname);
+                           perror(progname);
 #endif				/* USE_SYSLOG */
-		    if (softboot)
-			return (err);
+                       if (softboot)
+                           return (err);
 
-		    continue;
-		}
+                       continue;
+                   }
 
-		/* check if packet is our ECHO */
-		icp = (struct icmphdr *) (packet + (((struct ip *) packet)->ip_hl << 2));
+                   /* check if packet is our ECHO */
+                   icp = (struct icmphdr *) (packet + (((struct ip *) packet)->ip_hl << 2));
 
-		if (icp->type == ICMP_ECHOREPLY && icp->un.echo.id == pid) {
+                   if (icp->type == ICMP_ECHOREPLY && icp->un.echo.id == pid) {
 			/* got one back, that'll do it for now */
 #if USE_SYSLOG
 			if (verbose && logtick && ticker == 1)
 				syslog(LOG_INFO, "got answer from target %s", target);
 #endif
 			return (ENOERR);
+                    }
 		}
 	    }
 	}
     }
 #if USE_SYSLOG
-    syslog(LOG_ERR, "network is unreachable (target: %s)", target);
+    syslog(LOG_ERR, "no response from ping (target: %s)", target);
 #endif				/* USE_SYSLOG */
     return (ENETUNREACH);
 }
+

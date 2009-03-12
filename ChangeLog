@@ -382,3 +382,16 @@ Mo Apr 17 14:35:29 CEST 2006
 		  available.
 	- Logtick option is used for verbose output in all tests
 
+We Jun 21 15:42:28 CEST 2006
+
+	- Added patch by Thomas Glanzmann <sithglan@abortium.glanzmann.de> for
+	  correct parsing of ping-count option.
+	- Added a patch by James Harper <james.harper@bendigoit.com.au> to fix
+	  that nasty ping problem. Thanks a lot.
+	- Applied some bug fix patches by Christoph Probst <chris@netzpunkt.org>.
+	- Changed interface check to use unsigned long.
+	- Some more small fixes.
+
+
+
+

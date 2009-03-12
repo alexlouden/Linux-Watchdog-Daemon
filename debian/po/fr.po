@@ -1,0 +1,53 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Relecteurs :Jean-Baka Domelevo-Entfellner <domelevo@gmail.com>,
+# Christian Perrier <bubulle@debian.org>,  Olivier Trichet <nive@nivalis.org>
+# Thomas Huriaux <thomas.huriaux@gmail.com> et Frédéric Bothamy <frederic.bothamy@free.fr>
+msgid ""
+msgstr ""
+"Project-Id-Version: watchdog_5.2.5-2/\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2006-05-13 07:52+0200\n"
+"PO-Revision-Date: 2006-05-16 21:34+0100\n"
+"Last-Translator: Frédéric ZULIAN <zulian@free.fr>\n"
+"Language-Team: French <debian-l10n-french@lists.debian.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=iso-8859-15\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: boolean
+#. Description
+#: ../templates:4
+msgid "Start watchdog at boot time?"
+msgstr "Faut-il lancer watchdog au démarrage ?"
+
+#. Type: boolean
+#. Description
+#: ../templates:4
+msgid ""
+"Please specify whether watchdog should be started as part of the boot "
+"process. This can be changed later by editing /etc/default/watchdog."
+msgstr ""
+"Veuillez indiquer si vous désirez démarrer watchdog à l'amorçage de "
+"l'ordinateur. Vous pourrez changer ce comportement plus tard en modifiant le "
+"fichier /etc/default/watchdog."
+
+#. Type: boolean
+#. Description
+#: ../templates:11
+msgid "Restart watchdog on upgrades?"
+msgstr "Faut-il redémarrer watchdog lors des mises à jour ?"
+
+#. Type: boolean
+#. Description
+#: ../templates:11
+msgid ""
+"If your kernel is configured with the CONFIG_WATCHDOG_NOWAYOUT option, "
+"restarting watchdog will cause a spurious reboot (the kernel will think the "
+"watchdog daemon crashed)."
+msgstr ""
+"Si le noyau est configuré avec l'option CONFIG_WATCHDOG_NOWAYOUT, le "
+"redémarrage de watchdog causera un réamorçage indésirable (le noyau pensera "
+"que le démon s'est brutalement arrêté)."

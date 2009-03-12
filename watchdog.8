@@ -266,39 +266,39 @@ system error code (see
 for details). Negative values are special to
 .BR watchdog :
 .TP
--1 
+\-1 
 Reboot the system. This is not exactly an error message but a command to
 .BR watchdog . 
-If the return code is -1 
+If the return code is \-1 
 .B watchdog 
 will not try to run a shutdown
 script instead.
 .TP
--2 
+\-2 
 Reset the system. This is not exactly an error message but a command to
 .BR watchdog . 
-If the return code is -2 
+If the return code is \-2 
 .B watchdog will simply refuse to write the
 kernel device again.
 .TP
--3 
+\-3 
 Maximum load average exceeded.
 .TP
--4 
+\-4 
 The temperature inside is too high.
 .TP
--5 
+\-5 
 .I /proc/loadavg 
 contains no (or not enough) data.
 .TP
--6 
+\-6 
 The given file was not changed in the given interval.
 .TP
--7 
+\-7 
 .I /proc/meminfo 
 contains invalid data.
 .TP
--8 
+\-8 
 Free for personal use.
 .SH "REPAIR BINARY"
 The repair binary is started with one parameter: the error number that

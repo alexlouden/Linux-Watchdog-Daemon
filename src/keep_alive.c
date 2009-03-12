@@ -6,6 +6,7 @@
 #include <sys/syslog.h>
 #include <unistd.h>
 #include <time.h>
+#include <string.h>
 
 #include "extern.h"
 #include "watch_err.h"

@@ -25,7 +25,7 @@ struct filemode
 
 struct ifmode
 {
-	unsigned int bytes;
+	unsigned long bytes;
 };
 
 union wdog_options

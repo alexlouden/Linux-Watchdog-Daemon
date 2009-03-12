@@ -1,0 +1,15 @@
+#!/bin/sh -e
+
+# Remove generated default file.
+if [ "$1" = "purge" ]; then
+	rm -f /etc/default/watchdog
+fi
+
+# Not automatically added by dh_installinit (--noscripts)
+if [ "$1" = "purge" ] ; then
+	update-rc.d watchdog remove >/dev/null
+fi
+# End manually added section
+
+#DEBHELPER#
+

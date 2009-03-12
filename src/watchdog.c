@@ -295,6 +295,11 @@ static void read_config(char *filename, char *progname)
 		    fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 		else
 		    add_list(&pidfile, strdup(line + i));
+	    } else if (strncmp(line + i, PINGCOUNT, strlen(PINGCOUNT)) == 0) {
+		if (spool(line, &i, strlen(PINGCOUNT)))
+		    fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
+		else
+		    pingcount = atol(line + i);
 	    } else if (strncmp(line + i, PING, strlen(PING)) == 0) {
 		if (spool(line, &i, strlen(PING)))
 		    fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
@@ -398,11 +403,6 @@ static void read_config(char *filename, char *progname)
 		else {
 			minpages = atol(line + i);
 		}
-	    } else if (strncmp(line + i, PINGCOUNT, strlen(PINGCOUNT)) == 0) {
-		if (spool(line, &i, strlen(PINGCOUNT)))
-		    fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-		else
-		    pingcount = atol(line + i);
 	    } else {
 		fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 	    }
@@ -836,7 +836,7 @@ int main(int argc, char *const argv[])
 	if (verbose && logtick && (--ticker == 0)) {
 		ticker = logtick;
 	  	count += logtick;
-	    	syslog(LOG_INFO, "still alive after %ld seconds = %ld interval(s)", count * tint, count);
+	    	syslog(LOG_INFO, "still alive after %ld interval(s)", count);
 	}
 #endif				/* USE_SYSLOG */
     }

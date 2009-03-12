@@ -4,6 +4,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
 #include "extern.h"
 #include "watch_err.h"
 
@@ -58,7 +59,7 @@ int check_iface(struct list *dev)
 			
 		for (; line[i] == ' ' || line[i] == '\t'; i++);
 		if (strncmp(line + i, dev->name, strlen(dev->name)) == 0) {
-			unsigned int bytes = atoi(line + i + strlen(dev->name) + 1);
+			unsigned long bytes = strtoul(line + i + strlen(dev->name) + 1, NULL, 10);
 			
 #if USE_SYSLOG
 			/* do verbose logging */
