@@ -11,3 +11,4 @@
 #define ENOCHANGE	-6	/* file wasn't changed in the given interval */
 #define EINVMEM		-7	/* /proc/meminfo contains invalid data */
 #define ECHKILL		-8	/* child was killed by signal */
+#define ETOOLONG	-9	/* child didn't return in time */

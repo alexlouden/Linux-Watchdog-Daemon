@@ -51,7 +51,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
     if (target == NULL)
 	return (ENOERR);
 
-    /* try at "ping-count" times */
+    /* try "ping-count" times */
     for (i = 0; i < count; i++) {
 
 	struct sockaddr_in from;
@@ -127,7 +127,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 		if (icp->type == ICMP_ECHOREPLY && icp->un.echo.id == pid) {
 			/* got one back, that'll do it for now */
 #if USE_SYSLOG
-			if (verbose)
+			if (verbose && logtick && ticker == 1)
 				syslog(LOG_INFO, "got answer from target %s", target);
 #endif
 			return (ENOERR);

@@ -12,7 +12,6 @@
 #include <signal.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <utmp.h>
 #include <sys/mman.h>
 #include <sys/param.h>
@@ -76,17 +75,28 @@ static void log_end()
 /* close the device and check for error */
 static void close_all()
 {
-    if (watchdog != -1 && close(watchdog) == -1) {
+    if (watchdog != -1) {
+        if ( write(watchdog, "V", 1) < 0 ) {
+		int err = errno;
 #if USE_SYSLOG
-	syslog(LOG_ALERT, "cannot close %s", devname);
+		syslog(LOG_ERR, "write watchdog device gave error %d = '%m'!", err);
 #else				/* USE_SYSLOG */
-	perror(progname);
+		perror(progname);
 #endif				/* USE_SYSLOG */
+	}
+
+        if (close(watchdog) == -1) {
+#if USE_SYSLOG
+            syslog(LOG_ALERT, "cannot close %s (errno = %d)", devname, errno);
+#else				/* USE_SYSLOG */
+            perror(progname);
+#endif				/* USE_SYSLOG */
+        }
     }
     
     if (load != -1 && close(load) == -1) {
 #if USE_SYSLOG
-	syslog(LOG_ALERT, "cannot close /proc/loadavg");
+	syslog(LOG_ALERT, "cannot close /proc/loadavg (errno = %d)", errno);
 #else				/* USE_SYSLOG */
 	perror(progname);
 #endif				/* USE_SYSLOG */
@@ -94,7 +104,7 @@ static void close_all()
     
     if (mem != -1 && close(mem) == -1) {
 #if USE_SYSLOG
-	syslog(LOG_ALERT, "cannot close /proc/meminfo");
+	syslog(LOG_ALERT, "cannot close /proc/meminfo (errno = %d)", errno);
 #else				/* USE_SYSLOG */
 	perror(progname);
 #endif				/* USE_SYSLOG */
@@ -102,7 +112,15 @@ static void close_all()
     
     if (temp != -1 && close(temp) == -1) {
 #if USE_SYSLOG
-	syslog(LOG_ALERT, "cannot close /dev/temperature");
+	syslog(LOG_ALERT, "cannot close /dev/temperature (errno = %d)", errno);
+#else				/* USE_SYSLOG */
+	perror(progname);
+#endif				/* USE_SYSLOG */
+    }
+
+    if (hb != NULL && fclose(hb) == -1) {
+#if USE_SYSLOG
+	syslog(LOG_ALERT, "cannot close %s (errno = %d)", heartbeat, errno);
 #else				/* USE_SYSLOG */
 	perror(progname);
 #endif				/* USE_SYSLOG */
@@ -127,6 +145,8 @@ void terminate(int arg)
 #endif
     close_all();
     log_end();
+    if (timestamps != NULL)
+	    free(timestamps);
     exit(0);
 }
 
@@ -309,7 +329,9 @@ void do_shutdown(int errorcode)
 	FILE *ph;
 	char exe[128];
 
-	sprintf(exe, "%s -i %s", PATH_SENDMAIL, admin);
+	/* only can send an email if sendmail binary exists so make shell check
+	 * that first, or else we will get a broken pipe in pclose */
+	sprintf(exe, "[ -x %s ] && %s -i %s", PATH_SENDMAIL, PATH_SENDMAIL, admin);
 	ph = popen(exe, "w");
 	if (ph == NULL) {
 #if USE_SYSLOG
@@ -405,9 +427,9 @@ void do_shutdown(int errorcode)
 	write(fd, (char *) &wtmp, sizeof(wtmp));
 	close(fd);
     }
+    
     /* save the random seed if a save location exists */
     /* don't worry about error messages, we react here anyway */
-
     if (strlen(seedbck) != 0) {
 	int fd_seed;
 
@@ -424,6 +446,7 @@ void do_shutdown(int errorcode)
 	    close(fd_seed);
 	}
     }
+    
     /* Turn off accounting */
     if (acct(NULL) < 0)
 	perror(progname);

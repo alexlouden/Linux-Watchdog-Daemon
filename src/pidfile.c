@@ -3,7 +3,6 @@
 #endif
 
 #include <errno.h>
-#include <stdio.h>
 #include <fcntl.h>
 #include "extern.h"
 #include "watch_err.h"
@@ -26,8 +25,9 @@ int check_pidfile(struct list *file)
 	perror(progname);
 #endif				/* USE_SYSLOG */
 
-	/* on error ENETDOWN|ENETUNREACH we react as if we're in ping mode */
-	if (softboot || err == ENETDOWN || err == ENETUNREACH)
+	/* on error ENETDOWN|ENETUNREACH we react as if we're in ping mode 
+	 * on ENOENT we assume that the server to be monitored has exited */
+	if (softboot || err == ENETDOWN || err == ENETUNREACH || err == ENOENT )
 	    return (err);
 	
 	return(ENOERR);
@@ -102,7 +102,7 @@ int check_pidfile(struct list *file)
     
 #if USE_SYSLOG
     /* do verbose logging */
-    if (verbose)
+    if (verbose && logtick && ticker == 1)
 	syslog(LOG_INFO, "was able to ping process %d (%s).", pid, file->name);
 #endif
 

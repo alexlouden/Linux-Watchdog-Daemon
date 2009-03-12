@@ -3,7 +3,6 @@
 #endif
 
 #include <errno.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +20,7 @@
 int check_memory(void)
 {
     char buf[1024], *ptr1, *ptr2;
-    int free, res;
+    unsigned int free;
 
     /* is the memory file open? */
     if (mem == -1)
@@ -76,11 +75,11 @@ int check_memory(void)
     free = atoi(ptr1+strlen(FREEMEM)) + atoi(ptr2+strlen(FREESWAP));
 
 #if USE_SYSLOG
-    if (verbose)
+    if (verbose && logtick && ticker == 1)
 	syslog(LOG_INFO, "currently there are %d kB of free memory available", free);
 #endif				/* USE_SYSLOG */
 
-    if (free * 1024 < minpages * EXEC_PAGESIZE) {
+    if (free < minpages * (EXEC_PAGESIZE / 1024)) {
 #if USE_SYSLOG
 	syslog(LOG_ERR, "memory %d kB is less than %d pages", free, minpages);
 #endif				/* USE_SYSLOG */

@@ -1,10 +1,14 @@
 #include <netinet/in.h>
+#include <stdio.h>
 
 /* external variables */
-extern int softboot, watchdog, temp, maxtemp, tint;
+extern int softboot, watchdog, temp, maxtemp, tint, lastts, nrts;
 extern int maxload1, maxload5, maxload15, load, verbose, mem, minpages;
+extern int hbstamps, logtick, ticker;
 extern pid_t pid;
-extern char *tempname, *admin, *devname, *progname;
+extern char *tempname, *admin, *devname, *progname, *timestamps, *heartbeat;
+extern time_t timeout;
+extern FILE *hb;
 
 /* variable types */
 struct pingmode
@@ -21,7 +25,7 @@ struct filemode
 
 struct ifmode
 {
-	int bytes;
+	unsigned int bytes;
 };
 
 union wdog_options
@@ -47,6 +51,8 @@ struct list
 #define TRUE  1
 #define FALSE 0
 
+#define TS_SIZE	12
+
 /* function prototypes */
 int check_file_stat(struct list *);
 int check_file_table(void);
@@ -54,7 +60,7 @@ int keep_alive(void);
 int check_load(void);
 int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *packet, int time, int count);
 int check_temp(void);
-int check_bin(char *);
+int check_bin(char *, time_t);
 int check_pidfile(struct list *);
 int check_iface(struct list *);
 int check_memory(void);

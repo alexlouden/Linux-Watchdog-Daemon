@@ -51,7 +51,7 @@ char *xstrconcat4 (const char *, const char *, const char *, const char *);
 #if defined(__GNUC_MINOR__) && __GNUC__ == 2 && __GNUC_MINOR__ >= 5
 void die (int errcode, const char *fmt, ...) __attribute__ ((noreturn));
 #else /* GNUC < 2.5 */
-void volatile die (int errcode, const char *fmt, ...);
+void die (int errcode, const char *fmt, ...);
 #endif /* GNUC < 2.5 */
 #else /* !__GNUC__ */
 void die (int errcode, const char *fmt, ...);

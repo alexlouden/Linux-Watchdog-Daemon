@@ -3,7 +3,6 @@
 #endif
 
 #include <errno.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -77,7 +76,7 @@ int check_load(void)
     }
 
 #if USE_SYSLOG
-    if (verbose)
+    if (verbose && logtick && ticker == 1)
 	syslog(LOG_INFO, "current load is %d %d %d", avg1, avg5, avg15);
 #endif				/* USE_SYSLOG */
 

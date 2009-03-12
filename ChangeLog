@@ -351,3 +351,34 @@ Thu May 10 14:19:57 CEST 2001
 
 	- Finally released 5.2.
 
+Thu May 10 15:11:45 CEST 2001
+
+	- Started to integrate stuff written by Marcel Jansen
+	  <marcel@appliancestudio.com>.
+	- Decided to move to version 6.0.
+
+Fre Jan  3 14:47:46 CET 2003
+
+	- Added patch by Patrick Higgins <phiggins@transzap.com> to catch test
+	  programs running for too long and react to that fact.
+	- Fixed pidfile check. A missing file usually means the server exited
+	  and thus watchdog needs to take action.
+	- Finally really started adding Marcel's patches:
+		* Redirection of stdout/stderr for test and repair binary.
+		* Write timestamps to heartbeat file.
+		* Add wd_keepalive program that uses the same config file,
+		  but only updates the watchdog device.
+	- Fixed shutdown with missing sendmail program.
+	- Added two bug fixes by Stephane List <stephane.list@fr.alcove.com>.
+	- Added patch by Jos Vos <jos@xos.nl> for a "write-magic" config
+	  parameter.
+	- Use unsigned ints for free memory check.
+	  
+Mo Apr 17 14:35:29 CEST 2006
+
+	- Fixed some bugs:
+		* unsigned int is too small for free memory check
+		* Man page still referencing options that are no longer
+		  available.
+	- Logtick option is used for verbose output in all tests
+

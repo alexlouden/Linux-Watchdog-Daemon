@@ -23,9 +23,9 @@ case $1 in
 #	=> increase file-max by 10%
 #
  23) 	
-	fm=`cat /proc/sys/kernel/file-max`
+	fm=`cat /proc/sys/fs/file-max`
 	fm=`expr $fm + $fm / 10`
-	echo $fm > /proc/sys/kernel/file-max
+	echo $fm > /proc/sys/fs/file-max
 #
 #	create log entry
 #
@@ -42,9 +42,12 @@ case $1 in
 #
 	
 100|101)
-	if [ -f /etc/rc.d/init.d/network ]; then
+	if [ -x /etc/rc.d/init.d/network ]; then
 		# Redhat
 		/etc/rc.d/init.d/network stop
+	elif [ -x /etc/init.d/networking ]; then
+		# Debian
+		/etc/init.d/networking stop
 	else
 		ifconfig |
 		awk '/Link/ {print $1}' |
@@ -70,10 +73,10 @@ done
 #
 #	bring it back up
 #
-if [ -f /etc/init.d/network ]; then
+if [ -x /etc/init.d/networking ]; then
     # Debian
-    /etc/init.d/network    
-elif [ -f /etc/rc.d/init.d/network ]; then
+    /etc/init.d/networking start
+elif [ -x /etc/rc.d/init.d/network ]; then
     # Redhat
     /etc/rc.d/init.d/network start
 else

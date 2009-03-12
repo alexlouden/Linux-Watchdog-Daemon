@@ -36,10 +36,10 @@ case "$1" in
 	modprobe pcwd &>/dev/null
 	modprobe acquirewdt &>/dev/null
 
-	if [ ${VERBOSE}="yes" ]; then
+	if [ "${VERBOSE}"="yes" ]; then
 	    daemon watchdog -v
 	else
-	daemon watchdog
+	    daemon watchdog
         fi
 	echo
 	touch /var/lock/subsys/watchdog

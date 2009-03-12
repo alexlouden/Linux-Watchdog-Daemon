@@ -9,13 +9,14 @@
 #include "config.h"
 #endif
 
+#include "extern.h"
+
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
 #include <netdb.h>
 #include <sched.h>
 #include <signal.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <sys/mman.h>
@@ -30,7 +31,6 @@ extern char *basename(const char *);
 #include <unistd.h>
 
 #include "watch_err.h"
-#include "extern.h"
 
 #if USE_SYSLOG
 #include <syslog.h>
@@ -62,13 +62,20 @@ int verbose = FALSE;
 #define REPAIRBIN	"repair-binary"
 #define TEMP		"temperature-device"
 #define TESTBIN		"test-binary"
+#define TESTTIMEOUT	"test-timeout"
+#define HEARTBEAT	"heartbeat-file"
+#define HBSTAMPS	"heartbeat-stamps"
 
 pid_t pid;
-int softboot = FALSE, watchdog = -1, load = -1, mem = -1, temp = -1, tint = 10, logtick = 1, ticker = 0, schedprio = 1;
-char *tempname = NULL, *devname = NULL, *admin = "root", *progname;
+int softboot = FALSE, watchdog = -1, load = -1, mem = -1, temp = -1;
+int tint = 10, logtick = 1, ticker = 1, schedprio = 1;
 int maxload1 = 0, maxload5 = 0, maxload15 = 0, minpages = 0;
-int maxtemp = 120;
+int maxtemp = 120, hbstamps = 300, lastts, nrts;
 int pingcount = 3;
+char *tempname = NULL, *devname = NULL, *admin = "root", *progname;
+char *timestamps, *heartbeat;
+time_t timeout = 0;
+FILE *hb;
 
 #if defined(_POSIX_MEMLOCK)
 int mlocked = FALSE, realtime = FALSE;
@@ -110,6 +117,15 @@ static int repair(char *rbinary, int result)
 
     child_pid = fork();
     if (!child_pid) {
+	/* Don't want the stdin and stdout of our test program
+	 * to cause trouble
+	 * So make stdout and stderr go to their respective files */
+        if (!freopen("/var/log/watchdog/repair-bin.stdout", "a+", stdout))
+        	exit (errno);
+        if (!freopen("/var/log/watchdog/repair-bin.stderr", "a+", stderr))
+        	exit (errno);
+
+        /* else start binary */
 	execl(rbinary, rbinary, parm, NULL);
 
 	/* execl should only return in case of an error */
@@ -273,7 +289,7 @@ static void read_config(char *filename, char *progname)
 		if (ptr->parameter.file.mtime != 0)
 		    fprintf(stderr, "Duplicate change interval option in config file. Ignoring first entry.\n");
 
-		file->parameter.file.mtime = atoi(line + i);
+		ptr->parameter.file.mtime = atoi(line + i);
 	    } else if (strncmp(line + i, SERVERPIDFILE, strlen(SERVERPIDFILE)) == 0) {
 		if (spool(line, &i, strlen(SERVERPIDFILE)))
 		    fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
@@ -307,6 +323,21 @@ static void read_config(char *filename, char *progname)
 			tbinary = NULL;
 		else
 			tbinary = strdup(line + i);
+	    } else if (strncmp(line + i, TESTTIMEOUT, strlen(TESTTIMEOUT)) == 0) {
+		if (spool(line, &i, strlen(TESTTIMEOUT)))
+			timeout = 0;
+		else
+			timeout = atol(line + i);
+	    } else if (strncmp(line + i, HEARTBEAT, strlen(HEARTBEAT)) == 0) {
+		if (spool(line, &i, strlen(HEARTBEAT)))
+			heartbeat = NULL;
+		else
+			heartbeat = strdup(line + i);
+	    } else if (strncmp(line + i, HBSTAMPS, strlen(HBSTAMPS)) == 0) {
+		if (spool(line, &i, strlen(HBSTAMPS)))
+		        fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
+		else
+			hbstamps = atol(line + i);
 	    } else if (strncmp(line + i, ADMIN, strlen(ADMIN)) == 0) {
 		if (spool(line, &i, strlen(ADMIN)))
 			admin = NULL;
@@ -400,7 +431,7 @@ int main(int argc, char *const argv[])
     pid_t child_pid;
 
 #if USE_SYSLOG
-    char log[256], *opts = "d:i:n:fsvbql:p:t:c:r:m:a:";
+    char *opts = "d:i:n:fsvbql:p:t:c:r:m:a:";
     struct option long_options[] =
     {
 	{"config-file", required_argument, NULL, 'c'},
@@ -488,7 +519,14 @@ int main(int argc, char *const argv[])
 	fprintf(stderr, "To force this load average use the -f option.\n");
 	exit(1);
     }
-    
+   
+    /* make sure we get our own directory in /var/log */
+    if (mkdir ("/var/log/watchdog", 0750) && errno != EEXIST) {
+	fprintf(stderr, "%s error:\n", progname);
+        fprintf(stderr, "Cannot create directory /var/log/watchdog\n");
+	exit (1);
+    }
+
     /* set up pinging if in ping mode */
     if (target != NULL) {
 	for (act = target; act != NULL; act = act->next) {
@@ -530,6 +568,7 @@ int main(int argc, char *const argv[])
 	    act->parameter.net = *net;
 	}
     }
+    
     /* make sure we're on the root partition */
     if (chdir("/") < 0) {
 	perror(progname);
@@ -574,9 +613,8 @@ int main(int argc, char *const argv[])
 
     /* Log the starting message */
     openlog(progname, LOG_PID, LOG_DAEMON);
-    sprintf(log, "starting daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
-    
-    sprintf(log + strlen(log), " int=%ds realtime=%s sync=%s soft=%s mla=%d mem=%ld ping=",
+    syslog(LOG_INFO, "starting daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
+    syslog(LOG_INFO, "int=%ds realtime=%s sync=%s soft=%s mla=%d mem=%ld",
 	    tint,
 	    realtime ? "yes" : "no",
 	    sync_it ? "yes" : "no",
@@ -584,40 +622,37 @@ int main(int argc, char *const argv[])
 	    maxload1, minpages);
 	    
     if (target == NULL)
-            sprintf(log + strlen(log), "none ");
+            syslog(LOG_INFO, "ping: no machine to check");
     else
             for (act = target; act != NULL; act = act->next)
-            	sprintf(log + strlen(log), "%s%c", act->name, (act->next != NULL) ? ',' : ' ');
+            	syslog(LOG_INFO, "ping: %s", act->name);
 	                                        
-    sprintf(log + strlen(log), "file=");
     if (file == NULL)
-            sprintf(log + strlen(log), "none ");
+            syslog(LOG_INFO, "file: no file to check");
     else
             for (act = file; act != NULL; act = act->next)
-                sprintf(log + strlen(log), "%s:%d%c", act->name, act->parameter.file.mtime, (act->next != NULL) ? ',' : ' ');
+                syslog(LOG_INFO, "file: %s:%d", act->name, act->parameter.file.mtime);
 
-    sprintf(log + strlen(log), "pidfile=");
     if (pidfile == NULL)
-            sprintf(log + strlen(log), "none ");
+            syslog(LOG_INFO, "pidfile: no server process to check");
     else
             for (act = pidfile; act != NULL; act = act->next)
-                sprintf(log + strlen(log), "%s%c", act->name, (act->next != NULL) ? ',' : ' ');                
+                syslog(LOG_INFO, "pidfile: %s", act->name);                
 
-    sprintf(log + strlen(log), "iface=");
     if (iface == NULL)
-            sprintf(log + strlen(log), "none ");
+            syslog(LOG_INFO, "interface: no interface to check");
     else
             for (act = iface; act != NULL; act = act->next)
-                sprintf(log + strlen(log), "%s%c", act->name, (act->next != NULL) ? ',' : ' ');                
+                syslog(LOG_INFO, "interface: %s", act->name);                
 
-    sprintf(log + strlen(log), "test=%s repair=%s alive=%s temp=%s to=%s no_act=%s",
-	    (tbinary == NULL) ? "none" : tbinary,
+    syslog(LOG_INFO, "test=%s(%d) repair=%s alive=%s heartbeat=%s temp=%s to=%s no_act=%s",
+	    (tbinary == NULL) ? "none" : tbinary, timeout, 
 	    (rbinary == NULL) ? "none" : rbinary,
 	    (devname == NULL) ? "none" : devname,
+	    (heartbeat == NULL) ? "none" : heartbeat,
 	    (tempname == NULL) ? "none" : tempname,
 	    (admin == NULL) ? "noone" : admin,
 	    (no_act == TRUE) ? "yes" : "no");
-    syslog(LOG_INFO, log);
 #endif				/* USE_SYSLOG */
 
 
@@ -633,6 +668,54 @@ int main(int argc, char *const argv[])
 	    /* do not exit here per default */
 	    /* we can use watchdog even if there is no watchdog device */
 	}
+    }
+
+    /* MJ 16/2/2000, need to keep track of the watchdog writes so that
+       I can have a potted history of recent reboots */
+    if ( heartbeat != NULL ) {        
+        hb = ((hb = fopen(heartbeat, "r+")) == NULL) ? fopen(heartbeat, "w+") : hb;
+        if ( hb == NULL ) {
+#if USE_SYSLOG
+            syslog(LOG_ERR, "cannot open %s (errno = %d = '%m')", heartbeat, errno);
+#else				
+            perror(progname);
+#endif			   
+        }
+        else {
+            char rbuf[TS_SIZE + 1];
+
+            /* Allocate  memory for keeping the timestamps in */
+            nrts = 0;
+            lastts = 0;
+            timestamps = (unsigned char *) calloc(hbstamps, TS_SIZE);
+            if ( timestamps == NULL ) {
+#if USE_SYSLOG
+                syslog(LOG_ERR, "cannot allocate memory for timestamps (errno = %d = '%m')", errno);
+#else				/* USE_SYSLOG */
+                perror(progname);
+#endif				/* USE_SYSLOG */
+            }
+            else {           
+                /* read any previous timestamps */
+                rewind(hb);
+                while ( fgets(rbuf, TS_SIZE + 1, hb) != NULL ) {
+                    memcpy(timestamps + (TS_SIZE * lastts), rbuf, TS_SIZE);
+                    if (nrts < hbstamps) 
+                        nrts++;
+                    lastts = ++lastts % hbstamps;
+                }
+                /* Write an indication that the watchdog has started to the heartbeat file */
+                /* copy it to the buffer */
+                sprintf(rbuf, "%*s\n", TS_SIZE - 1, "--restart--");
+                memcpy(timestamps + (lastts * TS_SIZE), rbuf, TS_SIZE);
+
+                // success
+                if (nrts < hbstamps) 
+                    nrts++;
+                lastts = ++lastts % hbstamps;
+
+            }
+        }
     }
 
     if (maxload1 > 0) {
@@ -670,6 +753,7 @@ int main(int argc, char *const argv[])
 #endif				/* USE_SYSLOG */
 	}
     }
+
     /* tuck my process id away */
     fp = fopen(PIDFILE, "w");
     if (fp != NULL) {
@@ -742,22 +826,18 @@ int main(int argc, char *const argv[])
 	    do_check(check_net(act->name, act->parameter.net.sock_fp, act->parameter.net.to, act->parameter.net.packet, tint , pingcount), rbinary);
 
 	/* in user mode execute the given binary or just test fork() call */
-	do_check(check_bin(tbinary), rbinary);
+	do_check(check_bin(tbinary, timeout), rbinary);
 
 	/* finally sleep some seconds */
 	sleep(tint);
 
-	if(logtick && (--ticker == 0)) {
-	  ticker = logtick;
-	  
 #if USE_SYSLOG
 	/* do verbose logging */
-	if (verbose) {
-	    count += logtick;
-		ticker = 0;
-	    syslog(LOG_INFO, "still alive after %ld seconds = %ld interval(s)", count * tint, count);
+	if (verbose && logtick && (--ticker == 0)) {
+		ticker = logtick;
+	  	count += logtick;
+	    	syslog(LOG_INFO, "still alive after %ld seconds = %ld interval(s)", count * tint, count);
 	}
 #endif				/* USE_SYSLOG */
-	}
     }
 }

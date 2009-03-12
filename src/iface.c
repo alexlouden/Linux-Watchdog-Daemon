@@ -3,7 +3,6 @@
 #endif
 
 #include <errno.h>
-#include <stdio.h>
 #include <string.h>
 #include "extern.h"
 #include "watch_err.h"
@@ -33,7 +32,7 @@ int check_iface(struct list *dev)
 	return(ENOERR);
     }
 
-    /* read the fil line by line */
+    /* read the file line by line */
     while (!feof(file)) {
 	char line[NETDEV_LINE_LEN];
         
@@ -59,15 +58,16 @@ int check_iface(struct list *dev)
 			
 		for (; line[i] == ' ' || line[i] == '\t'; i++);
 		if (strncmp(line + i, dev->name, strlen(dev->name)) == 0) {
-			int bytes = atoi(line + i + strlen(dev->name) + 1);
+			unsigned int bytes = atoi(line + i + strlen(dev->name) + 1);
 			
 #if USE_SYSLOG
 			/* do verbose logging */
-			if (verbose)
-		            syslog(LOG_INFO, "device %s received %d bytes", dev->name, bytes);
+			if (verbose && logtick && ticker == 1)
+		            syslog(LOG_INFO, "device %s received %u bytes", dev->name, bytes);
 #endif   
 
 			if (dev->parameter.iface.bytes == bytes) {
+				fclose(file);
 #if USE_SYSLOG
 		            	syslog(LOG_INFO, "device %s did not receive anything since last check", dev->name);
 #endif   

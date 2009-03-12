@@ -3,7 +3,6 @@
 #endif
 
 #include <errno.h>
-#include <stdio.h>
 #include <time.h>
 #include <sys/stat.h>
 #include "extern.h"
@@ -33,7 +32,7 @@ int check_file_stat(struct list *file)
 
 #if USE_SYSLOG
 	/* do verbose logging */
-	if (verbose)
+	if (verbose && logtick && ticker == 1)
 	    syslog(LOG_INFO, "file %s was last changed at %s.", file->name, ctime(&buf.st_mtime));
 #endif
 

@@ -39,7 +39,7 @@ int check_temp(void)
 	return (ENOERR);
     }
 #if USE_SYSLOG
-    if (verbose)
+    if (verbose && logtick && ticker == 1)
 	syslog(LOG_INFO, "current temperature is %d", temperature);
 
     if (temperature > templevel3) {
