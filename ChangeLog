@@ -286,3 +286,18 @@ Sat Apr 10 14:30:59 CEST 1999
 	- Added RedHat patches by Marc Merlin.
 	- Made ret an int variable.
 	- Include stdio.h in src/umount.c.
+	- Released 4.5.
+
+Mon May  3 19:49:45 CEST 1999
+
+	- Corrected INSTALL file to explicitely state that the .spec file is
+	  not distributed together with watchdog.
+
+Fri Sep  3 11:21:11 CEST 1999
+
+	- Change compile time maxload defaults to 24/18/12.
+
+Fre Sep  3 14:23:58 CEST 1999
+
+	- Add test for free memory.
+

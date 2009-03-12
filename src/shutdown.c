@@ -22,7 +22,7 @@
 #include "extern.h"
 
 #if defined __GLIBC__
-#include "glibc_compat.h"
+#include "ext2_mnt.h"
 #include <sys/quota.h>
 #include <sys/swap.h>
 #include <sys/reboot.h>
@@ -83,6 +83,7 @@ static void close_all()
 	perror(progname);
 #endif				/* USE_SYSLOG */
     }
+    
     if (load != -1 && close(load) == -1) {
 #if USE_SYSLOG
 	syslog(LOG_ALERT, "cannot close /proc/loadavg");
@@ -90,6 +91,15 @@ static void close_all()
 	perror(progname);
 #endif				/* USE_SYSLOG */
     }
+    
+    if (mem != -1 && close(mem) == -1) {
+#if USE_SYSLOG
+	syslog(LOG_ALERT, "cannot close /proc/meminfo");
+#else				/* USE_SYSLOG */
+	perror(progname);
+#endif				/* USE_SYSLOG */
+    }
+    
     if (temp != -1 && close(temp) == -1) {
 #if USE_SYSLOG
 	syslog(LOG_ALERT, "cannot close /dev/temperature");

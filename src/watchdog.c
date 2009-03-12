@@ -20,6 +20,7 @@
 #include <arpa/inet.h>
 #include <sys/mman.h>
 #include <sys/wait.h>
+#define __USE_GNU
 #include <string.h>
 
 #if !defined(__GLIBC__)		/* __GLIBC__ */
@@ -50,6 +51,7 @@ int verbose = FALSE;
 #define MAXLOAD5	"max-load-5"
 #define MAXLOAD15	"max-load-15"
 #define MAXTEMP		"max-temperature"
+#define MINMEM		"min-memory"
 #define PING		"ping"
 #define PRIORITY	"priority"
 #define REALTIME	"realtime"
@@ -58,9 +60,9 @@ int verbose = FALSE;
 #define TESTBIN		"test-binary"
 
 pid_t pid;
-int softboot = FALSE, watchdog = -1, load = -1, temp = -1, tint = 10, schedprio = 1;
+int softboot = FALSE, watchdog = -1, load = -1, mem = -1, temp = -1, tint = 10, schedprio = 1;
 char *tempname = NULL, *devname = NULL, *admin = "root", *progname;
-int maxload1 = 12, maxload5 = 9, maxload15 = 6;
+int maxload1 = 24, maxload5 = 18, maxload15 = 12, minmem = 1;
 int maxtemp = 120;
 
 #if defined(_POSIX_MEMLOCK)
@@ -339,6 +341,12 @@ static void read_config(char *filename, char *progname)
 			maxload5 = atol(line + i);
 			gotload5 = TRUE;
 		}
+	    } else if (strncmp(line + i, MINMEM, strlen(MINMEM)) == 0) {
+		if (spool(line, &i, strlen(MINMEM)))
+			fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
+		else {
+			minmem = atol(line + i);
+		}
 	    } else {
 		fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 	    }
@@ -542,12 +550,12 @@ int main(int argc, char *const argv[])
     openlog(progname, LOG_PID, LOG_DAEMON);
     sprintf(log, "starting daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
     
-    sprintf(log + strlen(log), " int=%ds realtime=%s sync=%s soft=%s mla=%d ping=",
+    sprintf(log + strlen(log), " int=%ds realtime=%s sync=%s soft=%s mla=%d mem=%ld ping=",
 	    tint,
 	    realtime ? "yes" : "no",
 	    sync_it ? "yes" : "no",
 	    softboot ? "yes" : "no",
-	    maxload1);
+	    maxload1, minmem);
 	    
     if (target == NULL)
             sprintf(log + strlen(log), "none ");
@@ -586,6 +594,7 @@ int main(int argc, char *const argv[])
 	    /* we can use watchdog even if there is no watchdog device */
 	}
     }
+
     /* open the load average file */
     load = open("/proc/loadavg", O_RDONLY);
     if (load == -1) {
@@ -595,6 +604,17 @@ int main(int argc, char *const argv[])
 	perror(progname);
 #endif				/* USE_SYSLOG */
     }
+    
+    /* open the memory info file */
+    mem = open("/proc/meminfo", O_RDONLY);
+    if (mem == -1) {
+#if USE_SYSLOG
+	syslog(LOG_ERR, "cannot open /proc/meminfo (errno = %d = '%m')", errno);
+#else				/* USE_SYSLOG */
+	perror(progname);
+#endif				/* USE_SYSLOG */
+    }
+    
     if (tempname != NULL && no_act == FALSE) {
 	/* open the temperature file */
 	temp = open(tempname, O_RDONLY);
@@ -654,6 +674,9 @@ int main(int argc, char *const argv[])
 
 	/* check load average */
 	do_check(check_load(), rbinary);
+	
+	/* check free memory */
+	do_check(check_memory(), rbinary);
 
 	/* check temperature */
 	do_check(check_temp(), rbinary);

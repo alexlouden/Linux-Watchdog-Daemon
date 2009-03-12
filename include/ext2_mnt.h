@@ -12,20 +12,3 @@
 #define MNTOPT_USRQUOTA         "usrquota"      /* use userquota on this partition */
 #define MNTOPT_GRPQUOTA         "grpquota"      /* use groupquota on this partition */
 
-/*
- * to get getsid()
- */
- 
-#define __USE_XOPEN_EXTENDED
-
-/*
- * to get typedef for __u32, is not needed for newer glibc sources, at least on Debian
- */
- 
-#include <asm/types.h>
-
-/*
- * to get PAGESIZE, needed by swap.h in 2.1.* kernel
- */
- 
-#include <asm/page.h>

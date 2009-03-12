@@ -37,6 +37,8 @@ Watchdog itself does several additional tests to check the system status:
 .TP
 Check whether the process table is full.
 .TP
+Check whether there is enough free memory available.
+.TP
 Check whether some given files are accessible.
 .TP
 Check whether some given files change in a given interval.
@@ -110,6 +112,11 @@ is reached the system is rebooted. You may specify maximal load averages for
 1 minute, 5 minutes or 15 minutes. The default values are 12 resp. 9 resp.
 6. Be careful not to set this parameter too low. To set a value less then
 the predefined minimal value of 2, you have to use the -f option.
+
+You can also specify a minimal amount of virtual memory you want to have
+available as free. As soon as more virtual memory is used action is taken by
+watchdog. Note, however, that watchdog does not distinguish between
+different types of memory usage. It just checks for free virtual memory.
 
 If you have a watchdog card with temperature sensor you can specify 
 the maximal allowed temperature. Once this temperature is reached the
@@ -203,7 +210,9 @@ kernel device again.
 .TP
 -6 Given file was not changed in the given interval.
 .TP
--7 free for personal use
+-7 /proc/meminfo contains invalid data.
+.TP
+-8 free for personal use
 .TP
 ...
 .LP

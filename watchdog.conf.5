@@ -4,8 +4,8 @@
 watchdog.conf \- configuration file for watchdog.8
 .SH DESCRIPTION
 This file carries all configuartion option for the Linux software watchdog.
-Each option has to be written on a line for itself. Comments start with ´#´.
-Blanks are ignored except after the ´=´ sign. An empty text after the ´=´
+Each option has to be written on a line for itself. Comments start with '#'.
+Blanks are ignored except after the '=' sign. An empty text after the '='
 sign disables the feature as long as that makes sense.
 
 .SH OPTIONS
@@ -19,24 +19,28 @@ only be used with the -f commandline option.
 .TP
 max-load-1 = <load1>
 Set the maximal allowed load average for a 1 minute span. Once this load
-average is reached the system is rebooted. Default value is 12. Be careful
+average is reached the system is rebooted. Default value is 24. Be careful
 not to this parameter too low. To set a value less then the predefined
 minimal value of 2, you have to use the -f commandline option.
 .TP
 max-load-5 = <load5>
 Set the maximal allowed load average for a 5 minute span. Once this load
-average is reached the system is rebooted. Default value is 9 resp.
+average is reached the system is rebooted. Default value is 18 resp.
 3/4*max-load-1. Be careful not to this parameter too low. To set a value
 less then the predefined minimal value of 2, you have to use the -f
 commandline option.
 .TP
 max-load-15 = <load15>
 Set the maximal allowed load average for a 15 minute span. Once this load
-average is reached the system is rebooted. Default value is 6 resp.
+average is reached the system is rebooted. Default value is 12 resp.
 1/2*max-load-1. Be careful not to this parameter too low. To set a value
 less then the predefined minimal value of 2, you have to use the -f
 commandline option.
 .TP
+min-memory = <minmem>
+Set the minimal amount of virtual memory that has to stay free. Note that
+this is in KB. Default value is 1 KB.
+
 max-temperature = <temp>
 Set the maximal allowed temperature. Once this temperature is reached the
 system is halted. Default value is 120. There is no unit conversion. So make

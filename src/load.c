@@ -37,6 +37,7 @@ int check_load(void)
 
 	return (ENOERR);
     }
+
     /* read the line (there is only one) */
     if (read(load, buf, sizeof(buf)) < 0) {
 	int err = errno;
@@ -87,5 +88,6 @@ int check_load(void)
 #endif				/* USE_SYSLOG */
 	return (EMAXLOAD);
     }
+
     return (ENOERR);
 }

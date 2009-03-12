@@ -2,7 +2,7 @@
 
 /* external variables */
 extern int softboot, watchdog, temp, maxtemp, tint;
-extern int maxload1, maxload5, maxload15, load, verbose;
+extern int maxload1, maxload5, maxload15, load, verbose, mem, minmem;
 extern pid_t pid;
 extern char *tempname, *admin, *devname, *progname;
 
