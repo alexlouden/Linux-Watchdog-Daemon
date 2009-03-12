@@ -397,9 +397,18 @@ Mo Jul 31 11:13:04 CEST 2006
 	- Added patch by Richard Hansen <gentoo-a7x@scientician.org> to fix
 	  intervals being 50% too long.
 
-Mo 12. Feb 10:45:21 CET 2007
+Mon Feb 12 10:45:21 CET 2007
 
 	- Hopefully fixed outstanding problems with wd_keepalive.
 	- Added some documentation about return values of the test binary.
 	- Released 5.3.
+
+Wed Feb 21 17:33:30 CET 2007
+
+	- Removed superfluous quotation from wd_keepalive.c.
+	- Added sourceforge as new primary archive site.
+
+Thu Feb 22 11:48:57 CET 2007
+
+	- Released 5.3.1.
 

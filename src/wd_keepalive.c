@@ -2,7 +2,7 @@
  * Copyright:   Appliance Studio Ltd
  * License:	GPL
  *
- * Filename:    $Id: wd_keepalive.c,v 1.3 2007/02/12 09:42:07 meskes Exp $    
+ * Filename:    $Id: wd_keepalive.c,v 1.5 2007/02/20 15:24:01 meskes Exp $    
  * Author:      Marcel Jansen, 22 February 2001
  * Purpose:     This program can be run during critical periods
  *              when the normal watcdog shouldn't be run. It will
@@ -271,7 +271,7 @@ int main(int argc, char *const argv[])
     }
 
     /* tuck my process id away */
-    fp = fopen("KA_PIDFILE", "w");
+    fp = fopen(KA_PIDFILE, "w");
     if ( fp != NULL ) {
         fprintf(fp, "%d\n", getpid());
         (void) fclose(fp);

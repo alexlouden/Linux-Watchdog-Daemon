@@ -1,3 +1,9 @@
+watchdog (5.3.1-1) unstable; urgency=low
+
+  * New upstream version, closes: #411961
+
+ -- Michael Meskes <meskes@debian.org>  Thu, 22 Feb 2007 11:46:30 +0100
+
 watchdog (5.3-1) unstable; urgency=low
 
   * New upstream version, closes: #224241, #409587
