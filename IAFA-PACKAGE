@@ -1,0 +1,9 @@
+Title:          watchdog
+Version:        3.3
+Description:    A software watchdog.
+Author:         meskes@debian.org (Michael Meskes)
+Maintained-by:  meskes@debian.org (Michael Meskes)
+Maintained-at:  ftp.debian.org
+Platforms:      C program
+Copying-Policy: GPL
+Keywords:       daemon, automatic-reboot

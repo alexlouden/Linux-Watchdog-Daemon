@@ -1,0 +1,35 @@
+If you're on a Debian system, make -f debian/rules binary creates the
+watchdog package. It's even easier if you use debmake, just call build.
+(Note that the Debian files are not distributed with the original source
+anymore. You have to get the Debian .diff.gz file, too.)
+
+In case you do not use Debian, consider switching to Debian :-)
+
+If your Linux distribution does not include watchdog feel free to ask the
+distributor to add it. Since watchdog is GPLed there should not be a
+problem.
+
+Okay, if you want to install it manually:
+
+1) Edit the Makefile, if you have to. Note, that you can disable keep alive
+   support and temperature checking by not providing a device name in the
+   Makefile. However, you may still re-enable it at run time by giving the
+   corresponding commandline option. If you enable temperature checking or
+   keep alive support without having the corresponding device you will get
+   an error message every time watchdog is started. This message can be
+   safely ignored, since watchdog will then disable temperature checking or  
+   keep alive support and keep on working.
+
+2) Run make install as root.
+
+3) If you don't have the device execute 'mknod /dev/watchdog c 10 130' as
+   root. This is done automatically by the post-installation script for
+   Debian users. 
+
+4) Edit your boot procedure to start /usr/sbin/watchdog at boot time. The
+   Debian bootfile is included in rc.watchdog.
+
+That's it.
+
+Enjoy
+Michael

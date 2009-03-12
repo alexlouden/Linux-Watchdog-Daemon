@@ -1,0 +1,45 @@
+#!/bin/sh
+#/etc/init.d/watchdog: start watchdog daemon.
+
+test -x /usr/sbin/watchdog || exit 0
+
+# Set run_watchdog to 1 to start watchdog or 0 to disable it.
+run_watchdog=1
+
+# Used by debmake as an argument to update-rc.d.
+FLAGS="defaults 10"
+
+case "$1" in
+  start)
+    if [ $run_watchdog = 1 ]
+    then
+	echo -n "Starting software watchdog..."
+	if start-stop-daemon --start --quiet --exec /usr/sbin/watchdog -- -r /usr/sbin/repair
+	then
+	    echo done.
+	else
+	    echo failed.
+	fi
+    fi
+    ;;
+
+  stop)
+    if [ $run_watchdog = 1 ]
+    then
+	echo -n "Stopping software watchdog..."
+	if start-stop-daemon --stop --quiet --pidfile /var/run/watchdog.pid
+	then
+	    echo done.
+	else
+	    echo failed.
+	fi
+    fi
+    ;;
+
+  *)
+    echo "Usage: /etc/init.d/watchdog {start|stop}"
+    exit 1
+
+esac
+
+exit 0

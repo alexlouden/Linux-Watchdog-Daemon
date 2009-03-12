@@ -1,0 +1,4 @@
+These files are taken from mount-2.6g with minor changes to be able to link
+mount and umount into one binary. Don't worry about the warnings printed.
+
+Michael

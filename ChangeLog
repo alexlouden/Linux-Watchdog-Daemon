@@ -1,0 +1,161 @@
+Fri Feb 23 13:26:14 MET 1996
+
+	- Watchdog 1.0 released.
+
+Tue Mar  5 09:11:34 MET 1996
+
+	- Fixed two bugs in watchdog.c reported (and patched) by 
+          Johannes Kroeger <fiction!squirrel.owl.de!jkroeger@golden-gate.owl.de>:
+	  Watchdog now tries to open /dev/watchdog before tugging its
+          process ID away.
+
+	- Released version 1.1
+
+Thu May 23 14:20:59 MET DST 1996
+
+	- Added process table watch routine.
+
+	- Process filemode before sleeping.
+
+	- Released version 1.2
+
+Thu May 30 13:00:44 MET DST 1996
+
+	- Watchdog now correctly shuts down the system if the
+	  process table is full
+ 
+Mon Jul 29 13:51:42 MET DST 1996
+
+	- Finally watchdog is able to shut down the system even if
+	  the process table remains full after killing all processes.
+
+	- Released version 2.0 (this was a major overhaul)
+
+Fri Jan 31 13:39:43 MET 1997
+
+	- Disconnect deamon from console.
+
+	- Close file descriptors 0, 1, 2 when compiled with USE_SYSLOG.
+
+	- Cleaned up source code.
+
+	- Write the softdog device between each check, since the increasing
+	  number of checks might cause problems otherise.
+
+	- Test the system load average and reboot if it is too high.
+
+Thu Apr  3 11:14:07 MET DST 1997
+
+        - Fixed that nasty bug that caused the root partion to stay mounted
+          during a soft reboot.
+
+	- Fixed another bug that caused watchdog to kill itself during
+	  reboot before all the work was done.
+
+Wed Jun  4 20:16:23 CEST 1997
+
+	- Finally soft reboot works as advertised.
+
+	- Tested NFS access in filemode.
+
+Fri Jun  6 22:55:16 CEST 1997
+
+	- Added network mode: soft reboot is initiated if a given
+          network/host does not answer.
+
+Wen Jun 11 09:25:36 CEST 1997
+
+	- Added file table check: reboot if file table overflow occurs.
+
+Mon Jun 16 12:10:55 CEST 1997
+
+	- Upgraded to mount 2.6g.
+	- Compile and link with glibc.
+	- Implemented call to user provides test binary.
+
+Tue Jun 17 13:35:15 CEST 1997
+
+	- Added examples for test scripts.
+
+Wed Jun 18 15:51:10 CEST 1997
+
+	- Default sleep interval now configurable via Makefile.
+
+Fri Jun 20 10:51:56 CEST 1997
+
+	- Added call to repair script.
+
+Tue Jun 24 15:31:03 CEST 1997
+
+	- Repair script now calls logger to create a syslog entry.
+
+Thu Jun 26 21:40:37 CEST 1997
+
+	- Fixed call of repair script.
+	- Let watchdog sleep five seconds before closelog() to make sure
+          everything is written to the logs.
+
+Mon Jun 30 13:48:08 CEST 1997
+
+	- Make sure files are only opened once.
+	- Work even if there is no /dev/watchdog.
+
+Mon Jun 30 21:07:39 CEST 1997
+
+	- Implemented temperature test.
+	- Added double fork() to inherit rights from init. Now watchdog will
+          unmount all partitions correctly regardless what your current
+          working directory is when you start it. My thanks go to Peter Tobias
+          <tobias@et-inf.fho-emden.de> for pointing me into the right direction.
+
+Wed Jul  2 11:00:49 CEST 1997
+
+	- Halt the system if temperature is too high, but send mail to the
+	  sysadmin prior doing that.
+
+Thu Jul  3 16:22:47 CEST 1997
+
+	- Include fully quantified hostname in Subject: line for mail.
+
+Fri Jul 11 10:38:39 CEST 1997
+
+	- Released version 3.0.
+
+Fri Jul 11 10:49:31 CEST 1997
+
+	- Fixed small typo in Makefile.
+
+Wed Sep  3 12:33:32 CEST 1997
+
+	- Corrected temperature reading code.
+	- Include patch to mount.c for sparcs.
+	- Write warning to log file when temperature start climbing to high.
+
+Sun Oct 19 11:22:26 CEST 1997
+
+	- No more warnings about unused variables if compiled without
+          USE_SYSLOG.
+	- Some more glibc adjustments for glibc 2.0.5.
+
+Fri Oct 24 11:40:07 CEST 1997
+
+	- Released version 3.1.
+
+Fri Nov 28 11:10:26 CET 1997
+
+	- Changed handling of return value of repair script to take care of
+          negative return value.
+	- Stop init before going down.
+
+Fri Nov 28 11:26:50 CET 1997
+
+	- Released version 3.2.
+
+Tue Dec  2 10:02:43 CET 1997
+
+	- Stupid me! Somehow I managed to release my test version without
+          removing the call to halt the system regardless of the temperature
+          that I used for my last test. I´m sorry. Hope it didn´t cause too
+          much problems.
+	- Released version 3.3.
+

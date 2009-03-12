@@ -1,0 +1,6 @@
+The code for temperature checking is NOT tested yet. I do not have a
+hardware watchdog. The system is correctly halted on error -3, though.
+
+As usual feedback is welcome.
+
+Michael
