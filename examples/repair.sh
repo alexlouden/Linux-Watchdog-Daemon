@@ -4,12 +4,13 @@
 # I try to get a repair script that can handle as many problems as possible.
 # Feel free to send me some additions.
 #
-# (C) Michael Meskes <meskes@topsystem.de> Mon Jun 23 13:40:15 CEST 1997
+# (C) Michael Meskes <meskes@usa.net> Mon Jun 23 13:40:15 CEST 1997
 # Placed under GPL.
-#
+# Improvements, and modification for Redhat by Marc Merlin 
+# <marcsoft@magic.metwire.com>
 
 #
-# whom to send mail
+# who to send mail to
 #
 admin=root
 
@@ -38,9 +39,6 @@ case $1 in
 #	ENETUNREACH: network is unreachable
 #	=> try to reconfigure network interface, there is no guarantee that
 #	   this helps, but if it does not, reboot won't either
-#	   Note: This is for Debian! Please adjust to your distribution and
-#	         tell me what you had to change!
-#		 Also, this is for machine with only one network card.
 #
 	
 100|101)
@@ -56,24 +54,19 @@ case $1 in
 		done
 	fi
 
-	ethmodule=`grep eth0 /etc/conf.modules | grep "^alias" | cut -f 3 -d' '`
-	if [ -n $ethmodule ]
-	then
+# Calling rmmod -a twice should remove all unused modules (including networking
+# ones). It might not work with very old rmmod binaries though, I don't know
+	rmmod -a
+	rmmod -a
+
 #
-#		sometime it helps to remove the module, in
-#		particular for drivers under development
+# make sure the modules gets back into it in case kerneld/kmod does not run
 #
-		modprobe -r $ethmodule
-#
-#		put it back in since we're not sure if kerneld
-#		handles this
-#
-		modprobe $ethmodule
-	if [ -f /etc/rc.d/init.d/network ]; then
-	    # Redhat
-	    /etc/rc.d/init.d/network stop
-	else
-	fi
+for module in `grep "^alias" /etc/conf.modules | awk '/eth/ {print $3}'`
+do
+        modprobe $module
+done
+		
 #
 #	bring it back up
 #

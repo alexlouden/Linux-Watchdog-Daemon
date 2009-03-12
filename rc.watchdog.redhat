@@ -1,0 +1,51 @@
+#! /bin/sh
+#
+# chkconfig: 12345 02 98
+# description: A software watchdog
+#
+# rc file author: Marc Merlin <marcsoft@magic.metawire.com>
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+test -x /usr/sbin/watchdog || exit 0
+
+# See how we were called.
+case "$1" in
+  start)
+	echo -n "Starting sofware watchdog: "
+	# For some people it is a module, for others not. We force it because
+	# for kernels < 2.1, we need kerneld, and it's not running yet.
+	modprobe softdog &>/dev/null
+	modprobe pcwd &>/dev/null
+	modprobe acquirewdt &>/dev/null
+	daemon watchdog
+	echo
+	touch /var/lock/subsys/watchdog
+	;;
+  stop)
+	echo -n "Stopping software watchdog: "
+	killproc watchdog
+        # If you compiled with CONFIG_WATCHDOG_NOWAYOUT, you may not want to
+        # remove the module as sometimes /etc/rc.d/init.d/ halt will hang on
+        # umounting some  remote nfs  partition, and you  may then  want the
+        # kernel to reboot by itself. If not, uncomment the following:
+	#rmmod softdog &>/dev/null
+	#rmmod pcwd &>/dev/null
+	#rmmod acquirewdt &>/dev/null
+	echo
+	rm -f /var/lock/subsys/watchdog
+	;;
+  status)
+	status watchdog
+	;;
+  restart|reload)
+	/etc/rc.d/init.d/watchdog stop
+	/etc/rc.d/init.d/watchdog start
+	;;
+  *)
+	echo "Usage: watchdog {start|stop|status|restart|reload}"
+	exit 1
+esac
+
+exit 0

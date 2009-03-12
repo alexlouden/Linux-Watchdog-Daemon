@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <errno.h>
 #include <sys/syslog.h>
 #include <unistd.h>

@@ -1,4 +1,5 @@
-#include <version.h>
+#include "config.h"
+
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>

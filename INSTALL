@@ -3,7 +3,11 @@ watchdog package. It's even easier if you use debmake, just call build.
 (Note that the Debian files are not distributed with the original source
 anymore. You have to get the Debian .diff.gz file, too.)
 
-In case you do not use Debian, consider switching to Debian :-)
+If you use redhat, you can use the .spec file to generate a package.
+Copy watchdog.spec to /usr/src/redhat/SPECS, copy the .tar.gz archive to
+/usr/src/redhat/SOURCES, cd /usr/src/redhat/SPECS, rpm -ba watchdog.spec.
+(Note that the watchdog.spec file not distributed with the original source
+either.)
 
 If your Linux distribution does not include watchdog feel free to ask the
 distributor to add it. Since watchdog is GPLed there should not be a

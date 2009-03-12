@@ -155,7 +155,7 @@ Tue Dec  2 10:02:43 CET 1997
 
 	- Stupid me! Somehow I managed to release my test version without
           removing the call to halt the system regardless of the temperature
-          that I used for my last test. I´m sorry. Hope it didn´t cause too
+          that I used for my last test. I'm sorry. Hope it didn't cause too
           much problems.
 	- Released version 3.3.
 
@@ -172,7 +172,8 @@ Fri Jan  2 16:30:56 CET 1998
 
 Thu Sep 10 17:22:32 CEST 1998
 
-	- Updated mount code to version 2.8 something.
+	- Updated mount code to version 2.8 something. Thanks to the one who
+	  send me the patches. Unfortunately I lost his email-address.
 
 Fri Sep 11 16:22:28 CEST 1998
 
@@ -198,3 +199,20 @@ Mon Sep 21 15:23:54 CEST 1998
 
 	- Updated man pages.
 
+Thu Oct 15 18:21:57 CEST 1998
+
+	- Released version 4.0.
+
+Fri Oct 16 14:22:15 CEST 1998
+
+	- Received patches for RedHat. Argh, should have waited with
+	  releasing 4.0.
+	- Some more modifications to repair.sh.
+
+Wed Okt 21 13:33:21 CEST 1998
+
+	- Moved configuration to config.h.
+
+Tue Okt 27 20:49:23 MEZ 1998
+
+	- Released 4.1.
