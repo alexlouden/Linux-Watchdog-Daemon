@@ -1,4 +1,4 @@
-/* $Header: /cvsroot/watchdog/watchdog/src/shutdown.c,v 1.3 2007/02/12 09:42:07 meskes Exp $ */
+/* $Header: /cvsroot/watchdog/watchdog/src/shutdown.c,v 1.5 2009/02/11 14:01:05 meskes Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -172,7 +172,8 @@ static void mnt_off()
     struct mntent *mnt;
 
     fp = setmntent(MNTTAB, "r");
-    while ((mnt = getmntent(fp)) != (struct mntent *) 0) {
+    /* in some rare cases fp might be NULL so be careful */
+    while (fp != NULL && ((mnt = getmntent(fp)) != (struct mntent *) 0)) {
 	/* First check if swap */
 	if (!strcmp(mnt->mnt_type, MNTTYPE_SWAP))
 	    if (swapoff(mnt->mnt_fsname) < 0)
@@ -330,54 +331,65 @@ void do_shutdown(int errorcode)
 	/* send mail to the system admin */
 	FILE *ph;
 	char exe[128];
+        struct stat buf;
 
-	/* only can send an email if sendmail binary exists so make shell check
-	 * that first, or else we will get a broken pipe in pclose */
-	sprintf(exe, "[ -x %s ] && %s -i %s", PATH_SENDMAIL, PATH_SENDMAIL, admin);
-	ph = popen(exe, "w");
-	if (ph == NULL) {
+	/* Only can send an email if sendmail binary exists so check
+	 * that first, or else we will get a broken pipe in pclose.
+	 * We cannot let the shell check, because a non-existant or
+	 * non-executable sendmail binary means that the pipe is closed faster
+	 * than we can write to it. */
+	if ((stat(PATH_SENDMAIL, &buf) != 0) || (buf.st_mode&S_IXUSR == 0))
 #if USE_SYSLOG
-	    syslog(LOG_ERR, "cannot start %s (errno = %d)", PATH_SENDMAIL, errno);
+		syslog(LOG_ERR, "%s does not exist or is not executable (errno = %d)", PATH_SENDMAIL, errno);
 #endif				/* USE_SYSLOG */
-	} else {
-	    char myname[MAXHOSTNAMELEN + 1];
-	    struct hostent *hp;
+	else
+	{
+		sprintf(exe, "%s -i %s", PATH_SENDMAIL, admin);
+		ph = popen(exe, "w");
+		if (ph == NULL) {
+#if USE_SYSLOG
+		    syslog(LOG_ERR, "cannot start %s (errno = %d)", PATH_SENDMAIL, errno);
+#endif				/* USE_SYSLOG */
+		} else {
+		    char myname[MAXHOSTNAMELEN + 1];
+		    struct hostent *hp;
 
-	    /* get my name */
-	    gethostname(myname, sizeof(myname));
+		    /* get my name */
+		    gethostname(myname, sizeof(myname));
 
-	    fprintf(ph, "To: %s\n", admin);
-	    if (ferror(ph) != 0) {
+		    fprintf(ph, "To: %s\n", admin);
+		    if (ferror(ph) != 0) {
 #if USE_SYSLOG
-		syslog(LOG_ERR, "cannot send mail (errno = %d)", errno);
+			syslog(LOG_ERR, "cannot send mail (errno = %d)", errno);
 #endif				/* USE_SYSLOG */
-	    }
-	    /* if possible use the full name including domain */
-	    if ((hp = gethostbyname(myname)) != NULL)
-		fprintf(ph, "Subject: %s is going down!\n\n", hp->h_name);
-	    else
-		fprintf(ph, "Subject: %s is going down!\n\n", myname);
-	    if (ferror(ph) != 0) {
+		    }
+		    /* if possible use the full name including domain */
+		    if ((hp = gethostbyname(myname)) != NULL)
+			fprintf(ph, "Subject: %s is going down!\n\n", hp->h_name);
+		    else
+			fprintf(ph, "Subject: %s is going down!\n\n", myname);
+		    if (ferror(ph) != 0) {
 #if USE_SYSLOG
-		syslog(LOG_ERR, "cannot send mail (errno = %d)", errno);
+			syslog(LOG_ERR, "cannot send mail (errno = %d)", errno);
 #endif				/* USE_SYSLOG */
-	    }
+		    }
 
-	    if (errorcode == ETOOHOT)
-		fprintf(ph, "Message from watchdog:\nIt is too hot to keep on working. The system will be halted!\n");
-	    else
-	    	fprintf(ph, "Message from watchdog:\nThe system will be rebooted because of error %d!\n", errorcode);
-	    if (ferror(ph) != 0) {
+		    if (errorcode == ETOOHOT)
+			fprintf(ph, "Message from watchdog:\nIt is too hot to keep on working. The system will be halted!\n");
+		    else
+			fprintf(ph, "Message from watchdog:\nThe system will be rebooted because of error %d!\n", errorcode);
+		    if (ferror(ph) != 0) {
 #if USE_SYSLOG
-		syslog(LOG_ERR, "cannot send mail (errno = %d)", errno);
+			syslog(LOG_ERR, "cannot send mail (errno = %d)", errno);
 #endif				/* USE_SYSLOG */
-	    }
-	    if (pclose(ph) == -1) {
+		    }
+		    if (pclose(ph) == -1) {
 #if USE_SYSLOG
-		syslog(LOG_ERR, "cannot finish mail (errno = %d)", errno);
+			syslog(LOG_ERR, "cannot finish mail (errno = %d)", errno);
 #endif				/* USE_SYSLOG */
-	    }
-	    /* finally give the system a little bit of time to deliver */
+		    }
+		    /* finally give the system a little bit of time to deliver */
+		}
 	}
     }
 

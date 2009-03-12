@@ -1,3 +1,79 @@
+watchdog (5.5-1) unstable; urgency=low
+
+  * New upstream version.
+
+ -- Michael Meskes <meskes@debian.org>  Wed, 25 Feb 2009 12:08:29 +0100
+
+watchdog (5.4-11) unstable; urgency=low
+
+  * Updated Japanese debconf translation, closes: #512872
+  * Made init scripts cope with empty variable, closes: #514256
+  * Added upstream patch to prevent rare segfault on shutdown, closes: #514295
+  * Do not install stop links for wd_keepalive, closes: #506435, #506436
+  * Do not call init scripts from init scripts. Instead call
+    start-stop-daemon directly.
+
+ -- Michael Meskes <meskes@debian.org>  Wed, 11 Feb 2009 14:53:30 +0100
+
+watchdog (5.4-10) unstable; urgency=medium
+
+  * Preserve watchdog_module setting on upgrade, closes: #506376
+
+ -- Michael Meskes <meskes@debian.org>  Fri, 21 Nov 2008 10:13:09 +0100
+
+watchdog (5.4-9) unstable; urgency=low
+
+  * Do not start wd_keepalive on watchog restart, closes: #504336
+
+ -- Michael Meskes <meskes@debian.org>  Mon, 03 Nov 2008 10:10:01 +0100
+
+watchdog (5.4-8) unstable; urgency=low
+
+  * Added Swedish debconf translation, closes: #504250
+
+ -- Michael Meskes <meskes@debian.org>  Sun, 02 Nov 2008 14:03:46 +0100
+
+watchdog (5.4-7) unstable; urgency=low
+
+  * Check whether /sbin/MAKEDEV exists before calling it, closes: #503080
+
+ -- Michael Meskes <meskes@debian.org>  Wed, 22 Oct 2008 14:38:30 +0200
+
+watchdog (5.4-6) unstable; urgency=low
+
+  * Added Spanish debconf translation, closes: #495480
+  * Bumped standards-version to 3.8.0, no other changes needed.
+
+ -- Michael Meskes <meskes@debian.org>  Wed, 20 Aug 2008 15:17:35 +0200
+
+watchdog (5.4-5) unstable; urgency=low
+
+  * Bumped standards-version to 3.7.3, no other changes needed.
+  * Increased versioned build dependency on debhelper to >= 5 because we use
+    compatibility level 5.
+
+ -- Michael Meskes <meskes@debian.org>  Sat, 29 Dec 2007 13:26:40 +0100
+
+watchdog (5.4-4) unstable; urgency=low
+
+  * Replaced broken fi.po, the first version got broken during email transfer,
+    closes: #457455.
+
+ -- Michael Meskes <meskes@debian.org>  Sun, 23 Dec 2007 11:14:10 +0100
+
+watchdog (5.4-3) unstable; urgency=low
+
+  * Added Finish translation, closes: #457455.
+  * Fixed remaining lintian warnings.
+
+ -- Michael Meskes <meskes@debian.org>  Sat, 22 Dec 2007 17:36:02 +0100
+
+watchdog (5.4-2) unstable; urgency=low
+
+  * Removed dependency on devfsd which does not exist anymore.
+
+ -- Michael Meskes <meskes@debian.org>  Fri, 12 Oct 2007 09:46:05 +0200
+
 watchdog (5.4-1) unstable; urgency=low
 
   * New upstream version.

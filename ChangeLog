@@ -430,3 +430,19 @@ Fri, 17 Aug 2007 11:15:08 +0200
 	- Fixed some typos in watchdog manpage.
 	- Updated Debian files.
 	- Released 5.4
+
+Mon, 14 Jan 2008 13:57:34 +0100
+
+	- Check for existance before usage of sendmail.
+
+Wed, 11 Feb 2009 15:00:48 +0100
+
+	- Added patch by Jan Rouš <jaro@koukaam.se> to prevent rare segfault on
+	  shutdown.
+
+Wed, 25 Feb 2009 10:27:35 +0100
+
+	- Added patch by Enrique Zanardi <ezanardi@atlantux.com> to let repair
+	  binary know more about the failing test.
+	- Expanded that patch to work for more tests.
+	- Released version 5.5

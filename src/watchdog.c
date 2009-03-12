@@ -1,4 +1,4 @@
-/* $Header: /cvsroot/watchdog/watchdog/src/watchdog.c,v 1.4 2007/08/17 09:24:54 meskes Exp $ */
+/* $Header: /cvsroot/watchdog/watchdog/src/watchdog.c,v 1.5 2009/02/25 09:38:18 meskes Exp $ */
 
 /*************************************************************/
 /* Original version was an example in the kernel source tree */
@@ -105,7 +105,7 @@ static int sync_system(int sync_it)
 }
 
 /* execute repair binary */
-static int repair(char *rbinary, int result)
+static int repair(char *rbinary, int result, char *name)
 {
     pid_t child_pid;
     char parm[5];
@@ -128,7 +128,10 @@ static int repair(char *rbinary, int result)
         	exit (errno);
 
         /* else start binary */
-	execl(rbinary, rbinary, parm, NULL);
+	if (name == NULL)
+		execl(rbinary, rbinary, parm, NULL);
+	else
+		execl(rbinary, rbinary, parm, name, NULL);
 
 	/* execl should only return in case of an error */
 	/* so we return the reboot code */
@@ -175,7 +178,7 @@ static int repair(char *rbinary, int result)
     return (ENOERR);
 }
 
-static void wd_action(int result, char *rbinary)
+static void wd_action(int result, char *rbinary, char *name)
 {
     /* if no-action flag set, do nothing */
     /* no error, keep on working */
@@ -184,7 +187,7 @@ static void wd_action(int result, char *rbinary)
 
     /* error that might be repairable */
     if (result != EREBOOT)
-	result = repair(rbinary, result);
+	result = repair(rbinary, result, name);
 
     /* if still error, reboot */
     if (result != ENOERR)
@@ -192,10 +195,10 @@ static void wd_action(int result, char *rbinary)
 
 }
 
-static void do_check(int res, char *rbinary)
+static void do_check(int res, char *rbinary, char *name)
 {
-    wd_action(res, rbinary);
-    wd_action(keep_alive(), rbinary);
+    wd_action(res, rbinary, name);
+    wd_action(keep_alive(), rbinary, NULL);
 }
 
 struct list *file = NULL, *target = NULL, *pidfile = NULL, *iface = NULL;
@@ -794,41 +797,41 @@ int main(int argc, char *const argv[])
 
     /* main loop: update after <tint> seconds */
     while (1) {
-	wd_action(keep_alive(), rbinary);
+	wd_action(keep_alive(), rbinary, NULL);
 
 	/* sync system if we have to */
-	do_check(sync_system(sync_it), rbinary);
+	do_check(sync_system(sync_it), rbinary, NULL);
 
 	/* check file table */
-	do_check(check_file_table(), rbinary);
+	do_check(check_file_table(), rbinary, NULL);
 
 	/* check load average */
-	do_check(check_load(), rbinary);
+	do_check(check_load(), rbinary, NULL);
 	
 	/* check free memory */
-	do_check(check_memory(), rbinary);
+	do_check(check_memory(), rbinary, NULL);
 
 	/* check temperature */
-	do_check(check_temp(), rbinary);
+	do_check(check_temp(), rbinary, NULL);
 
 	/* in filemode stat file */
 	for (act = file; act != NULL; act = act->next)
-	    do_check(check_file_stat(act), rbinary);
+	    do_check(check_file_stat(act), rbinary, act->name);
 	    
 	/* in pidmode kill -0 processes */
 	for (act = pidfile; act != NULL; act = act->next)
-	    do_check(check_pidfile(act), rbinary);
+	    do_check(check_pidfile(act), rbinary, act->name);
 
 	/* in network mode check the given devices for input */
 	for (act = iface; act != NULL; act = act->next)
-	    do_check(check_iface(act), rbinary);
+	    do_check(check_iface(act), rbinary, act->name);
 	    
 	/* in ping mode ping the ip address */
 	for (act = target; act != NULL; act = act->next)
-	    do_check(check_net(act->name, act->parameter.net.sock_fp, act->parameter.net.to, act->parameter.net.packet, tint , pingcount), rbinary);
+	    do_check(check_net(act->name, act->parameter.net.sock_fp, act->parameter.net.to, act->parameter.net.packet, tint , pingcount), rbinary, act->name);
 
 	/* in user mode execute the given binary or just test fork() call */
-	do_check(check_bin(tbinary, timeout), rbinary);
+	do_check(check_bin(tbinary, timeout), rbinary, NULL);
 
 	/* finally sleep some seconds */
 	sleep((tint >> 1) + (tint % 2)); /* this should make watchdog sleep tint seconds alltogther */

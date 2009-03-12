@@ -11,7 +11,6 @@
 # <clameter@debian.org>.
 
 SHELL = /bin/bash
-export DH_COMPAT=4
 
 build: Makefile
 	$(checkdir)
@@ -24,7 +23,7 @@ Makefile:
 
 clean:	Makefile
 	$(checkdir)
-	-$(MAKE) distclean
+	[ ! -f Makefile ] || $(MAKE) distclean
 	debconf-updatepo
 
 	dh_clean

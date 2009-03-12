@@ -35,7 +35,7 @@ case "$1" in
   start)
     if [ $run_watchdog = 1 ]
     then
-        [ $watchdog_module != "none" ] && /sbin/modprobe $watchdog_module
+        [ ${watchdog_module:-none} != "none" ] && /sbin/modprobe $watchdog_module
 	echo -n "Starting watchdog keepalive daemon: "
 	if start-stop-daemon --start --quiet \
 	    --exec $DAEMON -- $watchdog_options
@@ -68,7 +68,7 @@ case "$1" in
   force-reload)
     if [ $run_watchdog = 0 ]; then exit 0; fi
     echo -n "Restarting $NAME daemon."
-    /etc/init.d/$NAME stop > /dev/null 2>&1
+    start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid
     echo -n "."
     sleep 5
     echo -n "."

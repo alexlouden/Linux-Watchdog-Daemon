@@ -29,16 +29,27 @@ watchdog_module="none"
 [ -e /etc/default/watchdog ] && . /etc/default/watchdog
 
 NAME=watchdog
+WD_NAME=wd_keepalive
+
 DAEMON=/usr/sbin/watchdog
+WD_DAEMON=/usr/sbin/wd_keepalive
 
 case "$1" in
   start)
     if [ $run_watchdog = 1 ]
     then
     	# do we have to load a module?
-	[ $watchdog_module != "none" ] && /sbin/modprobe $watchdog_module
-	# make sure that wd_keepalive is stopped if available
-	[ -e /etc/init.d/wd_keepalive ] && /etc/init.d/wd_keepalive stop
+	[ ${watchdog_module:-none} != "none" ] && /sbin/modprobe $watchdog_module
+	# make sure that wd_keepalive is stopped
+	echo -n "Stopping watchdog keepalive daemon: "
+        if start-stop-daemon --stop --quiet \
+            --pidfile  /var/run/$WD_NAME.pid
+        then
+            echo wd_keepalive.
+        else
+            echo
+        fi
+
 	echo -n "Starting watchdog daemon: "
 	if start-stop-daemon --start --quiet \
 	    --exec $DAEMON -- $watchdog_options
@@ -58,8 +69,16 @@ case "$1" in
 	    --pidfile /var/run/$NAME.pid
 	then
 	    echo watchdog.
-	    # make sure that wd_keepalive is started if available
-	    [ -e /etc/init.d/wd_keepalive ] && /etc/init.d/wd_keepalive start
+
+	    # make sure that wd_keepalive is started
+	    echo -n "Starting watchdog keepalive daemon: "
+            if start-stop-daemon --start --quiet \
+		--exec $WD_DAEMON -- $watchdog_options
+            then
+		echo wd_keepalive.
+            else
+		echo
+            fi
 	else
 	    echo
 	fi
@@ -73,7 +92,7 @@ case "$1" in
   force-reload)
     if [ $run_watchdog = 0 ]; then exit 0; fi
     echo -n "Restarting $NAME daemon."
-    /etc/init.d/$NAME stop > /dev/null 2>&1
+    start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid
     echo -n "."
     sleep 5
     echo -n "."
