@@ -262,3 +262,21 @@ Fri Feb  5 07:33:47 CET 1999
 	- Removed remount call so the one reported hang cannot happen
 	  anymore. This call wasn't really needed anyway.
 	- Released 4.3.
+
+Thu Feb 18 08:02:01 CET 1999
+
+	- Fixed typo in manpage.
+
+Fri Feb 19 07:49:51 CET 1999
+
+	- Send mail even in case of reboot.
+	- Close log only after the last write.
+	- Fixed getopt_long handling.
+
+Fri Feb 19 21:33:26 CET 1999
+
+	- Create directory before installing CONFIG_FILENAME.
+
+Sun Feb 28 13:05:11 CET 1999
+
+	- Released 4.4.

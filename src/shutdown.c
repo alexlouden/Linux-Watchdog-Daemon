@@ -293,14 +293,8 @@ void do_shutdown(int errorcode)
     /* first close the open files */
     close_all();
 
-#if USE_SYSLOG
-    /* now tell syslog what's happening */
-    syslog(LOG_ALERT, "shutting down the system because of error %d", errorcode);
-    closelog();
-#endif				/* USE_SYSLOG */
-
     /* if we will halt the system we should try to tell a sysadmin */
-    if (admin != NULL && errorcode == ETOOHOT) {
+    if (admin != NULL) {
 	/* send mail to the system admin */
 	FILE *ph;
 	char exe[128];
@@ -334,7 +328,11 @@ void do_shutdown(int errorcode)
 		syslog(LOG_ERR, "cannot send mail (errno = %d)", errno);
 #endif				/* USE_SYSLOG */
 	    }
-	    fprintf(ph, "It is too hot to keep on working. The system will be halted!\n");
+
+	    if (errorcode == ETOOHOT)
+		fprintf(ph, "It is too hot to keep on working. The system will be halted!\n");
+	    else
+	    	fprintf(ph, "The system will be rebooted because of error %d!\n", errorcode);
 	    if (ferror(ph) != 0) {
 #if USE_SYSLOG
 		syslog(LOG_ERR, "cannot send mail (errno = %d)", errno);
@@ -348,6 +346,12 @@ void do_shutdown(int errorcode)
 	    /* finally give the system a little bit of time to deliver */
 	}
     }
+
+#if USE_SYSLOG
+    /* now tell syslog what's happening */
+    syslog(LOG_ALERT, "shutting down the system because of error %d", errorcode);
+    closelog();
+#endif				/* USE_SYSLOG */
 
     sleep(10);			/* make sure log is written and mail is send */
 

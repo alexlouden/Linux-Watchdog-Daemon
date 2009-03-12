@@ -11,11 +11,12 @@ SUBDIRS = src
 CONFIG_FILENAME = @CONFIG_FILENAME@
 
 install-etc-local: watchdog.conf
-	@if test -e $(CONFIG_FILENAME) ; then \
+	@if test -e $(DESTDIR)$(CONFIG_FILENAME) ; then \
 	        echo "NOT installing $(CONFIG_FILENAME) - exists already"; \
 	else \
 	        echo "installing $(CONFIG_FILENAME)"; \
-	        $(INSTALL_DATA) watchdog.conf $(CONFIG_FILENAME); \
+		mkinstalldirs `dirname $(DESTDIR)$(CONFIG_FILENAME)`; \
+	        $(INSTALL_DATA) watchdog.conf $(DESTDIR)$(CONFIG_FILENAME); \
 	fi
 
 install-data-local: install-etc-local

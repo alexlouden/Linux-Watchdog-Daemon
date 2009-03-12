@@ -375,7 +375,8 @@ int main(int argc, char *const argv[])
 	{"sync", no_argument, NULL, 's'},
 	{"no-action", no_argument, NULL, 'q'},
 	{"verbose", no_argument, NULL, 'v'},
-	{"softboot", no_argument, NULL, 'b'}
+	{"softboot", no_argument, NULL, 'b'},
+	{NULL, 0, NULL, 0}
     };
     long count = 0L;
 #else				/* USE_SYSLOG */
@@ -386,7 +387,8 @@ int main(int argc, char *const argv[])
 	{"force", no_argument, NULL, 'f'},
 	{"sync", no_argument, NULL, 's'},
 	{"no-action", no_argument, NULL, 'q'},
-	{"softboot", no_argument, NULL, 'b'}
+	{"softboot", no_argument, NULL, 'b'},
+	{NULL, 0, NULL, 0}
     };
 #endif				/* USE_SYSLOG */
 
