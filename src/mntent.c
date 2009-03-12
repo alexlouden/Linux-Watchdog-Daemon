@@ -1,3 +1,5 @@
+/* $Header: /cvsroot/watchdog/watchdog/src/mntent.c,v 1.2 2006/07/31 09:39:23 meskes Exp $ */
+
 /* Private version of the libc *mntent() routines. */
 /* Note slightly different prototypes. */
 

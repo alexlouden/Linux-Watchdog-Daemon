@@ -1,7 +1,9 @@
+/* $Header: /cvsroot/watchdog/watchdog/src/watchdog.c,v 1.3 2007/02/12 09:42:07 meskes Exp $ */
+
 /*************************************************************/
 /* Original version was an example in the kernel source tree */
 /*                                                           */
-/* Rest was written by me, Michael Meskes                    */
+/* Most of the rest was written by me, Michael Meskes        */
 /* meskes@debian.org                                         */
 /*                                                           */
 /*************************************************************/
@@ -772,7 +774,7 @@ int main(int argc, char *const argv[])
 		syslog(LOG_ERR, "cannot lock realtime memory (errno = %d = '%m')", errno);
 #else				/* USE_SYSLOG */
 		perror(progname);
-#endif
+#endif				/* USE_SYSLOG */
 	    } else {
 		struct sched_param sp;
 
@@ -783,7 +785,7 @@ int main(int argc, char *const argv[])
 		    syslog(LOG_ERR, "cannot set scheduler (errno = %d = '%m')", errno);
 #else				/* USE_SYSLOG */
 		    perror(progname);
-#endif
+#endif				/* USE_SYSLOG */
 		} else
 		    mlocked = TRUE;
 	    }
@@ -829,7 +831,8 @@ int main(int argc, char *const argv[])
 	do_check(check_bin(tbinary, timeout), rbinary);
 
 	/* finally sleep some seconds */
-	sleep(tint);
+	sleep((tint >> 1) + (tint % 2)); /* this should make watchdog sleep tint seconds alltogther */
+	/* sleep(tint); */
 
 #if USE_SYSLOG
 	/* do verbose logging */

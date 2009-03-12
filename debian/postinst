@@ -53,7 +53,10 @@ run_watchdog=%s
 	printf "$default_format" "$run_watchdog"
 
 	# And finally preserve the watchdog_options setting.
-	grep watchdog_options /etc/default/watchdog
+	if [ -f /etc/default/watchdog ]
+	then
+		grep watchdog_options /etc/default/watchdog || true
+	fi
     } > /etc/default/watchdog.dpkg-new
 
 
@@ -96,6 +99,7 @@ fi
 
 # Not automatically added by dh_installinit (--noscripts)
 update-rc.d watchdog defaults 89 11 >/dev/null
+update-rc.d wd_keepalive defaults 09 91 >/dev/null
 
 #DEBHELPER#
 

@@ -8,8 +8,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: watchdog_5.2.5-2/\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-13 07:52+0200\n"
+"Report-Msgid-Bugs-To: meskes@debian.org\n"
+"POT-Creation-Date: 2006-07-31 11:44+0200\n"
 "PO-Revision-Date: 2006-05-16 21:34+0100\n"
 "Last-Translator: Frédéric ZULIAN <zulian@free.fr>\n"
 "Language-Team: French <debian-l10n-french@lists.debian.org>\n"
@@ -19,13 +19,13 @@ msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../templates:4
+#: ../templates:1001
 msgid "Start watchdog at boot time?"
 msgstr "Faut-il lancer watchdog au démarrage ?"
 
 #. Type: boolean
 #. Description
-#: ../templates:4
+#: ../templates:1001
 msgid ""
 "Please specify whether watchdog should be started as part of the boot "
 "process. This can be changed later by editing /etc/default/watchdog."
@@ -36,13 +36,13 @@ msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../templates:11
+#: ../templates:2001
 msgid "Restart watchdog on upgrades?"
 msgstr "Faut-il redémarrer watchdog lors des mises à jour ?"
 
 #. Type: boolean
 #. Description
-#: ../templates:11
+#: ../templates:2001
 msgid ""
 "If your kernel is configured with the CONFIG_WATCHDOG_NOWAYOUT option, "
 "restarting watchdog will cause a spurious reboot (the kernel will think the "

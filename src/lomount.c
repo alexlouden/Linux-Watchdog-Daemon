@@ -1,3 +1,5 @@
+/* $Header: /cvsroot/watchdog/watchdog/src/lomount.c,v 1.2 2006/07/31 09:39:23 meskes Exp $ */
+
 /* Taken from Ted's losetup.c - Mitch <m.dsouza@mrc-apu.cam.ac.uk> */
 /* Added vfs mount options - aeb - 960223 */
 /* Removed lomount - aeb - 960224 */

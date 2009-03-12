@@ -48,12 +48,9 @@ binary-arch:	checkroot build
 	dh_installdebconf
 	$(MAKE) install prefix=$$(pwd)/debian/watchdog/usr \
 		CONFIG_FILENAME=$$(pwd)/debian/watchdog/etc/watchdog.conf
-	# Do not install wd_keepalive as it is work in progress
-	# Has to be removed for 6.0!
-	-rm -f debian/watchdog/usr/sbin/wd_keepalive
-	cd debian/watchdog/usr && mv -v man share
 	cp -p watchdog.conf debian/watchdog/etc/watchdog.conf
-	dh_installinit --noscripts
+	dh_installinit --noscripts 
+	dh_installinit --noscripts --name=wd_keepalive
 	dh_strip
 	dh_compress
 	dh_installdeb

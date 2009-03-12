@@ -8,40 +8,40 @@ msgid ""
 msgstr ""
 "Project-Id-Version: watchdog 5.2.5-2\n"
 "Report-Msgid-Bugs-To: meskes@debian.org\n"
-"POT-Creation-Date: 2006-05-09 13:57+0200\n"
+"POT-Creation-Date: 2006-07-31 11:44+0200\n"
 "PO-Revision-Date: 2006-06-11 23:12+0100\n"
 "Last-Translator: Rui Branco <ruipb@debianpt.org>\n"
 "Language-Team: Portuguese <traduz@debianpt.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit"
+"Content-Transfer-Encoding: 8bit\n"
 
 #. Type: boolean
 #. Description
-#: ../templates:4
+#: ../templates:1001
 msgid "Start watchdog at boot time?"
 msgstr "Iniciar o watchdog durante o arranque?"
 
 #. Type: boolean
 #. Description
-#: ../templates:4
+#: ../templates:1001
 msgid ""
 "Please specify whether watchdog should be started as part of the boot "
 "process. This can be changed later by editing /etc/default/watchdog."
 msgstr ""
-"Especifique se quer que o watchdog arranque com parte do processo "
-"de arranque. Pode no entanto alterar esta opção editando o ficheiro "
-"/etc/default/watchdog."
+"Especifique se quer que o watchdog arranque com parte do processo de "
+"arranque. Pode no entanto alterar esta opção editando o ficheiro /etc/"
+"default/watchdog."
 
 #. Type: boolean
 #. Description
-#: ../templates:11
+#: ../templates:2001
 msgid "Restart watchdog on upgrades?"
 msgstr "Reiniciar o watchdog após actualizações?"
 
 #. Type: boolean
 #. Description
-#: ../templates:11
+#: ../templates:2001
 msgid ""
 "If your kernel is configured with the CONFIG_WATCHDOG_NOWAYOUT option, "
 "restarting watchdog will cause a spurious reboot (the kernel will think the "
@@ -50,4 +50,3 @@ msgstr ""
 "Se o seu kernel está configurado com a opção CONFIG_WATCHDOG_NOWAYOUT, "
 "reiniciar o watchdog irá causar uma reinicialização estranha (o kernel irá "
 "pensar que o watchdog bloqueou)."
-

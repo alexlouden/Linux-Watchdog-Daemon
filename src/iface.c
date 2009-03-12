@@ -1,3 +1,5 @@
+/* $Header: /cvsroot/watchdog/watchdog/src/iface.c,v 1.2 2006/07/31 09:39:23 meskes Exp $ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -70,7 +72,7 @@ int check_iface(struct list *dev)
 			if (dev->parameter.iface.bytes == bytes) {
 				fclose(file);
 #if USE_SYSLOG
-		            	syslog(LOG_INFO, "device %s did not receive anything since last check", dev->name);
+		            	syslog(LOG_ERR, "device %s did not receive anything since last check", dev->name);
 #endif   
 
 				return (ENETUNREACH);

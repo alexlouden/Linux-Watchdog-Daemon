@@ -1,3 +1,48 @@
+watchdog (5.3-1) unstable; urgency=low
+
+  * New upstream version, closes: #224241, #409587
+
+ -- Michael Meskes <meskes@debian.org>  Tue, 20 Feb 2007 12:16:03 +0100
+
+watchdog (5.2.6-7) unstable; urgency=low
+
+  * Add some upstream patches to wd_keepalive, install and use it, closes: #353053
+
+ -- Michael Meskes <meskes@debian.org>  Sun, 11 Feb 2007 10:59:11 +0100
+
+watchdog (5.2.6-6) unstable; urgency=low
+
+  * Fixed postinst to allow missing entries in /etc/default/watchdog, closes: #387261
+
+ -- Michael Meskes <meskes@debian.org>  Thu, 14 Sep 2006 09:58:37 +0200
+
+watchdog (5.2.6-5) unstable; urgency=low
+
+  * Applied upstream patch to prevent possible reboot because of uninitilized
+    variable.
+  * Added lsb-section to init script.
+
+ -- Michael Meskes <meskes@debian.org>  Tue, 12 Sep 2006 11:19:18 +0200
+
+watchdog (5.2.6-4) unstable; urgency=low
+
+  * Added Dutch po file, closes: #383337
+
+ -- Michael Meskes <meskes@debian.org>  Fri, 18 Aug 2006 16:17:22 +0200
+
+watchdog (5.2.6-3) unstable; urgency=low
+
+  * Added Czech po file, closes: #380527
+  * Added some two bug fixes from CVS.
+
+ -- Michael Meskes <meskes@debian.org>  Mon, 31 Jul 2006 10:58:42 +0200
+
+watchdog (5.2.6-2) unstable; urgency=low
+
+  * Check for existance of /etc/default/watchdog in postinst, closes: #376864
+
+ -- Michael Meskes <meskes@debian.org>  Thu,  6 Jul 2006 11:55:34 +0200
+
 watchdog (5.2.6-1) unstable; urgency=low
 
   * New upstream version, closes: #32547, #351398, #361839, #361835

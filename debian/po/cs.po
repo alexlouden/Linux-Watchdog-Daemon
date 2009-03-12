@@ -1,26 +1,25 @@
-# SOME DESCRIPTIVE TITLE.
+# Czech translation of watchdog debconf messages
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# This file is distributed under the same license as the watchdog package.
+# Miroslav Kure <kurem@debian.cz>, 2006.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: watchdog\n"
 "Report-Msgid-Bugs-To: meskes@debian.org\n"
 "POT-Creation-Date: 2006-07-31 11:44+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"PO-Revision-Date: 2006-07-30 18:45+0200\n"
+"Last-Translator: Miroslav Kure <kurem@debian.cz>\n"
+"Language-Team: Czech <debian-l10n-czech@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Type: boolean
 #. Description
 #: ../templates:1001
 msgid "Start watchdog at boot time?"
-msgstr ""
+msgstr "Spustit watchdog při zavádění systému?"
 
 #. Type: boolean
 #. Description
@@ -29,12 +28,14 @@ msgid ""
 "Please specify whether watchdog should be started as part of the boot "
 "process. This can be changed later by editing /etc/default/watchdog."
 msgstr ""
+"Vyberte si, zda se má watchdog spouštět během zavádění systému. Své "
+"rozhodnutí můžete později změnit úpravou souboru /etc/default/watchdog."
 
 #. Type: boolean
 #. Description
 #: ../templates:2001
 msgid "Restart watchdog on upgrades?"
-msgstr ""
+msgstr "Restartovat watchdog při aktualizaci?"
 
 #. Type: boolean
 #. Description
@@ -44,3 +45,6 @@ msgid ""
 "restarting watchdog will cause a spurious reboot (the kernel will think the "
 "watchdog daemon crashed)."
 msgstr ""
+"Pokud je vaše jádro sestaveno s parametrem CONFIG_WATCHDOG_NOWAYOUT, restart "
+"watchdogu způsobí zbytečný restart počítače, protože jádro si bude myslet, "
+"že daemon watchdogu havaroval."

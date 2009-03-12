@@ -5,9 +5,9 @@ Fri Feb 23 13:26:14 MET 1996
 Tue Mar  5 09:11:34 MET 1996
 
 	- Fixed two bugs in watchdog.c reported (and patched) by 
-          Johannes Kroeger <fiction!squirrel.owl.de!jkroeger@golden-gate.owl.de>:
+	  Johannes Kroeger <fiction!squirrel.owl.de!jkroeger@golden-gate.owl.de>:
 	  Watchdog now tries to open /dev/watchdog before tugging its
-          process ID away.
+	  process ID away.
 
 	- Released version 1.1
 
@@ -46,8 +46,8 @@ Fri Jan 31 13:39:43 MET 1997
 
 Thu Apr  3 11:14:07 MET DST 1997
 
-        - Fixed that nasty bug that caused the root partion to stay mounted
-          during a soft reboot.
+	- Fixed that nasty bug that caused the root partion to stay mounted
+	  during a soft reboot.
 
 	- Fixed another bug that caused watchdog to kill itself during
 	  reboot before all the work was done.
@@ -61,7 +61,7 @@ Wed Jun  4 20:16:23 CEST 1997
 Fri Jun  6 22:55:16 CEST 1997
 
 	- Added ping mode: soft reboot is initiated if a given
-          network/host does not answer.
+	  network/host does not answer.
 
 Wen Jun 11 09:25:36 CEST 1997
 
@@ -392,6 +392,14 @@ We Jun 21 15:42:28 CEST 2006
 	- Changed interface check to use unsigned long.
 	- Some more small fixes.
 
+Mo Jul 31 11:13:04 CEST 2006
 
+	- Added patch by Richard Hansen <gentoo-a7x@scientician.org> to fix
+	  intervals being 50% too long.
 
+Mo 12. Feb 10:45:21 CET 2007
+
+	- Hopefully fixed outstanding problems with wd_keepalive.
+	- Added some documentation about return values of the test binary.
+	- Released 5.3.
 

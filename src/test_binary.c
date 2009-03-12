@@ -1,3 +1,5 @@
+/* $Header: /cvsroot/watchdog/watchdog/src/test_binary.c,v 1.3 2006/09/12 09:17:01 meskes Exp $ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -68,7 +70,7 @@ static int check_processes (time_t timeout)
 int check_bin(char *tbinary, time_t timeout)
 {
     pid_t child_pid;
-    int result, res;
+    int result, res = 0;
 
     if (timeout > 0)
 	    res = check_processes(timeout);

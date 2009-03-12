@@ -1,3 +1,5 @@
+/* $Header: /cvsroot/watchdog/watchdog/src/nfsmount.c,v 1.2 2006/07/31 09:39:23 meskes Exp $ */
+
 /*
  * nfsmount.c -- Linux NFS mount
  * Copyright (C) 1993 Rick Sladkey <jrs@world.std.com>

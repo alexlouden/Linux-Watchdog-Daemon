@@ -1,19 +1,18 @@
 /**********************************************************
- * Copyright    Appliance Studio Ltd
+ * Copyright:   Appliance Studio Ltd
+ * License:	GPL
  *
- * Filename:    $Id: keepalive.c,v 1.1.1.1 2001/02/27 13:36:56 marcel Exp $    
+ * Filename:    $Id: wd_keepalive.c,v 1.3 2007/02/12 09:42:07 meskes Exp $    
  * Author:      Marcel Jansen, 22 February 2001
  * Purpose:     This program can be run during critical periods
  *              when the normal watcdog shouldn't be run. It will
  *              read from the same configuration file, it will do
  *              no checks but will keep writing to the device
- * History:     
- * $Log: keepalive.c,v $
- * Revision 1.1.1.1  2001/02/27 13:36:56  marcel
- * initial version
- *
  *
 ***********************************************************/
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <errno.h>
 #include <fcntl.h>
@@ -27,20 +26,19 @@
 #include <string.h>
 #include <syslog.h>
 
+#include <unistd.h>
+
+#if USE_SYSLOG
+#include <syslog.h>
+#endif         
+
 #define TRUE  1
 #define FALSE 0
 
-
-#define MAJOR_VERSION   1
-#define MINOR_VERSION     0
-
-#define DEVICE		    "watchdog-device"
-#define INTERVAL	    "interval"
-#define CONFIG_FILENAME "/etc/watchdog.conf"
-#define PIDFILE "/var/run/watchdog.pid"
-/* config file line length */
-#define CONFIG_LINE_LEN 160
-
+#define DEVICE		"watchdog-device"
+#define INTERVAL	"interval"
+#define PRIORITY        "priority"
+#define REALTIME        "realtime"
 
 int watchdog = -1, tint = 10, schedprio = 1;
 char *devname = NULL, *progname = NULL;
@@ -48,8 +46,6 @@ char *devname = NULL, *progname = NULL;
 #if defined(_POSIX_MEMLOCK)
 int mlocked = FALSE, realtime = FALSE;
 #endif
-
-
 
 static void usage(void)
 {
@@ -63,21 +59,36 @@ static void usage(void)
 /* write a log entry on exit */
 static void log_end()
 {
-    /* Log the closinging message */
+#if USE_SYSLOG
+    /* Log the closing message */
     syslog(LOG_INFO, "stopping keepalive daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
     closelog();
     sleep(5);           /* make sure log is written */
+#endif                          /* USE_SYSLOG */
     return;
 }
 
 /* close the device and check for error */
 static void close_all()
 {
-    if ( watchdog != -1 && close(watchdog) == -1 ) {
-        syslog(LOG_ALERT, "cannot close %s", devname);
-    }
+	if (watchdog != -1) {
+		if ( write(watchdog, "V", 1) < 0 ) {
+			int err = errno;
+#if USE_SYSLOG
+	                syslog(LOG_ERR, "write watchdog device gave error %d = '%m'!", err);
+#else                           /* USE_SYSLOG */
+	                perror(progname);
+#endif                          /* USE_SYSLOG */
+	        }
+		if (close(watchdog) == -1) {
+#if USE_SYSLOG
+		        syslog(LOG_ALERT, "cannot close %s (errno = %d)", devname, errno);
+#else                           /* USE_SYSLOG */
+			perror(progname);
+#endif                          /* USE_SYSLOG */
+		}
+        }
 }
-
 
 /* on exit we close the device and log that we stop */
 void terminate(int arg) {
@@ -85,10 +96,14 @@ void terminate(int arg) {
     if ( realtime == TRUE && mlocked == TRUE ) {
         /* unlock all locked pages */
         if ( munlockall() != 0 ) {
-            syslog(LOG_ERR, "cannot unlock realtime memory (errno = %d)", errno);
-        }
+#if USE_SYSLOG            
+	    syslog(LOG_ERR, "cannot unlock realtime memory (errno = %d)", errno);
+#else                           /* USE_SYSLOG */
+            perror(progname);
+#endif                          /* USE_SYSLOG */
+	}
     }
-#endif    
+#endif    	/* _POSIX_MEMLOCK */
     close_all();
     log_end();
     exit(0);
@@ -157,7 +172,15 @@ static void read_config(char *filename, char *progname)
                     devname = NULL;
                 else
                     devname = strdup(line + i);
-            }
+	    } else if (strncmp(line + i, REALTIME, strlen(REALTIME)) == 0) {
+                (void)spool(line, &i, strlen(REALTIME));
+	        realtime = (strncmp(line + i, "yes", 3) == 0) ? TRUE : FALSE;
+	    } else if (strncmp(line + i, PRIORITY, strlen(PRIORITY)) == 0) {
+	        if (spool(line, &i, strlen(PRIORITY)))
+			fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
+		else
+		        schedprio = atol(line + i);
+	    } 
             else {
                 fprintf(stderr, "Ignoring config line: %s\n", line);
             }
@@ -214,6 +237,7 @@ int main(int argc, char *const argv[])
 #endif				/* !DEBUG */
 
     /* now we're free */
+#if USE_SYSLOG
 #if !defined(DEBUG)
     /* Okay, we're a daemon     */
     /* but we're still attached to the tty */
@@ -225,24 +249,29 @@ int main(int argc, char *const argv[])
     close(2);
 #endif				/* !DEBUG */
 
-
     /* Log the starting message */
     openlog(progname, LOG_PID, LOG_DAEMON);
-    sprintf(log, "starting keepalive daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
-    sprintf(log + strlen(log), " int=%d alive=%s", tint, devname);
+    sprintf(log, "starting watchdog keepalive daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
+    sprintf(log + strlen(log), " int=%d alive=%s realtime=%s", tint, devname, realtime ? "yes" : "no");
     syslog(LOG_INFO, log);
+#endif                          /* USE_SYSLOG */
 
     /* open the device */
     if ( devname != NULL ) {
         watchdog = open(devname, O_WRONLY);
         if ( watchdog == -1 ) {
+#if USE_SYSLOG
             syslog(LOG_ERR, "cannot open %s (errno = %d = '%m')", devname, errno);
+#else                           /* USE_SYSLOG */
+            perror(progname);
+#endif                          /* USE_SYSLOG */
+
             exit(1);
         }
     }
 
     /* tuck my process id away */
-    fp = fopen(PIDFILE, "w");
+    fp = fopen("KA_PIDFILE", "w");
     if ( fp != NULL ) {
         fprintf(fp, "%d\n", getpid());
         (void) fclose(fp);
@@ -256,7 +285,12 @@ int main(int argc, char *const argv[])
     if ( realtime == TRUE ) {
         /* lock all actual and future pages into memory */
         if ( mlockall(MCL_CURRENT | MCL_FUTURE) != 0 ) {
-            syslog(LOG_ERR, "cannot lock realtime memory (errno = %d = '%m')", errno);
+#if USE_SYSLOG
+		syslog(LOG_ERR, "cannot lock realtime memory (errno = %d = '%m')", errno);
+#else                           /* USE_SYSLOG */
+                perror(progname);
+#endif                           /* USE_SYSLOG */
+
         }
         else {
             struct sched_param sp;
@@ -264,7 +298,11 @@ int main(int argc, char *const argv[])
             /* now set the scheduler */
             sp.sched_priority = schedprio;
             if ( sched_setscheduler(0, SCHED_RR, &sp) != 0 ) {
-                syslog(LOG_ERR, "cannot set scheduler (errno = %d = '%m')", errno);
+#if USE_SYSLOG
+		syslog(LOG_ERR, "cannot set scheduler (errno = %d = '%m')", errno);
+#else                           /* USE_SYSLOG */
+                perror(progname);
+#endif                           /* USE_SYSLOG */
             }
             else
                 mlocked = TRUE;
@@ -276,14 +314,17 @@ int main(int argc, char *const argv[])
     while ( 1 ) {
         if ( write(watchdog, "\0", 1) < 0 ) {
             int err = errno;
-            syslog(LOG_ERR, "write watchdog device gave error %d = '%m'!", err);
+#if USE_SYSLOG
+	    syslog(LOG_ERR, "write watchdog device gave error %d = '%m'!", err);
+#else                   /* USE_SYSLOG */
+            perror(progname);
+#endif                  /* USE_SYSLOG */
         }
 
         /* finally sleep some seconds */
         sleep(tint);
 
         count++;
-        syslog(LOG_INFO, "still alive after %ld seconds = %ld interval(s)", count * tint, count);
     }
 }
 

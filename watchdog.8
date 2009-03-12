@@ -207,8 +207,10 @@ a given interface for traffic. If no traffic arrives the network is
 considered unreachable causing a soft reboot or action from the 
 repair binary.
 .PP
-.B watchdog
-can run an external command for user-defined tests.
+.B watchdog can run an external command for user-defined tests. A return code
+not equal 0 means an error occured and watchdog should react. If the external
+command is killed by an uncaught signal this is considered an error by watchdog
+too.
 The command may take longer than the time slice defined for the kernel device
 without a problem. However, error messages are
 generated into the syslog facility. If you have enabled softboot on error
@@ -298,7 +300,13 @@ The given file was not changed in the given interval.
 .I /proc/meminfo 
 contains invalid data.
 .TP
-\-8 
+\-8
+Child process was killed by a signal.
+.TP
+\-9
+Child process did not return in time.
+.TP
+\-10 
 Free for personal use.
 .SH "REPAIR BINARY"
 The repair binary is started with one parameter: the error number that

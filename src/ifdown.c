@@ -1,3 +1,5 @@
+/* $Header: /cvsroot/watchdog/watchdog/src/ifdown.c,v 1.2 2006/07/31 09:39:23 meskes Exp $ */
+
 /*
  * ifdown.c	Find all network interfaces on the system and
  *		shut them down.

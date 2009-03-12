@@ -1,3 +1,5 @@
+/* $Header: /cvsroot/watchdog/watchdog/src/shutdown.c,v 1.3 2007/02/12 09:42:07 meskes Exp $ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -48,7 +50,7 @@ static struct mntent rootfs;
 
 #if defined(_POSIX_MEMLOCK)
 extern int mlocked, realtime;
-#endif
+#endif /* _POSIX_MEMLOCK */
 
 jmp_buf ret2dog;
 
@@ -63,7 +65,7 @@ typedef struct _proc_ {
 static void log_end()
 {
 #if USE_SYSLOG
-    /* Log the closinging message */
+    /* Log the closing message */
     syslog(LOG_INFO, "stopping daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
     closelog();
 
@@ -139,10 +141,10 @@ void terminate(int arg)
 		syslog(LOG_ERR, "cannot unlock realtime memory (errno = %d)", errno);
 #else				/* USE_SYSLOG */
 		perror(progname);
-#endif
+#endif				/* USE_SYSLOG */
 	}
     }
-#endif
+#endif		/* _POSIX_MEMLOCK */
     close_all();
     log_end();
     if (timestamps != NULL)

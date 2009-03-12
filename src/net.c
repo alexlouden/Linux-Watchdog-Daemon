@@ -1,3 +1,5 @@
+/* $Header: /cvsroot/watchdog/watchdog/src/net.c,v 1.3 2007/01/08 12:01:58 meskes Exp $ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -105,10 +107,15 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
                dtimeout.tv_sec = timeout.tv_sec - dtimeout.tv_sec;
                dtimeout.tv_usec = timeout.tv_usec - dtimeout.tv_usec;
                if (dtimeout.tv_usec < 0) {
-                       dtimeout.tv_sec += dtimeout.tv_usec / 1000000 - 1;
-                       dtimeout.tv_usec -= (dtimeout.tv_usec / 1000000 - 1) * 1000000;
+	       		dtimeout.tv_usec += 1000000;
+			dtimeout.tv_sec--;
                }
-               if (dtimeout.tv_sec <= 0 && dtimeout.tv_usec <= 0)
+	       while (dtimeout.tv_usec >= 1000000)
+	       {
+	       		dtimeout.tv_usec -= 1000000;
+			dtimeout.tv_sec++;
+	       }
+               if (dtimeout.tv_sec <= 0)
                    break;
 #if USE_SYSLOG
                if (verbose && logtick && ticker == 1)

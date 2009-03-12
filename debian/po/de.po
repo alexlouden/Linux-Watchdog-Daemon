@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 5.2.5-2\n"
 "Report-Msgid-Bugs-To: meskes@debian.org\n"
-"POT-Creation-Date: 2006-05-09 13:57+0200\n"
+"POT-Creation-Date: 2006-07-31 11:44+0200\n"
 "PO-Revision-Date: 2006-05-09 13:57+0200\n"
 "Last-Translator: Michael Meskes <meskes@debian.org>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,36 +17,34 @@ msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../templates:4
+#: ../templates:1001
 msgid "Start watchdog at boot time?"
 msgstr "Watchdog im Bootprozess starten?"
 
 #. Type: boolean
 #. Description
-#: ../templates:4
+#: ../templates:1001
 msgid ""
 "Please specify whether watchdog should be started as part of the boot "
 "process. This can be changed later by editing /etc/default/watchdog."
 msgstr ""
-"Bitte geben Sie an, ob Watchdog als Teil des Bootprozesses gestartet "
-"werden soll. Dies kann später in der Datei /etc/default/watchdog geändert "
-"werden."
+"Bitte geben Sie an, ob Watchdog als Teil des Bootprozesses gestartet werden "
+"soll. Dies kann später in der Datei /etc/default/watchdog geändert werden."
 
 #. Type: boolean
 #. Description
-#: ../templates:11
+#: ../templates:2001
 msgid "Restart watchdog on upgrades?"
 msgstr "Watchdog nach einem Upgrade neu starten?"
 
 #. Type: boolean
 #. Description
-#: ../templates:11
+#: ../templates:2001
 msgid ""
 "If your kernel is configured with the CONFIG_WATCHDOG_NOWAYOUT option, "
 "restarting watchdog will cause a spurious reboot (the kernel will think the "
 "watchdog daemon crashed)."
 msgstr ""
-"Wenn Ihr Kernel die Option CONFIG_WATCHDOG_NOWAYOUT definiert hat, "
-"führt der Neustart von Watchdog zum Neustart des Systems, weil der Kernel "
-"denkt, der Watchdog Prozess wäre abgestürzt."
-
+"Wenn Ihr Kernel die Option CONFIG_WATCHDOG_NOWAYOUT definiert hat, führt der "
+"Neustart von Watchdog zum Neustart des Systems, weil der Kernel denkt, der "
+"Watchdog Prozess wäre abgestürzt."

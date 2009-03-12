@@ -1,3 +1,5 @@
+/* $Header: /cvsroot/watchdog/watchdog/src/temp.c,v 1.2 2006/07/31 09:39:23 meskes Exp $ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
