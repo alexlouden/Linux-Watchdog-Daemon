@@ -1,5 +1,5 @@
 
-man_MANS = watchdog.8 watchdog.conf.5
+man_MANS = watchdog.8 wd_keepalive.8 watchdog.conf.5
 
 # This does not work. subdirs are not copied correctly
 # for make dist... :(

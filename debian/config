@@ -24,6 +24,9 @@ then
     parse_default /etc/default/watchdog || true
 fi
 
+db_input medium watchdog/module || true
+db_go
+
 # Use a state machine to allow jumping back.
 state=1
 while true

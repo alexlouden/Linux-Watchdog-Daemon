@@ -412,3 +412,21 @@ Thu Feb 22 11:48:57 CET 2007
 
 	- Released 5.3.1.
 
+Thu, 26 Apr 2007 15:08:07 +0200
+
+	- Added "another-chance" repair script written by Erik Rossen
+	  <rossen@prolibre.com>.
+
+Tue, 29 May 2007 16:34:34 +0200
+
+	- Applied some changes to RedHat init script.
+	- Added sysconf script for RedHat.
+
+Fri, 17 Aug 2007 11:15:08 +0200
+
+	- Made wd_keepalive honor config file option.
+	- Added wd_keealive manpage.
+	- Made wd_keepalive not start without a watchdog device.
+	- Fixed some typos in watchdog manpage.
+	- Updated Debian files.
+	- Released 5.4

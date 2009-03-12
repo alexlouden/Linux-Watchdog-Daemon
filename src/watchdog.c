@@ -1,4 +1,4 @@
-/* $Header: /cvsroot/watchdog/watchdog/src/watchdog.c,v 1.3 2007/02/12 09:42:07 meskes Exp $ */
+/* $Header: /cvsroot/watchdog/watchdog/src/watchdog.c,v 1.4 2007/08/17 09:24:54 meskes Exp $ */
 
 /*************************************************************/
 /* Original version was an example in the kernel source tree */
@@ -461,7 +461,7 @@ int main(int argc, char *const argv[])
     progname = basename(argv[0]);
 
     /* check the options */
-    /* there arn't that many any more */
+    /* there aren't that many any more */
     while ((c = getopt_long(argc, argv, opts, long_options, NULL)) != EOF) {
 	if (c == -1)
 	    break;

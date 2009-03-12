@@ -27,7 +27,8 @@ then
     default_format="\
 # Start watchdog at boot time? 0 or 1
 run_watchdog=%s
-#
+# Load module before starting watchdog
+watchdog_module=%s
 # Specify additional watchdog options here (see manpage).
 "
 
@@ -38,19 +39,22 @@ run_watchdog=%s
     *)      run_watchdog=1;;
     esac
 
+    db_get watchdog/module
+    module=$RET
+
     # Create an up-to-date copy of the default file.
     {
 	# If it already exists, preserve everything except our comment
 	# and $run_watchdog.
 	if [ -f /etc/default/watchdog ]
 	then
-	    printf "$default_format" '.*' \
+	    printf "$default_format" '.*' '.*' \
 		| grep -vxf - /etc/default/watchdog \
 		| grep -v watchdog_options || true
 	fi
 
 	# Append our comment and the current value.
-	printf "$default_format" "$run_watchdog"
+	printf "$default_format" "$run_watchdog" "\"$module\""
 
 	# And finally preserve the watchdog_options setting.
 	if [ -f /etc/default/watchdog ]

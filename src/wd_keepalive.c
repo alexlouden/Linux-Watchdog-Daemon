@@ -2,8 +2,9 @@
  * Copyright:   Appliance Studio Ltd
  * License:	GPL
  *
- * Filename:    $Id: wd_keepalive.c,v 1.5 2007/02/20 15:24:01 meskes Exp $    
+ * Filename:    $Id: wd_keepalive.c,v 1.6 2007/08/17 09:24:54 meskes Exp $    
  * Author:      Marcel Jansen, 22 February 2001
+ * 		Michael Meskes, since then
  * Purpose:     This program can be run during critical periods
  *              when the normal watcdog shouldn't be run. It will
  *              read from the same configuration file, it will do
@@ -16,6 +17,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <getopt.h>
 #include <sched.h>
 #include <signal.h>
 #include <stdio.h>
@@ -61,7 +63,7 @@ static void log_end()
 {
 #if USE_SYSLOG
     /* Log the closing message */
-    syslog(LOG_INFO, "stopping keepalive daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
+    syslog(LOG_INFO, "stopping watchdog keepalive daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
     closelog();
     sleep(5);           /* make sure log is written */
 #endif                          /* USE_SYSLOG */
@@ -201,8 +203,26 @@ int main(int argc, char *const argv[])
     char *filename = CONFIG_FILENAME;
     pid_t child_pid;
     int count = 0;
+    int c;
+    char *opts = "c:";
+    struct option long_options[] =
+    {
+        {"config-file", required_argument, NULL, 'c'},
+	{NULL, 0, NULL, 0}
+    };
 
     progname = basename(argv[0]);
+
+    /* check for the one option we understand */
+    while ((c = getopt_long(argc, argv, opts, long_options, NULL)) != EOF) {
+	if (c == -1)
+	    break;
+	
+	if (c == 'c')
+	    filename = optarg;
+	else
+	    usage();
+    }
 
     read_config(filename, progname);
 
@@ -256,10 +276,14 @@ int main(int argc, char *const argv[])
     syslog(LOG_INFO, log);
 #endif                          /* USE_SYSLOG */
 
+    /* this daemon has no other function than writing to this device 
+     * i.e. if there is no device given we better punt */
+    if ( devname == NULL )
+	terminate(0);
+
     /* open the device */
-    if ( devname != NULL ) {
-        watchdog = open(devname, O_WRONLY);
-        if ( watchdog == -1 ) {
+    watchdog = open(devname, O_WRONLY);
+    if ( watchdog == -1 ) {
 #if USE_SYSLOG
             syslog(LOG_ERR, "cannot open %s (errno = %d = '%m')", devname, errno);
 #else                           /* USE_SYSLOG */
@@ -267,7 +291,6 @@ int main(int argc, char *const argv[])
 #endif                          /* USE_SYSLOG */
 
             exit(1);
-        }
     }
 
     /* tuck my process id away */

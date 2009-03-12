@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: meskes@debian.org\n"
-"POT-Creation-Date: 2006-07-31 11:44+0200\n"
+"POT-Creation-Date: 2007-07-16 08:48+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,13 +18,13 @@ msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../templates:1001
+#: ../templates:2001
 msgid "Start watchdog at boot time?"
 msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../templates:1001
+#: ../templates:2001
 msgid ""
 "Please specify whether watchdog should be started as part of the boot "
 "process. This can be changed later by editing /etc/default/watchdog."
@@ -32,15 +32,30 @@ msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../templates:2001
+#: ../templates:3001
 msgid "Restart watchdog on upgrades?"
 msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../templates:2001
+#: ../templates:3001
 msgid ""
-"If your kernel is configured with the CONFIG_WATCHDOG_NOWAYOUT option, "
-"restarting watchdog will cause a spurious reboot (the kernel will think the "
-"watchdog daemon crashed)."
+"If the kernel is configured with the CONFIG_WATCHDOG_NOWAYOUT option (which "
+"is not the default setting), restarting watchdog will cause a spurious "
+"reboot (the kernel will assume that the watchdog daemon crashed)."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../templates:4001
+msgid "Watchdog module to preload:"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../templates:4001
+msgid ""
+"Please choose which watchdog module should be preloaded before starting "
+"watchdog. The 'softdog' module should be suited for all installations. Enter "
+"'none' if you don't want the script to load a module."
 msgstr ""

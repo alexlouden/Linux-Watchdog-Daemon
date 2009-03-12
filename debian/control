@@ -3,16 +3,16 @@ Section: admin
 Priority: extra
 Maintainer: Michael Meskes <meskes@debian.org>
 Build-Depends: debhelper (>> 4.1.13), po-debconf (>= 0.5.0)
-Standards-Version: 3.6.2
+Standards-Version: 3.7.2
 
 Package: watchdog
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, makedev (>= 2.3.1-24) | devfsd | udev
 Description: software watchdog
- The watchdog program writes to /dev/watchdog every ten seconds.
- If the device is open but not written to within a minute the machine
- will reboot -- a feature available when "software watchdog" support
- is compiled into the kernel.
+ The watchdog program writes to /dev/watchdog every ten seconds.  If
+ the device is opened but not written to within a minute, the machine
+ will reboot. This feature is available when the kernel is built with
+ 'software watchdog' support (standard in Debian kernels).
  .
  The ability to reboot will depend on the state of the machine
  and interrupts.

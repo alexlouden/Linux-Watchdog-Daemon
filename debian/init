@@ -23,6 +23,9 @@ run_watchdog=0
 # Specify additional watchdog options here (see manpage).
 watchdog_options=""
 
+# Specify module to load
+watchdog_module="none"
+
 [ -e /etc/default/watchdog ] && . /etc/default/watchdog
 
 NAME=watchdog
@@ -32,6 +35,8 @@ case "$1" in
   start)
     if [ $run_watchdog = 1 ]
     then
+    	# do we have to load a module?
+	[ $watchdog_module != "none" ] && /sbin/modprobe $watchdog_module
 	# make sure that wd_keepalive is stopped if available
 	[ -e /etc/init.d/wd_keepalive ] && /etc/init.d/wd_keepalive stop
 	echo -n "Starting watchdog daemon: "
