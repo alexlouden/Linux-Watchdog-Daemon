@@ -46,12 +46,14 @@ int verbose = FALSE;
 #define CHANGE		"change"
 #define DEVICE		"watchdog-device"
 #define	FILENAME	"file"
+#define INTERFACE	"interface"
 #define INTERVAL	"interval"
 #define MAXLOAD1	"max-load-1"
 #define MAXLOAD5	"max-load-5"
 #define MAXLOAD15	"max-load-15"
 #define MAXTEMP		"max-temperature"
 #define MINMEM		"min-memory"
+#define SERVERPIDFILE	"pidfile"
 #define PING		"ping"
 #define PRIORITY	"priority"
 #define REALTIME	"realtime"
@@ -62,7 +64,7 @@ int verbose = FALSE;
 pid_t pid;
 int softboot = FALSE, watchdog = -1, load = -1, mem = -1, temp = -1, tint = 10, schedprio = 1;
 char *tempname = NULL, *devname = NULL, *admin = "root", *progname;
-int maxload1 = 24, maxload5 = 18, maxload15 = 12, minmem = 1;
+int maxload1 = 0, maxload5 = 0, maxload15 = 0, minpages = 1;
 int maxtemp = 120;
 
 #if defined(_POSIX_MEMLOCK)
@@ -175,7 +177,7 @@ static void do_check(int res, char *rbinary)
     wd_action(keep_alive(), rbinary);
 }
 
-struct list *file = NULL, *target = NULL;
+struct list *file = NULL, *target = NULL, *pidfile = NULL, *iface = NULL;
 char *tbinary, *rbinary, *admin;
 
 static void add_list(struct list **list, char *name)
@@ -218,6 +220,7 @@ static void read_config(char *filename, char *progname)
 	perror(progname);
 	exit(1);
     }
+
     while (!feof(wc)) {
 	char line[CONFIG_LINE_LEN];
 
@@ -249,7 +252,6 @@ static void read_config(char *filename, char *progname)
 
 	    /* now check for an option */
 	    if (strncmp(line + i, FILENAME, strlen(FILENAME)) == 0) {
-	    	
 		if (spool(line, &i, strlen(FILENAME)))
 		    fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 		else
@@ -269,11 +271,21 @@ static void read_config(char *filename, char *progname)
 		    fprintf(stderr, "Duplicate change interval option in config file. Ignoring first entry.\n");
 
 		file->parameter.file.mtime = atoi(line + i);
+	    } else if (strncmp(line + i, SERVERPIDFILE, strlen(SERVERPIDFILE)) == 0) {
+		if (spool(line, &i, strlen(SERVERPIDFILE)))
+		    fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
+		else
+		    add_list(&pidfile, strdup(line + i));
 	    } else if (strncmp(line + i, PING, strlen(PING)) == 0) {
 		if (spool(line, &i, strlen(PING)))
 		    fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 		else
 		    add_list(&target, strdup(line + i));
+	    } else if (strncmp(line + i, INTERFACE, strlen(INTERFACE)) == 0) {
+		if (spool(line, &i, strlen(INTERFACE)))
+		    fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
+		else
+		    add_list(&iface, strdup(line + i));
 	    } else if (strncmp(line + i, REALTIME, strlen(REALTIME)) == 0) {
 		(void)spool(line, &i, strlen(REALTIME));
 		realtime = (strncmp(line + i, "yes", 3) == 0) ? TRUE : FALSE;
@@ -345,7 +357,7 @@ static void read_config(char *filename, char *progname)
 		if (spool(line, &i, strlen(MINMEM)))
 			fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 		else {
-			minmem = atol(line + i);
+			minpages = atol(line + i);
 		}
 	    } else {
 		fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
@@ -456,14 +468,15 @@ int main(int argc, char *const argv[])
 	fprintf(stderr, "To force this interval length use the -f option.\n");
 	exit(1);
     }
-    if (maxload1 < MINLOAD && !force) {
+    
+    if (maxload1 > 0 && maxload1 < MINLOAD && !force) {
 	fprintf(stderr, "%s error:\n", progname);
 	fprintf(stderr, "Using this maximal load average might reboot the system to often!\n");
 	fprintf(stderr, "To force this load average use the -f option.\n");
 	exit(1);
     }
     
-    /* set up pinging if in network mode */
+    /* set up pinging if in ping mode */
     if (target != NULL) {
 	for (act = target; act != NULL; act = act->next) {
 	    struct protoent *proto;
@@ -555,7 +568,7 @@ int main(int argc, char *const argv[])
 	    realtime ? "yes" : "no",
 	    sync_it ? "yes" : "no",
 	    softboot ? "yes" : "no",
-	    maxload1, minmem);
+	    maxload1, minpages);
 	    
     if (target == NULL)
             sprintf(log + strlen(log), "none ");
@@ -569,6 +582,20 @@ int main(int argc, char *const argv[])
     else
             for (act = file; act != NULL; act = act->next)
                 sprintf(log + strlen(log), "%s:%d%c", act->name, act->parameter.file.mtime, (act->next != NULL) ? ',' : ' ');
+
+    sprintf(log + strlen(log), "pidfile=");
+    if (pidfile == NULL)
+            sprintf(log + strlen(log), "none ");
+    else
+            for (act = pidfile; act != NULL; act = act->next)
+                sprintf(log + strlen(log), "%s%c", act->name, (act->next != NULL) ? ',' : ' ');                
+
+    sprintf(log + strlen(log), "iface=");
+    if (iface == NULL)
+            sprintf(log + strlen(log), "none ");
+    else
+            for (act = iface; act != NULL; act = act->next)
+                sprintf(log + strlen(log), "%s%c", act->name, (act->next != NULL) ? ',' : ' ');                
 
     sprintf(log + strlen(log), "test=%s repair=%s alive=%s temp=%s to=%s no_act=%s",
 	    (tbinary == NULL) ? "none" : tbinary,
@@ -595,14 +622,16 @@ int main(int argc, char *const argv[])
 	}
     }
 
-    /* open the load average file */
-    load = open("/proc/loadavg", O_RDONLY);
-    if (load == -1) {
+    if (maxload1 > 0) {
+	/* open the load average file */
+	load = open("/proc/loadavg", O_RDONLY);
+	if (load == -1) {
 #if USE_SYSLOG
-	syslog(LOG_ERR, "cannot open /proc/loadavg (errno = %d = '%m')", errno);
+		syslog(LOG_ERR, "cannot open /proc/loadavg (errno = %d = '%m')", errno);
 #else				/* USE_SYSLOG */
-	perror(progname);
+		perror(progname);
 #endif				/* USE_SYSLOG */
+	}
     }
     
     /* open the memory info file */
@@ -684,8 +713,16 @@ int main(int argc, char *const argv[])
 	/* in filemode stat file */
 	for (act = file; act != NULL; act = act->next)
 	    do_check(check_file_stat(act), rbinary);
+	    
+	/* in pidmode kill -0 processes */
+	for (act = pidfile; act != NULL; act = act->next)
+	    do_check(check_pidfile(act), rbinary);
 
-	/* in network mode ping the ip address */
+	/* in network mode check the given devices for input */
+	for (act = iface; act != NULL; act = act->next)
+	    do_check(check_iface(act), rbinary);
+	    
+	/* in ping mode ping the ip address */
 	for (act = target; act != NULL; act = act->next)
 	    do_check(check_net(act->name, act->parameter.net.sock_fp, act->parameter.net.to, act->parameter.net.packet, tint / 3), rbinary);
 

@@ -4,7 +4,7 @@
 # I try to get a repair script that can handle as many problems as possible.
 # Feel free to send me some additions.
 #
-# (C) Michael Meskes <meskes@usa.net> Mon Jun 23 13:40:15 CEST 1997
+# (C) Michael Meskes <meskes@debian.org> Mon Jun 23 13:40:15 CEST 1997
 # Placed under GPL.
 # Improvements, and modification for Redhat by Marc Merlin 
 # <marcsoft@merlins.org>

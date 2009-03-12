@@ -2,7 +2,7 @@
 
 /* external variables */
 extern int softboot, watchdog, temp, maxtemp, tint;
-extern int maxload1, maxload5, maxload15, load, verbose, mem, minmem;
+extern int maxload1, maxload5, maxload15, load, verbose, mem, minpages;
 extern pid_t pid;
 extern char *tempname, *admin, *devname, *progname;
 
@@ -19,10 +19,16 @@ struct filemode
 	int mtime;
 };
 
+struct ifmode
+{
+	int bytes;
+};
+
 union wdog_options
 {
         struct pingmode net;
         struct filemode file;
+        struct ifmode iface;
 };
                                         
 struct list
@@ -49,6 +55,9 @@ int check_load(void);
 int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *packet, int time);
 int check_temp(void);
 int check_bin(char *);
+int check_pidfile(struct list *);
+int check_iface(struct list *);
+int check_memory(void);
 
 void do_shutdown(int errorcode);
 void terminate(int arg);

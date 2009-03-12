@@ -47,7 +47,11 @@ Check whether the average work load exceeds a predefined maximal value.
 .TP
 Check whether the a file table overflow occurred.
 .TP
+Check whether a given process (specified by a pid file) is still running.
+.TP
 Check whether some given IP addresses answer to a ping message.
+.TP
+Check whether some given network interfaces received some traffic.
 .TP
 Check the temperature (if available).
 .TP
@@ -109,8 +113,8 @@ loads.
 
 Also you can specify a maximal allowed load average. Once this load average
 is reached the system is rebooted. You may specify maximal load averages for
-1 minute, 5 minutes or 15 minutes. The default values are 12 resp. 9 resp.
-6. Be careful not to set this parameter too low. To set a value less then
+1 minute, 5 minutes or 15 minutes. The default values is to disable this
+test. Be careful not to set this parameter too low. To set a value less then
 the predefined minimal value of 2, you have to use the -f option.
 
 You can also specify a minimal amount of virtual memory you want to have
@@ -126,12 +130,17 @@ once the tempearture increases 90%, 95% and 98% of this temperature.
 
 When using file mode watchdog will try stat the given files. Errors returned
 by stat will 
-.I not
+.B not
 cause a reboot. For a reboot the stat call has to last at least one minute.
 This may happen if the file is located on an NFS mounted filesystem. If your
 system relies on an NFS mounted filesystem you might try this option.
 However, in such a case the sync option may not work if the NFS server is
 not answering.
+
+If you give watchdog a pidfile it will read the pid from this file and call
+kill(pid,0) to see whether the process still exists. If not action is taken
+by watchdog. So you can for instance restart the server from your
+repair-binary.
 
 Watchdog will try periodically to fork itself to see whether the process
 table is full. This process will leave a zombie process until watchdog wakes
@@ -140,10 +149,19 @@ up again and cathes it.
 In ping mode watchdog tries to ping the given addresses. These addresses do
 not have to be a single machine. It is possible to ping to a broadcast
 address instead to see if at least one machine in a subnet is still living.
+
+.B Do not use this broadcast ping unless your MIS person a) knows about it and
+.B b) has given you explicit permission to use it!
+
 Watchdog will send out three ping packages and wait up to <interval> seconds
 for the reply with <interval> being the time it goes to sleep between two
 times triggering the watchdog device. Thus a unreachable network will not
 cause a hard reset but a soft reboot.
+
+You can also test passively for an unreavhable network by just monitoring
+a given interface for traffic. If no traffic arrives the network is
+considered unreachable causing a soft reboot resp. action from the 
+repair binary.
 
 With using an external check binary watchdog can run user defined tests.
 This may last longer than the time slice defined for the kernel device

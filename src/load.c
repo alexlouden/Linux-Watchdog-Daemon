@@ -20,7 +20,7 @@ int check_load(void)
     char buf[40], *ptr;
 
     /* is the load average file open? */
-    if (load == -1)
+    if (load == -1 || maxload1 == 0 || maxload5 == 0 || maxload15 == 0)
 	return (ENOERR);
 
     /* position pointer at start of file */
@@ -83,7 +83,7 @@ int check_load(void)
 
     if (avg1 > maxload1 || avg5 > maxload5 || avg15 > maxload15) {
 #if USE_SYSLOG
-	syslog(LOG_ERR, "loadavg %d %d %d > %d %d %d!", avg1, avg5, avg15,
+	syslog(LOG_ERR, "loadavg %d %d %d is higher than the given threshold %d %d %d!", avg1, avg5, avg15,
 	       maxload1, maxload5, maxload15);
 #endif				/* USE_SYSLOG */
 	return (EMAXLOAD);

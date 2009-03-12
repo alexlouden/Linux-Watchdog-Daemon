@@ -10,3 +10,4 @@
 #define ENOLOAD		-5	/* /proc/loadavg contains no data */
 #define ENOCHANGE	-6	/* file wasn't changed in the given interval */
 #define EINVMEM		-7	/* /proc/meminfo contains invalid data */
+#define ECHKILL		-8	/* child was killed by signal */

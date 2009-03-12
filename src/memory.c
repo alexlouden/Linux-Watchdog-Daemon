@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/param.h>
 #include "extern.h"
 #include "watch_err.h"
 
@@ -79,9 +80,9 @@ int check_memory(void)
 	syslog(LOG_INFO, "currently there are %d KB of free memory available", free);
 #endif				/* USE_SYSLOG */
 
-    if (free < minmem) {
+    if (free < minpages * EXEC_PAGESIZE) {
 #if USE_SYSLOG
-	syslog(LOG_ERR, "memory %d KB < %d KB", free, minmem);
+	syslog(LOG_ERR, "memory %d KB is less than %d pages", free, minpages);
 #endif				/* USE_SYSLOG */
 	return (ENOMEM);
     }

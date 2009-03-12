@@ -26,7 +26,7 @@ int check_file_stat(struct list *file)
 #else				/* USE_SYSLOG */
 	perror(progname);
 #endif				/* USE_SYSLOG */
-	/* on error ENETDOWN|ENETUNREACH we react as if we're in network mode */
+	/* on error ENETDOWN|ENETUNREACH we react as if we're in ping mode */
 	if (softboot || err == ENETDOWN || err == ENETUNREACH)
 	    return (err);
     } else if (file->parameter.file.mtime != 0) {

@@ -19,27 +19,27 @@ only be used with the -f commandline option.
 .TP
 max-load-1 = <load1>
 Set the maximal allowed load average for a 1 minute span. Once this load
-average is reached the system is rebooted. Default value is 24. Be careful
-not to this parameter too low. To set a value less then the predefined
-minimal value of 2, you have to use the -f commandline option.
+average is reached the system is rebooted. Default value is 0. That means
+the load average check is disabled. Be careful not to this parameter too
+low. To set a value less then the predefined minimal value of 2, you have to
+use the -f commandline option.
 .TP
 max-load-5 = <load5>
 Set the maximal allowed load average for a 5 minute span. Once this load
-average is reached the system is rebooted. Default value is 18 resp.
-3/4*max-load-1. Be careful not to this parameter too low. To set a value
-less then the predefined minimal value of 2, you have to use the -f
-commandline option.
+average is reached the system is rebooted. Default value is 3/4*max-load-1.
+Be careful not to this parameter too low. To set a value less then the
+predefined minimal value of 2, you have to use the -f commandline option.
 .TP
 max-load-15 = <load15>
 Set the maximal allowed load average for a 15 minute span. Once this load
-average is reached the system is rebooted. Default value is 12 resp.
-1/2*max-load-1. Be careful not to this parameter too low. To set a value
-less then the predefined minimal value of 2, you have to use the -f
-commandline option.
+average is reached the system is rebooted. Default value is 1/2*max-load-1.
+Be careful not to this parameter too low. To set a value less then the
+predefined minimal value of 2, you have to use the -f commandline option.
 .TP
-min-memory = <minmem>
+min-memory = <minpage>
 Set the minimal amount of virtual memory that has to stay free. Note that
-this is in KB. Default value is 1 KB.
+this is in pages. Default value is 1 page. The pagesize is taken from the
+system include files.
 
 max-temperature = <temp>
 Set the maximal allowed temperature. Once this temperature is reached the
@@ -63,15 +63,27 @@ change = <mtime> Set the change interval time for file mode. This options
 always belongs to the active filename, that is when finding a ´change =´
 line watchdog assumes it belongs to the most recently read ´file =´ line.
 They don't neccessarily have to follow each other directly. But you cannot
-specify a ´change =´ before a ´file =´.
+specify a 'change =' before a 'file ='.
 
 The default is to only stat the file and don't look for changes.
+.TP
+pidfile = <pidfilename>
+Set pidfile name for server test mode.
+
+Note that this option can be given as often as you like to check several
+servers.
 .TP
 ping = <ip-addr>
 Set IP address for ping mode
 
 This option also can be used more often than once to check different
 connections.
+.TP
+interface = <if-namer>
+Set interface name for network mode
+
+This option also can be used more often than once to check different
+interfaces.
 .TP
 test-binary = <testbin>
 Execute the given binary to do some user defined tests.

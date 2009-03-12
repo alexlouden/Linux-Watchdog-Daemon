@@ -60,7 +60,7 @@ Wed Jun  4 20:16:23 CEST 1997
 
 Fri Jun  6 22:55:16 CEST 1997
 
-	- Added network mode: soft reboot is initiated if a given
+	- Added ping mode: soft reboot is initiated if a given
           network/host does not answer.
 
 Wen Jun 11 09:25:36 CEST 1997
@@ -234,7 +234,7 @@ Thu Jan 14 13:43:53 CET 1999
 
 Thu Jan 14 14:17:35 CET 1999
 
-	- And fixed another silly bug that caused network mode to not work
+	- And fixed another silly bug that caused ping mode to not work
 	  anymore.
 
 Wed Jan 20 21:03:30 CET 1999
@@ -301,3 +301,23 @@ Fre Sep  3 14:23:58 CEST 1999
 
 	- Add test for free memory.
 
+Mon Sep  6 07:40:07 CEST 1999
+
+	- Added simple test script that tests whether /bin/sh can be
+	  started.
+	- Made load average check disabled by default.
+
+Don Sep  9 19:56:06 CEST 1999
+
+	- Added passive network test and server pinging test.
+
+Sun Dec 19 13:18:35 CET 1999
+
+	- Fixed big in test_binary.c that caused not existing errors to be
+	  logged.
+	- Add red label in watchdog.8 to not use broadcast ping without
+	  explicit permission.
+
+Mon Dec 20 14:54:58 CET 1999
+
+	- Released 5.0.
