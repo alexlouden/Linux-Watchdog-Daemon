@@ -1,81 +1,86 @@
-#!/bin/sh
+#! /bin/sh
 #
-# chkconfig: - 20 80
+# chkconfig: - 27 46
 # description: A software watchdog
 #
-#
 # rc file author: Marc Merlin <marcsoft@merlins.org>
-#		  Henning P. Schmiedehausen <hps@tanstaafl.de>
-#	  Fix by: K. Yamato <kyamato@miraclelinux.com>
-#	    - Fix "${VERBOSE}="yes" line without no space characters.
-#	    - Default daemon status is set to off in all run levels.
-#          - The following settings are moved to /etc/sysconf/watchdog
-#             + choice of watchdog or wd_keepalive as a deamon
-#             + verbose option
-#             + modules loading and unloading commands
-#
-#
-# Note that even though chkconfig says that this should be run at runlevel 1,
-# RH by default won't do this, so the RPM applies an ugly patch to 
-# /etc/rc.d/init.d/single so that if you go from RL 3 to RL 1, watchdog is
-# restarted anyway (if it's not, it can cause the kernel to reboot your machine
-# depending on whether your kernel was compiled with CONFIG_WATCHDOG_NOWAYOUT)
-#
-# I have filed a bug with RH about this, and I hope they will change their
-# single script to allow for other scripts to be run in RL 1.
+#                 Henning P. Schmiedehausen <hps@tanstaafl.de>
 
 # Source function library.
 . /etc/rc.d/init.d/functions
 
+[ -x /usr/sbin/watchdog -a -e /etc/watchdog.conf ] || exit 0
+
 VERBOSE="no"
-WD_DAEMON=/usr/sbin/watchdog
 if [ -f /etc/sysconfig/watchdog ]; then
     . /etc/sysconfig/watchdog
 fi
 
-[ -x ${WD_DAEMON} -a -e /etc/watchdog.conf ] || exit 0
+RETVAL=0
+prog=watchdog
+pidfile=/var/run/watchdog.pid
+lockfile=/var/lock/subsys/watchdog
 
+start() {
 
-# See how we were called.
+	echo -n $"Starting $prog: "
+	if [ -n "$(pidofproc $prog)" ]; then
+		echo -n $"$prog: already running"
+		echo_failure
+		echo
+		return 1
+	fi
+	if [ "$VERBOSE" = "yes" ]; then
+	    daemon /usr/sbin/${prog} -v
+	else
+	    daemon /usr/sbin/${prog}
+        fi
+	RETVAL=$?
+	[ $RETVAL -eq 0 ] && touch $lockfile
+	[ $RETVAL -eq 0 ] && echo_success
+	[ $RETVAL -ne 0 ] && echo_failure
+	echo
+	return $RETVAL
+}
+
+stop() {
+	echo -n "Stopping $prog: "
+	# We are forcing it to _only_ use -TERM as killproc could use
+	# -KILL which would result in BMC timer not being set properly 
+	# and reboot the box.
+	killproc $prog -TERM
+	RETVAL=$?
+	echo
+	[ $RETVAL -eq 0 ] && rm -f $lockfile $pidfile
+	return $RETVAL
+}
+
+restart() {
+  	stop
+	sleep 6
+	start
+}	
+
 case "$1" in
   start)
-	echo -n "Starting watchdog daemon: "
-
-	# Load modules
-	if [ "x${START_MOD_CMD}" != "x" ]; then
-	  ${START_MOD_CMD}
-	fi
-
-	if [ "${VERBOSE}" = "yes" ]; then
-	    daemon ${WD_DAEMON} -v
-	else
-	    daemon ${WD_DAEMON}
-	fi
-	echo
-	touch /var/lock/subsys/watchdog
+  	start
 	;;
   stop)
-	echo -n "Stopping watchdog daemon: "
-	killproc ${WD_DAEMON}
-
-	# Unload modules
-	if [ "x${STOP_MOD_CMD}" != "x" ]; then
-	  ${STOP_MOD_CMD}
-	fi
-
-	rm -f /var/lock/subsys/watchdog
+  	stop
 	;;
+  reload|restart)
+  	restart
+	;;
+  condrestart)
+    if [ -f $lockfile ]; then
+		restart
+    fi
+    ;;
   status)
-	status ${WD_DAEMON}
-	;;
-  restart|reload)
-	/etc/rc.d/init.d/watchdog stop
-	/etc/rc.d/init.d/watchdog start
+	status $prog
+	RETVAL=$?
 	;;
   *)
-	echo "Usage: watchdog {start|stop|status|restart|reload}"
+	echo $"Usage: $0 {start|stop|restart|status|condrestart}"
 	exit 1
-	;;
 esac
-
-exit 0
