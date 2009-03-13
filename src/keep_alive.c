@@ -20,7 +20,6 @@ int write_heartbeat(void)
     struct tm *tm;
     char tbuf[TS_SIZE + 1];
     char tbufw[TS_SIZE + 1];
-    int i;
 
     if (hb == NULL)
 	    return (ENOERR);
@@ -41,7 +40,8 @@ int write_heartbeat(void)
         // success
         if (nrts < hbstamps) 
             nrts++;
-        lastts = ++lastts % hbstamps;
+        ++lastts;
+        lastts = lastts % hbstamps;
         
         // write the buffer to the file
         rewind(hb);

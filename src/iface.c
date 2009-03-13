@@ -66,7 +66,7 @@ int check_iface(struct list *dev)
 #if USE_SYSLOG
 			/* do verbose logging */
 			if (verbose && logtick && ticker == 1)
-		            syslog(LOG_INFO, "device %s received %u bytes", dev->name, bytes);
+		            syslog(LOG_INFO, "device %s received %lu bytes", dev->name, bytes);
 #endif   
 
 			if (dev->parameter.iface.bytes == bytes) {

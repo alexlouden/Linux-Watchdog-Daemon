@@ -57,7 +57,8 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
     for (i = 0; i < count; i++) {
 
 	struct sockaddr_in from;
-	int fromlen, fdmask, j;
+	int fdmask, j;
+	socklen_t fromlen;
 	struct timeval timeout, dtimeout;
 	struct icmphdr *icp = (struct icmphdr *) outpack;
 
@@ -119,7 +120,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
                    break;
 #if USE_SYSLOG
                if (verbose && logtick && ticker == 1)
-                   syslog(LOG_ERR, "ping select timeout = %d seconds and %d useconds\n", dtimeout.tv_sec, dtimeout.tv_usec);
+                   syslog(LOG_ERR, "ping select timeout = %ld seconds and %ld useconds\n", dtimeout.tv_sec, dtimeout.tv_usec);
 #endif /* USE_SYSLOG */
 
             	   if (select(sock_fp + 1, (fd_set *) & fdmask, (fd_set *) NULL,

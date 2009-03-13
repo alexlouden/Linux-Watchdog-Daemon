@@ -4,6 +4,9 @@
 #include "config.h"
 #endif
 
+#define _XOPEN_SOURCE 500      /* for getsid(2) */
+#define _BSD_SOURCE            /* for acct(2) */
+
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -18,6 +21,10 @@
 #include <sys/mman.h>
 #include <sys/param.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <time.h>
+#include <rpc/types.h>         /* for caddr_t */
 
 #include "watch_err.h"
 #include "extern.h"
@@ -346,7 +353,7 @@ void do_shutdown(int errorcode)
 	 * We cannot let the shell check, because a non-existant or
 	 * non-executable sendmail binary means that the pipe is closed faster
 	 * than we can write to it. */
-	if ((stat(PATH_SENDMAIL, &buf) != 0) || (buf.st_mode&S_IXUSR == 0))
+	if ((stat(PATH_SENDMAIL, &buf) != 0) || ((buf.st_mode&S_IXUSR) == 0))
 #if USE_SYSLOG
 		syslog(LOG_ERR, "%s does not exist or is not executable (errno = %d)", PATH_SENDMAIL, errno);
 #endif				/* USE_SYSLOG */

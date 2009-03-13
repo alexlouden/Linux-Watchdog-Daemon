@@ -31,7 +31,7 @@ int check_temp(void)
 	int err = errno;
 
 #if USE_SYSLOG
-	syslog(LOG_ERR, "read %s gave errno = %d = '%m'", err, tempname);
+	syslog(LOG_ERR, "read %s gave errno = %d = '%m'", tempname, err);
 #else				/* USE_SYSLOG */
 	perror(progname);
 #endif				/* USE_SYSLOG */

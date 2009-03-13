@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <time.h>
+
 #include "extern.h"
 #include "watch_err.h"
 
@@ -76,7 +78,7 @@ int check_bin(char *tbinary, time_t timeout)
 	    res = check_processes(timeout);
     if (res == ETOOLONG) {
 #if USE_SYSLOG
-        syslog(LOG_ERR, "test-binary %s exceeded time limit %d", tbinary, timeout);
+        syslog(LOG_ERR, "test-binary %s exceeded time limit %ld", tbinary, timeout);
 #endif				/* USE_SYSLOG */
         return res;
     }

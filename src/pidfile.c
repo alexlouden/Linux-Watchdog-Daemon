@@ -6,6 +6,10 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <wait.h>
+
 #include "extern.h"
 #include "watch_err.h"
 

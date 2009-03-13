@@ -23,6 +23,8 @@
 #include <arpa/inet.h>
 #include <sys/mman.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <linux/watchdog.h>
 #define __USE_GNU
 #include <string.h>
@@ -629,7 +631,7 @@ int main(int argc, char *const argv[])
     /* Log the starting message */
     openlog(progname, LOG_PID, LOG_DAEMON);
     syslog(LOG_INFO, "starting daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
-    syslog(LOG_INFO, "int=%ds realtime=%s sync=%s soft=%s mla=%d mem=%ld",
+    syslog(LOG_INFO, "int=%ds realtime=%s sync=%s soft=%s mla=%d mem=%d",
 	    tint,
 	    realtime ? "yes" : "no",
 	    sync_it ? "yes" : "no",
@@ -660,7 +662,7 @@ int main(int argc, char *const argv[])
             for (act = iface; act != NULL; act = act->next)
                 syslog(LOG_INFO, "interface: %s", act->name);                
 
-    syslog(LOG_INFO, "test=%s(%d) repair=%s alive=%s heartbeat=%s temp=%s to=%s no_act=%s",
+    syslog(LOG_INFO, "test=%s(%ld) repair=%s alive=%s heartbeat=%s temp=%s to=%s no_act=%s",
 	    (tbinary == NULL) ? "none" : tbinary, timeout, 
 	    (rbinary == NULL) ? "none" : rbinary,
 	    (devname == NULL) ? "none" : devname,
@@ -713,7 +715,7 @@ int main(int argc, char *const argv[])
             /* Allocate  memory for keeping the timestamps in */
             nrts = 0;
             lastts = 0;
-            timestamps = (unsigned char *) calloc(hbstamps, TS_SIZE);
+            timestamps = (char *) calloc(hbstamps, TS_SIZE);
             if ( timestamps == NULL ) {
 #if USE_SYSLOG
                 syslog(LOG_ERR, "cannot allocate memory for timestamps (errno = %d = '%m')", errno);
@@ -728,7 +730,8 @@ int main(int argc, char *const argv[])
                     memcpy(timestamps + (TS_SIZE * lastts), rbuf, TS_SIZE);
                     if (nrts < hbstamps) 
                         nrts++;
-                    lastts = ++lastts % hbstamps;
+                    ++lastts;
+                    lastts = lastts % hbstamps;
                 }
                 /* Write an indication that the watchdog has started to the heartbeat file */
                 /* copy it to the buffer */
@@ -738,7 +741,8 @@ int main(int argc, char *const argv[])
                 // success
                 if (nrts < hbstamps) 
                     nrts++;
-                lastts = ++lastts % hbstamps;
+                ++lastts;
+                lastts = lastts % hbstamps;
 
             }
         }

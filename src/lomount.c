@@ -195,13 +195,13 @@ set_loop (const char *device, const char *file, int offset,
     break;
   case LO_CRYPT_XOR:
     pass = getpass ("Password: ");
-    strncpy (loopinfo.lo_encrypt_key, pass, LO_KEY_SIZE);
+    strncpy ((char *) loopinfo.lo_encrypt_key, pass, LO_KEY_SIZE);
     loopinfo.lo_encrypt_key[LO_KEY_SIZE - 1] = 0;
-    loopinfo.lo_encrypt_key_size = strlen (loopinfo.lo_encrypt_key);
+    loopinfo.lo_encrypt_key_size = (int) strlen ((char *) loopinfo.lo_encrypt_key);
     break;
   case LO_CRYPT_DES:
     pass = getpass ("Password: ");
-    strncpy (loopinfo.lo_encrypt_key, pass, 8);
+    strncpy ((char *) loopinfo.lo_encrypt_key, pass, 8);
     loopinfo.lo_encrypt_key[8] = 0;
     loopinfo.lo_encrypt_key_size = 8;
     pass = getpass ("Init (up to 16 hex digits): ");

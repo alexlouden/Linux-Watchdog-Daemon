@@ -21,11 +21,11 @@
 static char need_escaping[] = { ' ', '\t', '\n', '\\' };
 
 static char *
-mangle(unsigned char *s) {
+mangle(const char *s) {
 	char *ss, *sp;
 	int n;
 
-	n = strlen(s);
+	n = (int) strlen(s);
 	ss = sp = xmalloc(4*n+1);
 	while(1) {
 		for (n = 0; n < sizeof(need_escaping); n++) {
