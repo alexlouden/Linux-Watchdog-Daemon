@@ -331,8 +331,8 @@ void do_shutdown(int errorcode)
     char *seedbck = RANDOM_SEED;
 
     /* soft-boot the system */
-    /* first close the open files */
-    close_all();
+    /* do not close open files here, they will be closed later anyway */
+    /* close_all(); */
 
     /* if we will halt the system we should try to tell a sysadmin */
     if (admin != NULL) {
@@ -401,20 +401,24 @@ void do_shutdown(int errorcode)
 	}
     }
 
+    keep_alive();
 #if USE_SYSLOG
     /* now tell syslog what's happening */
     syslog(LOG_ALERT, "shutting down the system because of error %d", errorcode);
     closelog();
 #endif				/* USE_SYSLOG */
 
+    keep_alive();
     sleep(10);			/* make sure log is written and mail is send */
+    keep_alive();
 
     /* We cannot start shutdown, since init might not be able to fork. */
     /* That would stop the reboot process. So we try rebooting the system */
     /* ourselves. Note, that it is very likely we cannot start any rc */
     /* script either, so we do it all here. */
 
-    /* Start with closing the files. */
+    /* Close all files. */
+    close_all();
     for (i = 0; i < 3; i++)
 	if (!isatty(i))
 	    close(i);

@@ -461,3 +461,9 @@ Thu, 12 Mar 2009 14:36:01 +0100
 	- Made wd_keepalive accept all options watchdog accepts and not throw
 	  errors on those it does not use itself.
 
+Fri, 13 Mar 2009 12:26:40 +0100
+
+	- Made watchdog not close the watchdog device so early when trying a
+	  normal shutdown. This ensures a reset even if the system hangs while
+	  doing this.
+
