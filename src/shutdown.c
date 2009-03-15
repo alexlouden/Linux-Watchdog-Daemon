@@ -408,7 +408,6 @@ void do_shutdown(int errorcode)
 	}
     }
 
-    keep_alive();
 #if USE_SYSLOG
     /* now tell syslog what's happening */
     syslog(LOG_ALERT, "shutting down the system because of error %d", errorcode);
