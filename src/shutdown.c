@@ -423,13 +423,13 @@ void do_shutdown(int errorcode)
     /* ourselves. Note, that it is very likely we cannot start any rc */
     /* script either, so we do it all here. */
 
-    /* Close all files. */
-    close_all();
+    /* Close all files except the watchdog device. */
     for (i = 0; i < 3; i++)
 	if (!isatty(i))
 	    close(i);
     for (i = 3; i < 20; i++)
-	close(i);
+	if (i != watchdog)
+		close(i);
     close(255);
 
     /* Ignore all signals. */
@@ -443,6 +443,7 @@ void do_shutdown(int errorcode)
     (void) killall5(SIGTERM);
     sleep(5);
     (void) killall5(SIGKILL);
+    keep_alive();
 
     /* Record the fact that we're going down */
     if ((fd = open(_PATH_WTMP, O_WRONLY | O_APPEND)) >= 0) {
@@ -482,6 +483,8 @@ void do_shutdown(int errorcode)
     /* Turn off accounting */
     if (acct(NULL) < 0)
 	perror(progname);
+
+    keep_alive();
 
     /* Turn off quota and swap */
     mnt_off();
@@ -528,13 +531,7 @@ void do_shutdown(int errorcode)
     /* okay we should never reach this point, */
     /* but if we do we will cause the hard reset */
 
-    /* open the device again */
-    /* don't check for error, it won't help anyway here */
-    if (devname != NULL) {
-	open(devname, O_WRONLY);
-
-	sleep(TIMER_MARGIN * 4);
-    }
+    sleep(TIMER_MARGIN * 4);
 
     /* unbelievable: we're still alive */
     panic();
