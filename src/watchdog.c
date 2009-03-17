@@ -685,12 +685,12 @@ int main(int argc, char *const argv[])
 	    /* do not exit here per default */
 	    /* we can use watchdog even if there is no watchdog device */
 	}
-	if (devtimeout > 0) {
+	if (watchdog >= 0 && devtimeout > 0) {
 	    /* Set the watchdog hard-stop timeout; default = unset (use
 	       driver default) */
 	    if (ioctl(watchdog, WDIOC_SETTIMEOUT, &devtimeout) < 0) {
 #if USE_SYSLOG
-            	syslog(LOG_ERR, "cannot set timeout %s (errno = %d = '%m')", devtimeout, errno);
+            	syslog(LOG_ERR, "cannot set timeout %s (errno = %d = '%m')", strerror(errno), devtimeout, errno);
 #else				
             	perror(progname);
 #endif			   
