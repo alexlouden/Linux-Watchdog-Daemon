@@ -94,9 +94,9 @@ static void usage(void)
 {
     fprintf(stderr, "%s version %d.%d, usage:\n", progname, MAJOR_VERSION, MINOR_VERSION);
 #if USE_SYSLOG
-    fprintf(stderr, "%s [-i <interval> [-f]] [-l <max load avg>] [-v] [-s] [-b] [-m <max temperature>]\n", progname);
+    fprintf(stderr, "%s [-f] [-c <config_file>] [-v] [-s] [-b] [-q]\n", progname);
 #else				/* USE_SYSLOG */
-    fprintf(stderr, "%s [-i <interval> [-f]] [-l <max load avg>] [-v] [-b] [-m <max temperature>]\n", progname);
+    fprintf(stderr, "%s [-f] [-c <config_file>] [-s] [-b] [-q]\n", progname);
 #endif				/* USE_SYSLOG */
     exit(1);
 }
