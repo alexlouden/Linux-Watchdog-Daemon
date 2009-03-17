@@ -785,9 +785,10 @@ int main(int argc, char *const argv[])
     }
 
     /* tuck my process id away */
+    pid = getpid();
     fp = fopen(PIDFILE, "w");
     if (fp != NULL) {
-	fprintf(fp, "%d\n", pid = getpid());
+	fprintf(fp, "%d\n", pid);
 	(void) fclose(fp);
     }
     /* set signal term to set our run flag to 0 so that */
