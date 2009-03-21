@@ -59,6 +59,7 @@ static struct mntent rootfs;
 extern int mlocked, realtime;
 #endif /* _POSIX_MEMLOCK */
 extern volatile sig_atomic_t _running;
+extern int devtimeout; /* From watchdog.c */
 
 jmp_buf ret2dog;
 
@@ -172,10 +173,10 @@ static void panic(void)
 {
     /* if we are still alive, we just exit */
     close_all();
-    fprintf(stderr, "WATCHDOG PANIC: Still alive after sleeping %d seconds!\n", 4 * TIMER_MARGIN);
+    fprintf(stderr, "WATCHDOG PANIC: Still alive after sleeping %d seconds!\n", 4 * devtimeout);
 #if USE_SYSLOG
     openlog(progname, LOG_PID, LOG_DAEMON);
-    syslog(LOG_ALERT, "still alive after sleeping %d seconds", 4 * TIMER_MARGIN);
+    syslog(LOG_ALERT, "still alive after sleeping %d seconds", 4 * devtimeout);
     closelog();
 #endif
     exit(1);
@@ -531,7 +532,7 @@ void do_shutdown(int errorcode)
     /* okay we should never reach this point, */
     /* but if we do we will cause the hard reset */
 
-    sleep(TIMER_MARGIN * 4);
+    sleep(devtimeout * 4);
 
     /* unbelievable: we're still alive */
     panic();

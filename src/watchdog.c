@@ -80,7 +80,7 @@ int tint = 10, logtick = 1, ticker = 1, schedprio = 1;
 int maxload1 = 0, maxload5 = 0, maxload15 = 0, minpages = 0;
 int maxtemp = 120, hbstamps = 300, lastts, nrts;
 int pingcount = 3;
-int devtimeout = 0;
+int devtimeout = TIMER_MARGIN;
 char *tempname = NULL, *devname = NULL, *admin = "root", *progname;
 char *timestamps, *heartbeat;
 time_t timeout = 0;
@@ -176,7 +176,7 @@ static int repair(char *rbinary, int result, char *name)
 #endif				/* USE_SYSLOG */
 
 	if (ret == ERESET) /* repair script says force hard reset, we give it a try */
-		sleep(TIMER_MARGIN * 4);
+		sleep(devtimeout * 4);
 	
 	/* for all other errors or if we still live, we let shutdown handle it */
 	return (ret);
@@ -523,7 +523,7 @@ int main(int argc, char *const argv[])
     if (tint < 0)
 	usage();
 
-    if (tint >= TIMER_MARGIN && !force) {
+    if (tint >= devtimout && !force) {
 	fprintf(stderr, "%s error:\n", progname);
 	fprintf(stderr, "This interval length might reboot the system while the process sleeps!\n");
 	fprintf(stderr, "To force this interval length use the -f option.\n");
