@@ -2,6 +2,8 @@ watchdog (5.6-1) unstable; urgency=low
 
   * New upstream version, closes: #517419
   * Bumped Standards-Version to 3.8.1, no change needed.
+  * Added homepage field.
+  * Added watch file.
 
  -- Michael Meskes <meskes@debian.org>  Thu, 22 Mar 2009 13:56:25 +0100
 
