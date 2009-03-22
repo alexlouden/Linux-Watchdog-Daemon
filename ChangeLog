@@ -469,3 +469,7 @@ Fri, 13 Mar 2009 12:26:40 +0100
 	- Applied patch by Richard W.M. Jones <rjones@redhat.com> to cleanup
 	  code base for gcc-4.4.
 
+Sun, 22 Mar 2009 14:33:21 +0100
+
+	- Some more bugfixes by me and Lon.
+	- Released 5.6
