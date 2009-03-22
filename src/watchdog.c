@@ -523,7 +523,7 @@ int main(int argc, char *const argv[])
     if (tint < 0)
 	usage();
 
-    if (tint >= devtimout && !force) {
+    if (tint >= devtimeout && !force) {
 	fprintf(stderr, "%s error:\n", progname);
 	fprintf(stderr, "This interval length might reboot the system while the process sleeps!\n");
 	fprintf(stderr, "To force this interval length use the -f option.\n");
