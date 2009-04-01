@@ -25,6 +25,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/ioctl.h>
 #include <linux/watchdog.h>
 #define __USE_GNU
 #include <string.h>
@@ -690,7 +691,7 @@ int main(int argc, char *const argv[])
 	       driver default) */
 	    if (ioctl(watchdog, WDIOC_SETTIMEOUT, &devtimeout) < 0) {
 #if USE_SYSLOG
-            	syslog(LOG_ERR, "cannot set timeout %s (errno = %d = '%m')", strerror(errno), devtimeout, errno);
+                syslog(LOG_ERR, "cannot set timeout %d (errno = %d = '%m')", devtimeout, errno);
 #else				
             	perror(progname);
 #endif			   

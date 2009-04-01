@@ -71,4 +71,11 @@ int check_memory(void);
 
 void do_shutdown(int errorcode);
 void sigterm_handler(int arg);
-void terminate(void);
+
+#ifdef __GNUC__
+#define GCC_NORETURN __attribute__((noreturn))
+#else
+#define GCC_NORETURN
+#endif
+
+void terminate(void) GCC_NORETURN;

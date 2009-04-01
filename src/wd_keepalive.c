@@ -34,6 +34,8 @@
 #include <syslog.h>
 #endif         
 
+#include "extern.h"
+
 #define TRUE  1
 #define FALSE 0
 
