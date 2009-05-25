@@ -1,3 +1,9 @@
+watchdog (5.6-2) unstable; urgency=low
+
+  * Accept config lines with arbitrary length, closes: #529891
+
+ -- Michael Meskes <meskes@debian.org>  Mon, 25 May 2009 02:54:51 +0200
+
 watchdog (5.6-1) unstable; urgency=low
 
   * New upstream version, closes: #517419
