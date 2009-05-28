@@ -39,7 +39,7 @@ int check_iface(struct list *dev)
     while (!feof(file)) {
 	char line[NETDEV_LINE_LEN];
         
-        if (fgets(line, CONFIG_LINE_LEN, file) == NULL) {
+        if (fgets(line, NETDEV_LINE_LEN, file) == NULL) {
 		if (!ferror(file))
 		        break;
 	        else {

@@ -112,16 +112,6 @@ AC_ARG_WITH(configfile,
 ])
 AC_SUBST(CONFIG_FILENAME)
 
-AC_MSG_CHECKING(for config file line length)
-AC_ARG_WITH(linelength,
-[  --with-linelength=int   max line length in config file (default 80)],[
-  AC_DEFINE_UNQUOTED(CONFIG_LINE_LEN, $withval, "max line length in config file")
-  AC_MSG_RESULT($withval)
-],[
-  AC_DEFINE(CONFIG_LINE_LEN, 80, "max line length in config file")
-  AC_MSG_RESULT(80)
-])
-
 AC_MSG_CHECKING(for pid filename)
 AC_ARG_WITH(pidfile,
 [  --with-pidfile=filename name of pid file (default /var/run/watchdog.pid)],[
