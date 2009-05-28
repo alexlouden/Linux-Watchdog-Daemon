@@ -255,9 +255,9 @@ static void read_config(char *filename, char *progname)
 
     while (!feof(wc)) {
 	char *line = NULL;
-	size_t *n;
+	size_t n;
 
-	if (getline(&line, n, wc) == -1) {
+	if (getline(&line, &n, wc) == -1) {
 	    if (!ferror(wc))
 		break;
 	    else {
