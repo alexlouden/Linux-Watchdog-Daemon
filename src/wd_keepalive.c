@@ -34,8 +34,6 @@
 #include <syslog.h>
 #endif         
 
-#include "extern.h"
-
 #define TRUE  1
 #define FALSE 0
 
@@ -140,9 +138,10 @@ static void read_config(char *filename, char *progname)
     }
 
     while ( !feof(wc) ) {
-        char line[CONFIG_LINE_LEN];
+	char *line = NULL;
+	size_t n;
 
-        if ( fgets(line, CONFIG_LINE_LEN, wc) == NULL ) {
+	if (getline(&line, &n, wc) == -1) {
             if ( !ferror(wc) )
                 break;
             else {
