@@ -8,7 +8,7 @@ Homepage: http://watchdog.sourceforge.net
 
 Package: watchdog
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, makedev (>= 2.3.1-24) | udev
+Depends: ${shlibs:Depends}, ${misc:Depends}, makedev (>= 2.3.1-24) | udev, lsb-base (>= 3.2-14)
 Description: A software watchdog
  The watchdog program writes to /dev/watchdog every ten seconds.  If
  the device is opened but not written to within a minute, the machine

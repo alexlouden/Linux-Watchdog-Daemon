@@ -34,6 +34,9 @@ WD_NAME=wd_keepalive
 DAEMON=/usr/sbin/watchdog
 WD_DAEMON=/usr/sbin/wd_keepalive
 
+# Get lsb functions
+. /lib/lsb/init-functions
+
 case "$1" in
   start)
     if [ $run_watchdog = 1 ]
@@ -41,47 +44,37 @@ case "$1" in
     	# do we have to load a module?
 	[ ${watchdog_module:-none} != "none" ] && /sbin/modprobe $watchdog_module
 	# make sure that wd_keepalive is stopped
-	echo -n "Stopping watchdog keepalive daemon: "
-        if start-stop-daemon --stop --quiet \
+	log_begin_msg "Stopping watchdog keepalive daemon..."
+        start-stop-daemon --stop --quiet \
             --pidfile  /var/run/$WD_NAME.pid
-        then
-            echo wd_keepalive.
-        else
-            echo
-        fi
+        log_end_msg $?
 
-	echo -n "Starting watchdog daemon: "
-	if start-stop-daemon --start --quiet \
-	    --exec $DAEMON -- $watchdog_options
-	then
-	    echo watchdog.
-	else
-	    echo
-	fi
+	sleep 5
+	# Unconditionally start watchdog daemon because we want to run it even
+	# if wd_keepalive wasn't running
+	log_begin_msg "Starting watchdog daemon..."
+	start-stop-daemon --start --quiet \
+             --exec $DAEMON -- $watchdog_options
+	log_end_msg $?
     fi
     ;;
 
   stop)
     if [ $run_watchdog = 1 ]
     then
-	echo -n "Stopping watchdog daemon: "
+	log_begin_msg "Stopping watchdog daemon..."
 	if start-stop-daemon --stop --quiet \
 	    --pidfile /var/run/$NAME.pid
 	then
-	    echo watchdog.
+	    log_end_msg $?
 
+	    sleep 5
 	    # make sure that wd_keepalive is started
-	    echo -n "Starting watchdog keepalive daemon: "
-            if start-stop-daemon --start --quiet \
+	    log_begin_msg "Starting watchdog keepalive daemon..."
+            start-stop-daemon --start --quiet \
 		--exec $WD_DAEMON -- $watchdog_options
-            then
-		echo wd_keepalive.
-            else
-		echo
-            fi
-	else
-	    echo
 	fi
+	log_end_msg $?
     fi
     ;;
 
@@ -91,22 +84,20 @@ case "$1" in
 
   force-reload)
     if [ $run_watchdog = 0 ]; then exit 0; fi
-    echo -n "Restarting $NAME daemon."
+    log_begin_msg "Restarting $NAME daemon..."
     start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid
-    echo -n "."
     sleep 5
-    echo -n "."
-    if start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid \
+    start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid \
 	--exec $DAEMON -- $watchdog_options
-    then
-	echo "done."
-    else
-	echo
-    fi
+    log_end_msg $?
+    ;;
+
+  status)
+    status_of_proc "$DAEMON" watchdog
     ;;
 
   *)
-    echo "Usage: /etc/init.d/watchdog {start|stop|restart|force-reload}"
+    echo "Usage: /etc/init.d/watchdog {start|stop|restart|force-reload|status}"
     exit 1
 
 esac
