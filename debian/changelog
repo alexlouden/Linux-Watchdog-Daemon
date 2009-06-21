@@ -1,3 +1,13 @@
+watchdog (5.6-4) unstable; urgency=low
+
+  * wd_keepalive immediately terminates if no watchdog device is given,
+    therefore it cannot be stopped when starting watchdog. Make sure we do not
+    print an error in this case, closes: #533608
+  * Bumped Standards-Version to 3.8.2m no changes needed.
+  * Remove path specification from command in maintainer script.
+
+ -- Michael Meskes <meskes@debian.org>  Sun, 21 Jun 2009 10:54:23 +0200
+
 watchdog (5.6-3) unstable; urgency=low
 
   * Prevent usage of unset variable by applying upstream patch, closes: #530843

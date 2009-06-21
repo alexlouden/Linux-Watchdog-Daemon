@@ -6,17 +6,17 @@ if [ "$1" = configure ]
 then
     . /usr/share/debconf/confmodule
 
-    if [ -x /sbin/MAKEDEV ]; then
+    if [ -x `which MAKEDEV` ]; then
 	    # do we have to create the device?
 	    if [ ! -c /dev/watchdog ]
 	    then
-		(cd /dev; /sbin/MAKEDEV misc || true)
+		(cd /dev; MAKEDEV misc || true)
 	    fi
 
 	    # do we have to create the temperature device?
 	    if [ ! -c /dev/temperature ]
 	    then
-		(cd /dev; /sbin/MAKEDEV misc || true)
+		(cd /dev; MAKEDEV misc || true)
 	    fi
     fi
 

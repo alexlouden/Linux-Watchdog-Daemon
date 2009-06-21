@@ -45,7 +45,7 @@ case "$1" in
 	[ ${watchdog_module:-none} != "none" ] && /sbin/modprobe $watchdog_module
 	# make sure that wd_keepalive is stopped
 	log_begin_msg "Stopping watchdog keepalive daemon..."
-        start-stop-daemon --stop --quiet \
+        start-stop-daemon --stop --quiet -oknodo \
             --pidfile  /var/run/$WD_NAME.pid
         log_end_msg $?
 
