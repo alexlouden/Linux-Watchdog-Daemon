@@ -1,7 +1,7 @@
 watchdog (5.6-5) unstable; urgency=low
 
   * Fixed wd_keepalive init script LSB header to specify no stop level. Also
-    removed superfluous dependencies.
+    removed superfluous dependencies and old links.
 
  -- Michael Meskes <meskes@debian.org>  Sat, 08 Aug 2009 20:51:48 +0200
 
