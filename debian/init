@@ -6,7 +6,8 @@
 # Short-Description: Start software watchdog daemon
 # Required-Start:    $remote_fs $syslog
 # Required-Stop:     $remote_fs $syslog
-# Should-Start:      udev gdm kdm xdm $named
+# Should-Start:      udev hal gdm kdm xdm $named
+# Should-Stop:       anacron atd autofs bluetooth citadel time-daemon chipcardd dirmngr dovecot fam fancontrol fuse gpm klogd netdiag openbsd-inetd postfix powersaved quotarpc rsyncd smartmontools vboxadd webcit wicd wpa-ifupdown gdm kdm xdm
 # X-Start-Before:    bootlogs rmnologin
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
