@@ -1,16 +1,19 @@
 watchdog (5.6-5) unstable; urgency=low
 
   * Fixed wd_keepalive init script LSB header to specify no stop level. Also
-    removed superfluous dependencies and old links.
+    removed superfluous dependencies and old links, closes: #540390
+  * Also made sure that watchdog itself is stopped as early as possible. This
+    needs an insserv version that processes $all in stop lines.  Bumped
+  * Standards-Version to 3.8.3 no changes needed.
 
- -- Michael Meskes <meskes@debian.org>  Sat, 08 Aug 2009 20:51:48 +0200
+ -- Michael Meskes <meskes@debian.org>  Wed, 19 Aug 2009 11:56:30 +0200
 
 watchdog (5.6-4) unstable; urgency=low
 
   * wd_keepalive immediately terminates if no watchdog device is given,
     therefore it cannot be stopped when starting watchdog. Make sure we do not
     print an error in this case, closes: #533608
-  * Bumped Standards-Version to 3.8.2m no changes needed.
+  * Bumped Standards-Version to 3.8.2 no changes needed.
   * Remove path specification from command in maintainer script.
 
  -- Michael Meskes <meskes@debian.org>  Sun, 21 Jun 2009 10:54:23 +0200

@@ -3,7 +3,7 @@ Section: admin
 Priority: extra
 Maintainer: Michael Meskes <meskes@debian.org>
 Build-Depends: debhelper (>= 5), po-debconf (>= 0.5.0)
-Standards-Version: 3.8.2
+Standards-Version: 3.8.3
 Homepage: http://watchdog.sourceforge.net
 
 Package: watchdog
