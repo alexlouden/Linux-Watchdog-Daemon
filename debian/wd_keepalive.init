@@ -6,7 +6,7 @@
 # Short-Description: Start watchdog keepalive daemon
 # Required-Start:    $remote_fs
 # Required-Stop:     $remote_fs
-# X-Start-Before:    acpi-support aumix binfmt-support dirmngr fam fancontrol loadcpufreq kvm netdiag portmap quotarpc vboxadd vboxdrv $syslog
+# X-Start-Before:    acpi-support aumix binfmt-support bittorrent dirmngr dns2tcp fam fancontrol loadcpufreq kvm netdiag quotarpc saslauthd vboxadd vboxdrv $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      
 ### END INIT INFO
