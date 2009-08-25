@@ -480,4 +480,5 @@ Mon, 25 May 2009 02:46:32 +0200
 	- Applied patch by Mike Frysinger to not use deprecated sys_siglist
 	  anymore.
 	- Also removed configure test for sys_siglist.
+	- Cleaned up includes, also courtesy of Mike Frysinger.
 

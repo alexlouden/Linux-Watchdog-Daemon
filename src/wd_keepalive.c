@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/wait.h>
-#define __USE_GNU
+#include <libgen.h>
 #include <string.h>
 #include <syslog.h>
 

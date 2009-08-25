@@ -4,6 +4,7 @@
 #include "config.h"
 #endif
 
+#define _GNU_SOURCE /* for strsignal() */
 #include <unistd.h>
 #include <errno.h>
 #include <stdio.h>

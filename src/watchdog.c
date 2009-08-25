@@ -27,12 +27,10 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <linux/watchdog.h>
-#define __USE_GNU
 #include <string.h>
 
-#if !defined(__GLIBC__)		/* __GLIBC__ */
-extern char *basename(const char *);
-#endif				/* __GLIBC__ */
+#include <sys/ioctl.h>
+#include <libgen.h>
 
 #include <unistd.h>
 
