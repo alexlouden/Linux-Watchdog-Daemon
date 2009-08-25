@@ -477,3 +477,7 @@ Sun, 22 Mar 2009 14:33:21 +0100
 Mon, 25 May 2009 02:46:32 +0200
 
 	- Allow config lines with arbitrary length.
+	- Applied patch by Mike Frysinger to not use deprecated sys_siglist
+	  anymore.
+	- Also removed configure test for sys_siglist.
+
