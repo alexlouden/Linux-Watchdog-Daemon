@@ -56,6 +56,9 @@ int check_pidfile(struct list *file)
         return (ENOERR);
     }
 
+    /* just to play it safe */
+    memset(buf, 0, sizeof(buf));
+
     /* read the line (there is only one) */
     if (read(fd, buf, sizeof(buf)) < 0) {
     	int err = errno;
