@@ -76,6 +76,10 @@ line watchdog assumes it belongs to the most recently read 'file =' line.
 They don't neccessarily have to follow each other directly. But you cannot
 specify a 'change =' before a 'file ='.
 The default is to only stat the file and don't look for changes.
+Using this feature to monitor changes in /var/log/messages might require some
+special syslog daemon configuration, e.g. rsyslog needs
+"$ActionWriteAllMarkMessages on" to be set to make sure the marks are written
+no matter what.
 .TP
 pidfile = <pidfilename>
 Set pidfile name for server test mode.
