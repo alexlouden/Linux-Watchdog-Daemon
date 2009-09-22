@@ -1,3 +1,19 @@
+watchdog (5.6-8) unstable; urgency=low
+
+  * Next try in getting the dependencies right, wd_keepalive is supposed to be
+    started as early as possible to cope with system that boot with the
+    watchdog device open and watchdog is supposed to be started as late as
+    possible to be able to monitor other process. For the very same reason
+    watchdog should be stopped very early before the other process stop.
+
+ -- Michael Meskes <meskes@debian.org>  Tue, 22 Sep 2009 11:00:19 +0200
+
+watchdog (5.6-7) unstable; urgency=low
+
+  * Added rsyslog config option to watchdog.conf manpage, closes: #544671
+
+ -- Michael Meskes <meskes@debian.org>  Mon, 21 Sep 2009 13:13:26 +0200
+
 watchdog (5.6-6) unstable; urgency=low
 
   * wd_keepalive must not be started before portmap because /usr could be nfs

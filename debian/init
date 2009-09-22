@@ -4,11 +4,10 @@
 ### BEGIN INIT INFO
 # Provides:          watchdog
 # Short-Description: Start software watchdog daemon
-# Required-Start:    $remote_fs $syslog
+# Required-Start:    $all
 # Required-Stop:     $all
-# Should-Start:      udev hal gdm kdm xdm $named
+# Should-Start:      
 # Should-Stop:       
-# X-Start-Before:    bootlogs rmnologin
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 ### END INIT INFO
