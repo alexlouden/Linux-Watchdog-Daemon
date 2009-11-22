@@ -570,7 +570,8 @@ int main(int argc, char *const argv[])
 		(void) fprintf(stderr, "%s: unknown protocol icmp.\n", progname);
 		exit(1);
 	    }
-	    if ((net->sock_fp = socket(AF_INET, SOCK_RAW, proto->p_proto)) < 0) {
+	    if ((net->sock_fp = socket(AF_INET, SOCK_RAW, proto->p_proto)) < 0
+		|| fcntl(net->sock_fp, F_SETFD, 1)) {
 		perror(progname);
 		exit(1);
 	    }

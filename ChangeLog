@@ -482,3 +482,7 @@ Mon, 25 May 2009 02:46:32 +0200
 	- Also removed configure test for sys_siglist.
 	- Cleaned up includes, also courtesy of Mike Frysinger.
 
+Sun, 22 Nov 2009 14:05:29 +0100
+
+	- Applied patch by Russell Coker <russell@coker.com.au> to sets the
+	  socket handle for raw socket access to close on exec.
