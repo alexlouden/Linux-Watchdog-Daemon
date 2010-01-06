@@ -247,7 +247,7 @@ static void read_config(char *filename, char *progname)
     int gotload5 = FALSE, gotload15 = FALSE;
 
     if ((wc = fopen(filename, "r")) == NULL) {
-	perror(progname);
+	fprintf(stderr, "%s: Can't open config file \"%s\": %s ", progname, filename, strerror(errno));
 	exit(1);
     }
 
