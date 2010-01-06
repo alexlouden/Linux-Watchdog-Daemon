@@ -1,9 +1,10 @@
-watchdog (5.6-9) unstable; urgency=low
+watchdog (5.7-1) unstable; urgency=low
 
-  * Applied patch by Russell Coker <russell@coker.com.au> to set the socket
-    handle for raw socket access to close on exec. (Closes: #552611)
-  * Applied patch by Russell Coker <russell@coker.com.au> to give a
-    better error message if no config file is found. (Closes: #563798)
+  * New upstream version including all the changes from the Debian package and
+    - Patch by Russell Coker <russell@coker.com.au> to set the socket
+      handle for raw socket access to close on exec. (Closes: #552611)
+    - Patch by Russell Coker <russell@coker.com.au> to give a
+      better error message if no config file is found. (Closes: #563798)
 
  -- Michael Meskes <meskes@debian.org>  Wed, 06 Jan 2010 13:33:25 +0100
 
