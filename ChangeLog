@@ -492,3 +492,9 @@ Wed, 06 Jan 2010 13:36:37 +0100
 	- Applied patch by Russell Coker <russell@coker.com.au> to give a
 	  better error message if no config file is found.
 	- Released version 5.7.	
+
+Fri, 08 Jan 2010 11:02:23 +0100
+
+	- Applied patch by Min Zhang <mzhang@mvista.com> to make logdir a
+	  configurable option.
+

@@ -9,6 +9,7 @@ extern pid_t pid;
 extern char *tempname, *admin, *devname, *progname, *timestamps, *heartbeat;
 extern time_t timeout;
 extern FILE *hb;
+extern char* logdir;
 
 /* variable types */
 struct pingmode

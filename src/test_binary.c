@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/wait.h>
 #include <time.h>
 
@@ -85,6 +86,7 @@ int check_bin(char *tbinary, time_t timeout)
 
     child_pid = fork();
     if (!child_pid) {
+	char* logfile;
 	
 	/* child, exit immediately, if no test binary given */
 	if (tbinary == NULL)
@@ -93,12 +95,19 @@ int check_bin(char *tbinary, time_t timeout)
 	/* Don't want the stdin and stdout of our test program
 	 * to cause trouble
 	 * So make stdout and stderr go to their respective files */	
-	if (!freopen("/var/log/watchdog/test-bin.stdout", "a+", stdout))
+	logfile = (char*)malloc(strlen(logdir) + sizeof("/test-bin.stdout") + 1);
+	if (!logfile)
 	    exit (errno);
-	if (!freopen("/var/log/watchdog/test-bin.stderr", "a+", stderr))
+	strcpy(logfile, logdir);
+	strcat(logfile, "/test-bin.stdout");
+	if (!freopen(logfile, "a+", stdout))
 	    exit (errno);
-	
-	/* else start binary */
+	strcat(logfile, "/test-bin.stderr");
+	if (!freopen(logfile, "a+", stderr))
+	    exit (errno);
+	free (logfile);
+
+	/* now start binary */
 	execl(tbinary, tbinary, NULL);
 
 	/* execl should only return in case of an error */

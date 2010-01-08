@@ -72,6 +72,7 @@ volatile sig_atomic_t _running = 1;
 #define TESTTIMEOUT	"test-timeout"
 #define HEARTBEAT	"heartbeat-file"
 #define HBSTAMPS	"heartbeat-stamps"
+#define LOGDIR		"log-dir"
 
 pid_t pid;
 int softboot = FALSE, watchdog = -1, load = -1, mem = -1, temp = -1;
@@ -84,6 +85,7 @@ char *tempname = NULL, *devname = NULL, *admin = "root", *progname;
 char *timestamps, *heartbeat;
 time_t timeout = 0;
 FILE *hb;
+char* logdir = "/var/log/watchdog";
 
 #if defined(_POSIX_MEMLOCK)
 int mlocked = FALSE, realtime = FALSE;
@@ -125,15 +127,25 @@ static int repair(char *rbinary, int result, char *name)
 
     child_pid = fork();
     if (!child_pid) {
+	char* logfile;
+
 	/* Don't want the stdin and stdout of our test program
 	 * to cause trouble
 	 * So make stdout and stderr go to their respective files */
-        if (!freopen("/var/log/watchdog/repair-bin.stdout", "a+", stdout))
+	logfile = (char*)malloc(strlen(logdir) + sizeof("/repair-bin.stdout") + 1);
+	if (!logfile)
         	exit (errno);
-        if (!freopen("/var/log/watchdog/repair-bin.stderr", "a+", stderr))
-        	exit (errno);
+	strcpy(logfile, logdir);
+	strcat(logfile, "/repair-bin.stdout");
+	if (!freopen(logfile, "a+", stdout))
+		exit (errno);
+	strcpy(logfile, logdir);
+	strcat(logfile, "/repair-bin.stderr");
+	if (!freopen(logfile, "a+", stderr))
+		exit (errno);
+	free(logfile);
 
-        /* else start binary */
+        /* now start binary */
 	if (name == NULL)
 		execl(rbinary, rbinary, parm, NULL);
 	else
@@ -417,9 +429,13 @@ static void read_config(char *filename, char *progname)
 	    } else if (strncmp(line + i, MINMEM, strlen(MINMEM)) == 0) {
 		if (spool(line, &i, strlen(MINMEM)))
 			fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-		else {
+		else
 			minpages = atol(line + i);
-		}
+	    } else if (strncmp(line + i, LOGDIR, strlen(LOGDIR)) == 0) {
+		if (spool(line, &i, strlen(LOGDIR)))
+			fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
+		else
+			logdir = strdup(line + i);
 	    } else {
 		fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 	    }
@@ -537,10 +553,10 @@ int main(int argc, char *const argv[])
 	exit(1);
     }
    
-    /* make sure we get our own directory in /var/log */
-    if (mkdir ("/var/log/watchdog", 0750) && errno != EEXIST) {
+    /* make sure we get our own own directory */
+    if (mkdir (logdir, 0750) && errno != EEXIST) {
 	fprintf(stderr, "%s error:\n", progname);
-        fprintf(stderr, "Cannot create directory /var/log/watchdog\n");
+        fprintf(stderr, "Cannot create directory %s\n", logdir);
 	exit (1);
     }
 
