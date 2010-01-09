@@ -32,6 +32,8 @@ watchdog_module="none"
 NAME=wd_keepalive
 DAEMON=/usr/sbin/wd_keepalive
 
+STOP_RETRY_SCHEDULE='TERM/10/forever/KILL/1'
+
 case "$1" in
   start)
     if [ $run_watchdog = 1 ]
@@ -52,8 +54,8 @@ case "$1" in
     if [ $run_watchdog = 1 ]
     then
 	echo -n "Stopping watchdog keepalive daemon: "
-	if start-stop-daemon --stop --quiet \
-	    --pidfile /var/run/$NAME.pid
+	if start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid \
+	    --retry $STOP_RETRY_SCHEDULE
 	then
 	    echo wd_keepalive.
 	else
@@ -69,9 +71,8 @@ case "$1" in
   force-reload)
     if [ $run_watchdog = 0 ]; then exit 0; fi
     echo -n "Restarting $NAME daemon."
-    start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid
-    echo -n "."
-    sleep 5
+    start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid \
+	--retry $STOP_RETRY_SCHEDULE
     echo -n "."
     if start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid \
 	--exec $DAEMON -- $watchdog_options
