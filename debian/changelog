@@ -1,3 +1,10 @@
+watchdog (5.7-3) unstable; urgency=low
+
+  * Missed one line of Min Zhangg's patch resulting in an incorrect path when
+    using log_dir option.
+
+ -- Michael Meskes <meskes@debian.org>  Wed, 13 Jan 2010 09:59:49 +0100
+
 watchdog (5.7-2) unstable; urgency=low
 
   * Applied patch by Min Zhang <mzhang@mvista.com> to make logdir a
