@@ -1,3 +1,13 @@
+watchdog (5.7-2) unstable; urgency=low
+
+  * Applied patch by Min Zhang <mzhang@mvista.com> to make logdir a
+    configurable option.
+  * Fixed init scripts to make sure one daemon really has ended before
+    the next one is started. (Closes: #554793) - thanks to Tim Small
+    <tim@seoss.co.uk>
+
+ -- Michael Meskes <meskes@debian.org>  Sat, 09 Jan 2010 16:32:20 +0100
+
 watchdog (5.7-1) unstable; urgency=low
 
   * New upstream version including all the changes from the Debian package and

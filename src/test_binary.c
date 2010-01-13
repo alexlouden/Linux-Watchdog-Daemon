@@ -102,6 +102,7 @@ int check_bin(char *tbinary, time_t timeout)
 	strcat(logfile, "/test-bin.stdout");
 	if (!freopen(logfile, "a+", stdout))
 	    exit (errno);
+	strcpy(logfile, logdir);
 	strcat(logfile, "/test-bin.stderr");
 	if (!freopen(logfile, "a+", stderr))
 	    exit (errno);
