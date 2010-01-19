@@ -50,7 +50,7 @@ case "$1" in
 	# make sure that wd_keepalive is stopped
 	log_begin_msg "Stopping watchdog keepalive daemon..."
         start-stop-daemon --stop --quiet -oknodo --retry $STOP_RETRY_SCHEDULE \
-            --pidfile  /var/run/$KEEPALIVE_NAME.pid
+            --pidfile /var/run/$KEEPALIVE_NAME.pid
         log_end_msg $?
 
 	# Unconditionally start watchdog daemon because we want to run it even
@@ -71,7 +71,7 @@ case "$1" in
 	log_end_msg $?
 	# make sure that wd_keepalive is started
 	log_begin_msg "Starting watchdog keepalive daemon..."
-	start-stop-daemon --start --quiet \
+	start-stop-daemon --start --quiet --pidfile /var/run/$KEEPALIVE_NAME.pid \
 	    --exec $KEEPALIVE_DAEMON -- $watchdog_options
 	log_end_msg $?
     fi
