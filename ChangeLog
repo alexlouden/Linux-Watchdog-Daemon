@@ -498,3 +498,9 @@ Fri, 08 Jan 2010 11:02:23 +0100
 	- Applied patch by Min Zhang <mzhang@mvista.com> to make logdir a
 	  configurable option.
 
+Tue, 09 Feb 2010 16:26:21 +0100
+
+	- Disable OOM killer for watchdog and wd_keepalive. In the process also
+	  make sure that the daemons do not allocate memory once they are in
+	  daemon mode as a safeguard for systems running out of memory.
+

@@ -19,6 +19,26 @@ The wd_keepalive daemon can be stopped without causing a reboot if the device
 is closed correctly, unless your kernel is compiled with the
 .I CONFIG_WATCHDOG_NOWAYOUT
 option enabled.
+.PP
+Under high system load
+.B wd_keepalive
+might be swapped out of memory and may fail
+to make it back in in time. Under these circumstances the Linux kernel will
+reset the machine. To make sure you won't get unnecessary reboots make
+sure you have the variable
+.I realtime
+set to
+.I yes
+in the configuration file
+.IR watchdog.conf .
+This adds real time support to
+.BR wd_keepalive :
+it will lock itself into memory and there should  be no problem even under the
+highest of loads.
+.PP
+On system running out of memory the kernel will try to free enough memory by killing process. The
+.B wd_keepalive
+daemon itself is exempted from this so-called out-of-memory killer.
 .SH OPTIONS
 Available command line options are the following:
 .TP

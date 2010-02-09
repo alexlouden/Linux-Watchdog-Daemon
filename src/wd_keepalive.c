@@ -18,6 +18,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
+#include <limits.h>
 #include <sched.h>
 #include <signal.h>
 #include <stdio.h>
@@ -56,8 +57,6 @@ static void usage(void)
     fprintf(stderr, "%s \n", progname);
     exit(1);
 }
-
-
 
 /* write a log entry on exit */
 static void log_end()
@@ -128,11 +127,11 @@ static int spool(char *line, int *i, int offset)
         return(0);
 }
 
-static void read_config(char *filename, char *progname)
+static void read_config(char *configfile, char *progname)
 {
     FILE *wc;
 
-    if ( (wc = fopen(filename, "r")) == NULL ) {
+    if ( (wc = fopen(configfile, "r")) == NULL ) {
         perror(progname);
         exit(1);
     }
@@ -210,8 +209,8 @@ static void read_config(char *filename, char *progname)
 int main(int argc, char *const argv[])
 {
     FILE *fp;
-    char log[256];
-    char *filename = CONFIG_FILENAME;
+    char *configfile = CONFIG_FILENAME;
+    char *filename_buf;
     pid_t child_pid;
     int count = 0;
     int c;
@@ -249,7 +248,7 @@ int main(int argc, char *const argv[])
 	    break;
 	switch (c) {
 	case 'c':
-	    filename = optarg;
+	    configfile = optarg;
 	    break;
 	case 'n':
 	case 'p':
@@ -273,13 +272,22 @@ int main(int argc, char *const argv[])
 	}
     }
 
-    read_config(filename, progname);
+    read_config(configfile, progname);
 
     /* make sure we're on the root partition */
     if ( chdir("/") < 0 ) {
         perror(progname);
         exit(1);
     }
+
+    /* allocate some memory to store a filename, this is needed later on even
+     * if the system runs out of memory */
+    filename_buf = (char*)malloc(strlen("/proc//oom_adj") + sizeof(int) * CHAR_BIT * 10 / 3 + 1);
+    if (!filename_buf) {
+        error(progname);
+        exit(1);
+    }
+
 #if !defined(DEBUG)
     /* fork to go into the background */
     if ( (child_pid = fork()) < 0 ) {
@@ -320,9 +328,8 @@ int main(int argc, char *const argv[])
 
     /* Log the starting message */
     openlog(progname, LOG_PID, LOG_DAEMON);
-    sprintf(log, "starting watchdog keepalive daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
-    sprintf(log + strlen(log), " int=%d alive=%s realtime=%s", tint, devname, realtime ? "yes" : "no");
-    syslog(LOG_INFO, log);
+    syslog(LOG_INFO, "starting watchdog keepalive daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
+    syslog(LOG_INFO, " int=%d alive=%s realtime=%s", tint, devname, realtime ? "yes" : "no");
 #endif                          /* USE_SYSLOG */
 
     /* this daemon has no other function than writing to this device 
@@ -381,6 +388,14 @@ int main(int argc, char *const argv[])
         }
     }
 #endif
+
+    /* tell oom killer to not kill this process */
+    sprintf(filename_buf, "/proc/%d/oom_adj", getpid());
+    fp = fopen(filename_buf, "w");
+    if (fp != NULL) {
+        fprintf(fp, "-17\n");
+        (void) fclose(fp);
+    }
 
     /* main loop: update after <tint> seconds */
     while ( _running ) {

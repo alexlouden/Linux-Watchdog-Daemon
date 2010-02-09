@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
+#include <limits.h>
 #include <netdb.h>
 #include <sched.h>
 #include <signal.h>
@@ -39,6 +40,8 @@
 #if USE_SYSLOG
 #include <syslog.h>
 #endif				/* USE_SYSLOG */
+
+#define max(x,y) (x) > (y) ? (x) : (y)
 
 static int no_act = FALSE;
 
@@ -86,6 +89,7 @@ char *timestamps, *heartbeat;
 time_t timeout = 0;
 FILE *hb;
 char* logdir = "/var/log/watchdog";
+char *filename_buf;
 
 #if defined(_POSIX_MEMLOCK)
 int mlocked = FALSE, realtime = FALSE;
@@ -127,23 +131,17 @@ static int repair(char *rbinary, int result, char *name)
 
     child_pid = fork();
     if (!child_pid) {
-	char* logfile;
-
-	/* Don't want the stdin and stdout of our test program
-	 * to cause trouble
+	/* Don't want the stdin and stdout of our repair program
+	 * to cause trouble.
 	 * So make stdout and stderr go to their respective files */
-	logfile = (char*)malloc(strlen(logdir) + sizeof("/repair-bin.stdout") + 1);
-	if (!logfile)
-        	exit (errno);
-	strcpy(logfile, logdir);
-	strcat(logfile, "/repair-bin.stdout");
-	if (!freopen(logfile, "a+", stdout))
+	strcpy(filename_buf, logdir);
+	strcat(filename_buf, "/repair-bin.stdout");
+	if (!freopen(filename_buf, "a+", stdout))
 		exit (errno);
-	strcpy(logfile, logdir);
-	strcat(logfile, "/repair-bin.stderr");
-	if (!freopen(logfile, "a+", stderr))
+	strcpy(filename_buf, logdir);
+	strcat(filename_buf, "/repair-bin.stderr");
+	if (!freopen(filename_buf, "a+", stderr))
 		exit (errno);
-	free(logfile);
 
         /* now start binary */
 	if (name == NULL)
@@ -167,6 +165,7 @@ static int repair(char *rbinary, int result, char *name)
 	else
 	    return (ENOERR);
     }
+
     if (waitpid(child_pid, &result, 0) != child_pid) {
 	int err = errno;
 
@@ -253,13 +252,13 @@ static int spool(char *line, int *i, int offset)
     	return(0);
 }
 
-static void read_config(char *filename, char *progname)
+static void read_config(char *configfile, char *progname)
 {
     FILE *wc;
     int gotload5 = FALSE, gotload15 = FALSE;
 
-    if ((wc = fopen(filename, "r")) == NULL) {
-	fprintf(stderr, "%s: Can't open config file \"%s\": %s ", progname, filename, strerror(errno));
+    if ((wc = fopen(configfile, "r")) == NULL) {
+	fprintf(stderr, "%s: Can't open config file \"%s\": %s ", progname, configfile, strerror(errno));
 	exit(1);
     }
 
@@ -448,9 +447,9 @@ static void read_config(char *filename, char *progname)
     }
 }
 
-static void old_option(int c, char *filename)
+static void old_option(int c, char *configfile)
 {
-    fprintf(stderr, "Option -%c is no longer valid, please specify it in %s.\n", c, filename);
+    fprintf(stderr, "Option -%c is no longer valid, please specify it in %s.\n", c, configfile);
     usage();
 }
 
@@ -459,7 +458,7 @@ int main(int argc, char *const argv[])
     FILE *fp;
     int c, force = FALSE, sync_it = FALSE;
     int hold;
-    char *filename = CONFIG_FILENAME;
+    char *configfile = CONFIG_FILENAME;
     struct list *act;
     pid_t child_pid;
 
@@ -507,10 +506,10 @@ int main(int argc, char *const argv[])
 	case 'l':
 	case 'm':
 	case 'i':
-	    old_option(c, filename);
+	    old_option(c, configfile);
 	    break;
 	case 'c':
-	    filename = optarg;
+	    configfile = optarg;
 	    break;
 	case 'f':
 	    force = TRUE;
@@ -534,7 +533,7 @@ int main(int argc, char *const argv[])
 	}
     }
 
-    read_config(filename, progname);
+    read_config(configfile, progname);
 
     if (tint < 0)
 	usage();
@@ -553,7 +552,7 @@ int main(int argc, char *const argv[])
 	exit(1);
     }
    
-    /* make sure we get our own own directory */
+    /* make sure we get our own log directory */
     if (mkdir (logdir, 0750) && errno != EEXIST) {
 	fprintf(stderr, "%s error:\n", progname);
         fprintf(stderr, "Cannot create directory %s\n", logdir);
@@ -602,12 +601,21 @@ int main(int argc, char *const argv[])
 	    act->parameter.net = *net;
 	}
     }
-    
+
     /* make sure we're on the root partition */
     if (chdir("/") < 0) {
 	perror(progname);
 	exit(1);
     }
+
+    /* allocate some memory to store a filename, this is needed later on even
+     * if the system runs out of memory */
+    filename_buf = (char*)malloc(max(strlen(logdir) + sizeof("/repair-bin.stdout") + 1, strlen("/proc//oom_adj") + sizeof(int) * CHAR_BIT * 10 / 3 + 1));
+    if (!filename_buf) {
+	error(progname);
+        exit(1);
+    }
+
 #if !defined(DEBUG)
     /* fork to go into the background */
     if ((child_pid = fork()) < 0) {
@@ -808,6 +816,7 @@ int main(int argc, char *const argv[])
 	fprintf(fp, "%d\n", pid);
 	(void) fclose(fp);
     }
+
     /* set signal term to set our run flag to 0 so that */
     /* we make sure watchdog device is closed when receiving SIGTERM */
     signal(SIGTERM, sigterm_handler);
@@ -837,6 +846,14 @@ int main(int argc, char *const argv[])
 	    }
     }
 #endif
+
+    /* tell oom killer to not kill this process */
+    sprintf(filename_buf, "/proc/%d/oom_adj", pid);
+    fp = fopen(filename_buf, "w");
+    if (fp != NULL) {
+	fprintf(fp, "-17\n");
+	(void) fclose(fp);
+    }
 
     /* main loop: update after <tint> seconds */
     while (_running) {

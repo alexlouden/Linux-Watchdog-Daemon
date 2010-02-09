@@ -86,8 +86,6 @@ int check_bin(char *tbinary, time_t timeout)
 
     child_pid = fork();
     if (!child_pid) {
-	char* logfile;
-	
 	/* child, exit immediately, if no test binary given */
 	if (tbinary == NULL)
 	    exit(0);
@@ -95,18 +93,14 @@ int check_bin(char *tbinary, time_t timeout)
 	/* Don't want the stdin and stdout of our test program
 	 * to cause trouble
 	 * So make stdout and stderr go to their respective files */	
-	logfile = (char*)malloc(strlen(logdir) + sizeof("/test-bin.stdout") + 1);
-	if (!logfile)
+	strcpy(filename_buf, logdir);
+	strcat(filename_buf, "/test-bin.stdout");
+	if (!freopen(filename_buf, "a+", stdout))
 	    exit (errno);
-	strcpy(logfile, logdir);
-	strcat(logfile, "/test-bin.stdout");
-	if (!freopen(logfile, "a+", stdout))
+	strcpy(filename_buf, logdir);
+	strcat(filename_buf, "/test-bin.stderr");
+	if (!freopen(filename_buf, "a+", stderr))
 	    exit (errno);
-	strcpy(logfile, logdir);
-	strcat(logfile, "/test-bin.stderr");
-	if (!freopen(logfile, "a+", stderr))
-	    exit (errno);
-	free (logfile);
 
 	/* now start binary */
 	execl(tbinary, tbinary, NULL);

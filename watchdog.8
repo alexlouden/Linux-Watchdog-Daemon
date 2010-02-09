@@ -133,9 +133,12 @@ in the configuration file
 .IR watchdog.conf . 
 This adds real time support to 
 .BR watchdog :
-it will lock
-itself into memory and there should be no problem even under the highest of
-loads.
+it will lock itself into memory and there should  be no problem even under the
+highest of loads.
+.PP
+On system running out of memory the kernel will try to free enough memory by killing process. The
+.B watchdog
+daemon itself is exempted from this so-called out-of-memory killer. 
 .PP
 Also you can specify a maximal allowed load average. Once this load average
 is reached the system is rebooted. You may specify maximal load averages for
