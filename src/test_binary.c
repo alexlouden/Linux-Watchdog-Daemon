@@ -128,7 +128,7 @@ int check_bin(char *tbinary, time_t timeout)
 
 	/* wait for child(s) to stop */
 	/* but only after a short sleep */
-	sleep(tint * 500);
+	usleep(tint * 500000);
 
 	do {
 	    ret = waitpid(-1, &result, WNOHANG);
