@@ -504,3 +504,8 @@ Tue, 09 Feb 2010 16:26:21 +0100
 	  make sure that the daemons do not allocate memory once they are in
 	  daemon mode as a safeguard for systems running out of memory.
 
+Thu, 11 Feb 2010 14:50:39 +0100
+
+	- Decreased default interval from 10 seconds to just 1 because 10 is
+	  too much for some hardware especially embedded systems.
+

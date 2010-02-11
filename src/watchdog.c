@@ -79,7 +79,7 @@ volatile sig_atomic_t _running = 1;
 
 pid_t pid;
 int softboot = FALSE, watchdog = -1, load = -1, mem = -1, temp = -1;
-int tint = 10, logtick = 1, ticker = 1, schedprio = 1;
+int tint = 1, logtick = 1, ticker = 1, schedprio = 1;
 int maxload1 = 0, maxload5 = 0, maxload15 = 0, minpages = 0;
 int maxtemp = 120, hbstamps = 300, lastts, nrts;
 int pingcount = 3;
@@ -894,7 +894,7 @@ int main(int argc, char *const argv[])
 	do_check(check_bin(tbinary, timeout), rbinary, NULL);
 
 	/* finally sleep some seconds */
-	sleep((tint >> 1) + (tint % 2)); /* this should make watchdog sleep tint seconds alltogther */
+	usleep(tint * 500); /* this should make watchdog sleep tint seconds alltogther */
 	/* sleep(tint); */
 
 #if USE_SYSLOG
