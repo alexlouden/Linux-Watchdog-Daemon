@@ -8,7 +8,7 @@
 #endif
 
 #include <stdio.h>
-#include <string.h>		/* for index */
+#include <string.h>		/* for strchr */
 #include <ctype.h>		/* for isdigit */
 #include "wd_mntent.h"
 #include "sundries.h"		/* for xmalloc */
@@ -157,7 +157,7 @@ my_getmntent (mntFILE *mfp) {
 		if (fgets (buf, sizeof(buf), mfp->mntent_fp) == NULL)
 			return NULL;
 
-		s = index (buf, '\n');
+		s = strchr (buf, '\n');
 		if (s == NULL) {
 			/* extremely long line - assume file was corrupted */
 			mfp->mntent_errs = 1;

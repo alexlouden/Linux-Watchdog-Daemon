@@ -212,7 +212,7 @@ umount_one (const char *spec, const char *node, const char *type,
 	    if (res < 0)
 		 umnt_err2 = errno;
 	    /* Do not complain about remote NFS mount points */
-	    if (errno == ENOENT && index(spec, ':'))
+	    if (errno == ENOENT && strchr(spec, ':'))
 		 umnt_err2 = 0;
        }
   }
