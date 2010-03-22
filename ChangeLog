@@ -509,3 +509,14 @@ Thu, 11 Feb 2010 14:50:39 +0100
 	- Decreased default interval from 10 seconds to just 1 because 10 is
 	  too much for some hardware especially embedded systems.
 
+Sat Mar 6 22:07:15 2010 +0100
+
+	- Applied two patches by Jon Ringle <jon@ringle.org>:
+	  - uclibc does not have index(), but strchr() is equivalent to index()
+	    according to the index man page
+	  - Fix compile with USE_SYSLOG disabled
+	    Patch by Jon Ringle <jon@ringle.org>
+
+Mon, 22 Mar 2010 15:24:02 +0100
+
+	- Released 5.8

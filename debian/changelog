@@ -1,3 +1,10 @@
+watchdog (5.8-1) unstable; urgency=low
+
+  * New upstream version.
+  * Bumped Standards-Version to 3.8.4 no changes needed.
+
+ -- Michael Meskes <meskes@debian.org>  Mon, 22 Mar 2010 15:29:46 +0100
+
 watchdog (5.7-4) unstable; urgency=low
 
   * Decreased default interval from 10 seconds to just 1.
@@ -63,8 +70,8 @@ watchdog (5.6-5) unstable; urgency=low
   * Fixed wd_keepalive init script LSB header to specify no stop level. Also
     removed superfluous dependencies and old links, closes: #540390
   * Also made sure that watchdog itself is stopped as early as possible. This
-    needs an insserv version that processes $all in stop lines.  Bumped
-  * Standards-Version to 3.8.3 no changes needed.
+    needs an insserv version that processes $all in stop lines.
+  * Bumped Standards-Version to 3.8.3 no changes needed.
 
  -- Michael Meskes <meskes@debian.org>  Wed, 19 Aug 2009 11:56:30 +0200
 
