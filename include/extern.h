@@ -7,7 +7,7 @@ extern int maxload1, maxload5, maxload15, load, verbose, mem, minpages;
 extern int hbstamps, logtick, ticker;
 extern pid_t pid;
 extern char *tempname, *admin, *devname, *progname, *timestamps, *heartbeat;
-extern time_t timeout;
+extern time_t timeout, rtimeout;
 extern FILE *hb;
 extern char* logdir, *filename_buf;
 

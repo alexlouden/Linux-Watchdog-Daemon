@@ -105,6 +105,9 @@ repair-binary = <repbin>
 Execute the given binary in case of a problem instead of shutting down the
 system.
 .TP
+repair-timeout = <timeout in seconds>
+repair command may only run for <timeout> seconds. Set to 0 for unlimited.
+.TP
 admin = <mail-address>
 Email address to send admin mail to. That is, who shall be notified that the
 machine is being halted or rebooted. Default is 'root'. If you want to disable

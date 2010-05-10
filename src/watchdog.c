@@ -70,6 +70,7 @@ volatile sig_atomic_t _running = 1;
 #define PRIORITY	"priority"
 #define REALTIME	"realtime"
 #define REPAIRBIN	"repair-binary"
+#define REPAIRTIMEOUT	"repair-timeout"
 #define TEMP		"temperature-device"
 #define TESTBIN		"test-binary"
 #define TESTTIMEOUT	"test-timeout"
@@ -86,7 +87,7 @@ int pingcount = 3;
 int devtimeout = TIMER_MARGIN;
 char *tempname = NULL, *devname = NULL, *admin = "root", *progname;
 char *timestamps, *heartbeat;
-time_t timeout = 0;
+time_t timeout = 0, rtimeout = 0;
 FILE *hb;
 char* logdir = "/var/log/watchdog";
 char *filename_buf;
@@ -120,6 +121,7 @@ static int sync_system(int sync_it)
 static int repair(char *rbinary, int result, char *name)
 {
     pid_t child_pid;
+    pid_t r_pid;
     char parm[5];
     int ret;
 
@@ -166,7 +168,26 @@ static int repair(char *rbinary, int result, char *name)
 	    return (ENOERR);
     }
 
-    if (waitpid(child_pid, &result, 0) != child_pid) {
+    if (rtimeout > 0) {
+	time_t left = rtimeout;
+	do {
+	    sleep (1);
+	    r_pid = waitpid(child_pid, &result, WNOHANG);
+	    if (r_pid)
+		break;
+	    left--;
+	} while (left > 0);
+
+    } else
+	r_pid = waitpid(child_pid, &result, 0);
+    if (r_pid == 0) {
+#if USE_SYSLOG
+	syslog(LOG_ERR, "repair child %d timed out", child_pid);
+#else				/* USE_SYSLOG */
+	perror(progname);
+#endif				/* USE_SYSLOG */
+	return (EREBOOT);
+    } else if (r_pid != child_pid) {
 	int err = errno;
 
 #if USE_SYSLOG
@@ -346,6 +367,11 @@ static void read_config(char *configfile, char *progname)
 			rbinary = NULL;
 		else
 			rbinary = strdup(line + i);
+	    } else if (strncmp(line + i, REPAIRTIMEOUT, strlen(REPAIRTIMEOUT)) == 0) {
+		if (spool(line, &i, strlen(REPAIRTIMEOUT)))
+			rtimeout = 0;
+		else
+			rtimeout = atol(line + i);
 	    } else if (strncmp(line + i, TESTBIN, strlen(TESTBIN)) == 0) {
 		if (spool(line, &i, strlen(TESTBIN)))
 			tbinary = NULL;
@@ -687,9 +713,9 @@ int main(int argc, char *const argv[])
             for (act = iface; act != NULL; act = act->next)
                 syslog(LOG_INFO, "interface: %s", act->name);                
 
-    syslog(LOG_INFO, "test=%s(%ld) repair=%s alive=%s heartbeat=%s temp=%s to=%s no_act=%s",
+    syslog(LOG_INFO, "test=%s(%ld) repair=%s(%d) alive=%s heartbeat=%s temp=%s to=%s no_act=%s",
 	    (tbinary == NULL) ? "none" : tbinary, timeout, 
-	    (rbinary == NULL) ? "none" : rbinary,
+	    (rbinary == NULL) ? "none" : rbinary, rtimeout,
 	    (devname == NULL) ? "none" : devname,
 	    (heartbeat == NULL) ? "none" : heartbeat,
 	    (tempname == NULL) ? "none" : tempname,
