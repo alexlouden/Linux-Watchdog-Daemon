@@ -62,8 +62,10 @@ static int check_processes (time_t timeout)
     
     current = process_head;
     while (current != NULL) {
-        if (now - current->time > timeout)
+        if (now - current->time > timeout) {
+            remove_process (current->pid);
             return (ETOOLONG);
+        }
         current = current->next;
     }
     return (ENOERR);
