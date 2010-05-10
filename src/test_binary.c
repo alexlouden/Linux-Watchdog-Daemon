@@ -159,7 +159,7 @@ int check_bin(char *tbinary, time_t timeout)
 	} else {
 		/* in case there are still old childs running due to an error */
 		/* log that error */
-		if (err != 0 && err != ECHILD) {
+		if (ret != 0 && err != 0 && err != ECHILD) {
 #if USE_SYSLOG
 		    errno = err;
 		    syslog(LOG_ERR, "child %d did not exit immediately (error = %d = '%m')", child_pid, err);
