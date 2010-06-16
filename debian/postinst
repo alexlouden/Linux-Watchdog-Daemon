@@ -6,7 +6,7 @@ if [ "$1" = configure ]
 then
     . /usr/share/debconf/confmodule
 
-    if [ -x `which MAKEDEV` ]; then
+    if [ -x "`which MAKEDEV`" ]; then
 	    # do we have to create the device?
 	    if [ ! -c /dev/watchdog ]
 	    then
