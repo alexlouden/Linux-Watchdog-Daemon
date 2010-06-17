@@ -520,3 +520,15 @@ Sat Mar 6 22:07:15 2010 +0100
 Mon, 22 Mar 2010 15:24:02 +0100
 
 	- Released 5.8
+
+Mon May 10 15:48:35 2010 +0200
+
+	- Applied patches by Martin Koegler <mkoegler@auto.tuwien.ac.at>:
+	  - Implementing a timeout for repair scripts
+	  - Fixing a few bugs.
+
+Thu, 17 Jun 2010 16:59:53 +0200
+
+	- Added the ability to query the watchdog type based on work by Corey
+	  Minyard <minyard@acm.org>   
+

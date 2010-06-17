@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/wait.h>
+#include <linux/watchdog.h>
 #include <libgen.h>
 #include <string.h>
 #include <syslog.h>
@@ -227,6 +228,7 @@ int main(int argc, char *const argv[])
 	{"softboot", no_argument, NULL, 'b'},
 	{NULL, 0, NULL, 0}
     };
+    struct watchdog_info ident;
 #else				/* USE_SYSLOG */
     char *opts = "d:i:n:fsbql:p:t:c:r:m:a:";
     struct option long_options[] =
@@ -348,6 +350,17 @@ int main(int argc, char *const argv[])
 
             exit(1);
     }
+
+#if USE_SYSLOG
+    /* Also log watchdog identity */
+    if (ioctl(watchdog, WDIOC_GETSUPPORT, &ident) < 0) {
+	syslog(LOG_ERR, "cannot get watchdog identity (errno = %d = '%m')", errno);
+    }
+    else {
+	ident.identity[sizeof(ident.identity) - 1] = '\0'; /* Be sure */
+	syslog(LOG_INFO, "hardware wartchdog identity: %s", ident.identity);
+    }
+#endif
 
     /* tuck my process id away */
     fp = fopen(KA_PIDFILE, "w");

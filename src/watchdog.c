@@ -30,7 +30,6 @@
 #include <linux/watchdog.h>
 #include <string.h>
 
-#include <sys/ioctl.h>
 #include <libgen.h>
 
 #include <unistd.h>
@@ -501,6 +500,7 @@ int main(int argc, char *const argv[])
 	{NULL, 0, NULL, 0}
     };
     long count = 0L;
+    struct watchdog_info ident;
 #else				/* USE_SYSLOG */
     char *opts = "d:i:n:fsbql:p:t:c:r:m:a:";
     struct option long_options[] =
@@ -723,7 +723,6 @@ int main(int argc, char *const argv[])
 	    (no_act == TRUE) ? "yes" : "no");
 #endif				/* USE_SYSLOG */
 
-
     /* open the device */
     if (devname != NULL && no_act == FALSE) {
 	watchdog = open(devname, O_WRONLY);
@@ -736,16 +735,29 @@ int main(int argc, char *const argv[])
 	    /* do not exit here per default */
 	    /* we can use watchdog even if there is no watchdog device */
 	}
-	if (watchdog >= 0 && devtimeout > 0) {
-	    /* Set the watchdog hard-stop timeout; default = unset (use
-	       driver default) */
-	    if (ioctl(watchdog, WDIOC_SETTIMEOUT, &devtimeout) < 0) {
+	if (watchdog >= 0) {
+	    if (devtimeout > 0) {
+		/* Set the watchdog hard-stop timeout; default = unset (use
+		   driver default) */
+		if (ioctl(watchdog, WDIOC_SETTIMEOUT, &devtimeout) < 0) {
 #if USE_SYSLOG
-                syslog(LOG_ERR, "cannot set timeout %d (errno = %d = '%m')", devtimeout, errno);
+		syslog(LOG_ERR, "cannot set timeout %d (errno = %d = '%m')", devtimeout, errno);
 #else				
-            	perror(progname);
+		perror(progname);
 #endif			   
+		}
 	    }
+
+#if USE_SYSLOG
+	    /* Also log watchdog identity */
+	    if (ioctl(watchdog, WDIOC_GETSUPPORT, &ident) < 0) {
+		syslog(LOG_ERR, "cannot get watchdog identity (errno = %d = '%m')", errno);
+	    }
+	    else {
+		ident.identity[sizeof(ident.identity) - 1] = '\0'; /* Be sure */
+                syslog(LOG_INFO, "hardware wartchdog identity: %s", ident.identity);
+	    }
+#endif
 	}
     }
 
