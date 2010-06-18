@@ -3,6 +3,7 @@ watchdog (5.9-1) unstable; urgency=low
   * New upstream version.
   * Fixed check for existance of MAKEDEV. (Closes: #582766) - thanks to Timo
     Juhani Lindfors <timo.lindfors@iki.fi>
+  * Added source/format file.
 
  -- Michael Meskes <meskes@debian.org>  Thu, 17 Jun 2010 17:01:41 +0200
 
