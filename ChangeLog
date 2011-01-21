@@ -532,3 +532,6 @@ Thu, 17 Jun 2010 16:59:53 +0200
 	- Added the ability to query the watchdog type based on work by Corey
 	  Minyard <minyard@acm.org>   
 
+Fri, 03 Dec 2010 17:36:00 -0400
+
+	- Added /etc/watchdog.d capability.

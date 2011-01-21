@@ -10,6 +10,7 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <time.h>
+#include <linux/limits.h>
 
 #include "extern.h"
 #include "watch_err.h"
@@ -20,6 +21,7 @@
 
 struct process
 {
+    char proc_name[PATH_MAX];
     pid_t pid;
     time_t time;
     struct process *next;
@@ -27,9 +29,11 @@ struct process
 
 static struct process *process_head = NULL;
 
-static void add_process (pid_t pid)
+static void add_process (const char *name, pid_t pid)
 {
     struct process *node = (struct process *) malloc (sizeof (struct process));
+
+    snprintf(node->proc_name, sizeof(node->proc_name), "%s", name);
     node->pid = pid;
     node->time = time (NULL);
     node->next = process_head;
@@ -55,14 +59,15 @@ static void remove_process (pid_t pid)
 }
 
 /* See if any test processes have exceeded the timeout */
-static int check_processes (time_t timeout)
+static int check_processes (const char *name, time_t timeout)
 {
     struct process *current;
     time_t now = time (NULL);
     
     current = process_head;
     while (current != NULL) {
-        if (now - current->time > timeout) {
+        if (!strcmp(current->proc_name, name) &&
+	      now - current->time > timeout) {
             remove_process (current->pid);
             return (ETOOLONG);
         }
@@ -77,8 +82,11 @@ int check_bin(char *tbinary, time_t timeout)
     pid_t child_pid;
     int result, res = 0;
 
+    if (tbinary == NULL)
+        return ENOERR;
+
     if (timeout > 0)
-	    res = check_processes(timeout);
+	    res = check_processes(tbinary, timeout);
     if (res == ETOOLONG) {
 #if USE_SYSLOG
         syslog(LOG_ERR, "test-binary %s exceeded time limit %ld", tbinary, timeout);
@@ -88,9 +96,6 @@ int check_bin(char *tbinary, time_t timeout)
 
     child_pid = fork();
     if (!child_pid) {
-	/* child, exit immediately, if no test binary given */
-	if (tbinary == NULL)
-	    exit(0);
 
 	/* Don't want the stdin and stdout of our test program
 	 * to cause trouble
@@ -126,14 +131,14 @@ int check_bin(char *tbinary, time_t timeout)
 	int ret, err;
 
 	/* fork was okay, add child to process list */
-	add_process(child_pid);
+	add_process(tbinary, child_pid);
 
 	/* wait for child(s) to stop */
 	/* but only after a short sleep */
 	usleep(tint * 500000);
 
 	do {
-	    ret = waitpid(-1, &result, WNOHANG);
+	    ret = waitpid(child_pid, &result, WNOHANG);
 	    err = errno;
         if (ret > 0)
             remove_process(ret);

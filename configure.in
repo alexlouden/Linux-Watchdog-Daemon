@@ -111,6 +111,20 @@ AC_ARG_WITH(configfile,
 ])
 AC_SUBST(CONFIG_FILENAME)
 
+AC_MSG_CHECKING(for test binary directory)
+AC_ARG_WITH(test-bin-path,
+[  --with-test-bin-path=directory
+			  path to test binaries (default /etc/watchdog.d)],[
+  AC_DEFINE_UNQUOTED(TESTBIN_PATH, "$withval", "path to test binaries")
+  TESTBIN_PATH="$withval"
+  AC_MSG_RESULT($withval)
+],[
+  TESTBIN_PATH="/etc/watchdog.d"
+  AC_DEFINE_UNQUOTED(TESTBIN_PATH, "$TESTBIN_PATH", "path to test binaries")
+  AC_MSG_RESULT($CONFIG_FILENAME)
+])
+AC_SUBST(TESTBIN_PATH)
+
 AC_MSG_CHECKING(for pid filename)
 AC_ARG_WITH(pidfile,
 [  --with-pidfile=filename name of pid file (default /var/run/watchdog.pid)],[

@@ -31,6 +31,7 @@
 #include <string.h>
 
 #include <libgen.h>
+#include <dirent.h>
 
 #include <unistd.h>
 
@@ -237,6 +238,17 @@ static void do_check(int res, char *rbinary, char *name)
     wd_action(res, rbinary, name);
     wd_action(keep_alive(), rbinary, NULL);
 }
+
+#ifdef TESTBIN_PATH
+static void do_check2(int res, char *r_specific, char *r_global, char *name)
+{
+    wd_action(res, r_specific, name);
+    wd_action(keep_alive(), r_global, NULL);
+}
+
+/* Self-repairing binaries list */
+struct list *tr_bin = NULL;
+#endif
 
 struct list *file = NULL, *target = NULL, *pidfile = NULL, *iface = NULL;
 char *tbinary, *rbinary, *admin;
@@ -472,6 +484,58 @@ static void read_config(char *configfile, char *progname)
     }
 }
 
+#ifdef TESTBIN_PATH
+static void add_test_binaries(const char *path)
+{
+    DIR *d;
+    struct dirent dentry;
+    struct dirent *rdret;
+    struct stat sb;
+    int ret;
+    char fname[PATH_MAX];
+    char *fdup;
+
+    ret = stat(path, &sb);
+    if (ret < 0)
+	return;
+    if (!S_ISDIR(sb.st_mode))
+	return;
+
+    d = opendir(path);
+    if (!d)
+	return;
+    do {
+	ret = readdir_r(d, &dentry, &rdret);
+	if (ret)
+	    break;
+	if (rdret == NULL)
+	    break;
+
+	ret = snprintf(fname, sizeof(fname), "%s/%s",
+		       path, dentry.d_name);
+	if (ret >= sizeof(fname))
+	    continue;
+	ret = stat(fname, &sb);
+	if (ret < 0)
+	    continue;
+	if (!S_ISREG(sb.st_mode))
+	    continue;
+	if (!sb.st_mode & S_IXUSR)
+	    continue;
+	if (!sb.st_mode & S_IRUSR)
+	    continue;
+
+	fdup = strdup(fname);
+	if (!fdup)
+	    continue;
+
+	syslog(LOG_DEBUG, "adding %s to list of auto-repair binaries",
+	       fdup);
+	add_list(&tr_bin, fdup);
+    } while (1);
+}
+#endif
+
 static void old_option(int c, char *configfile)
 {
     fprintf(stderr, "Option -%c is no longer valid, please specify it in %s.\n", c, configfile);
@@ -560,6 +624,9 @@ int main(int argc, char *const argv[])
     }
 
     read_config(configfile, progname);
+#ifdef TESTBIN_PATH
+    add_test_binaries(TESTBIN_PATH);
+#endif
 
     if (tint < 0)
 	usage();
@@ -930,6 +997,12 @@ int main(int argc, char *const argv[])
 
 	/* in user mode execute the given binary or just test fork() call */
 	do_check(check_bin(tbinary, timeout), rbinary, NULL);
+
+#ifdef TESTBIN_PATH
+	/* test/repair binaries in the watchdog.d directory */
+	for (act = tr_bin; act != NULL; act = act->next)
+	    do_check2(check_bin(act->name, timeout), act->name, rbinary, NULL);
+#endif
 
 	/* finally sleep some seconds */
 	usleep(tint * 500000); /* this should make watchdog sleep tint seconds alltogther */
