@@ -638,7 +638,7 @@ int main(int argc, char *const argv[])
      * if the system runs out of memory */
     filename_buf = (char*)malloc(max(strlen(logdir) + sizeof("/repair-bin.stdout") + 1, strlen("/proc//oom_adj") + sizeof(int) * CHAR_BIT * 10 / 3 + 1));
     if (!filename_buf) {
-	error(progname);
+	perror(progname);
         exit(1);
     }
 
@@ -713,7 +713,7 @@ int main(int argc, char *const argv[])
             for (act = iface; act != NULL; act = act->next)
                 syslog(LOG_INFO, "interface: %s", act->name);                
 
-    syslog(LOG_INFO, "test=%s(%ld) repair=%s(%d) alive=%s heartbeat=%s temp=%s to=%s no_act=%s",
+    syslog(LOG_INFO, "test=%s(%ld) repair=%s(%ld) alive=%s heartbeat=%s temp=%s to=%s no_act=%s",
 	    (tbinary == NULL) ? "none" : tbinary, timeout, 
 	    (rbinary == NULL) ? "none" : rbinary, rtimeout,
 	    (devname == NULL) ? "none" : devname,
@@ -947,4 +947,5 @@ int main(int argc, char *const argv[])
 
     terminate();
     /* not reached */
+    exit (EXIT_SUCCESS);
 }

@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
+#include <sys/ioctl.h>
 #include <sys/wait.h>
 #include <linux/watchdog.h>
 #include <libgen.h>
@@ -286,7 +287,7 @@ int main(int argc, char *const argv[])
      * if the system runs out of memory */
     filename_buf = (char*)malloc(strlen("/proc//oom_adj") + sizeof(int) * CHAR_BIT * 10 / 3 + 1);
     if (!filename_buf) {
-        error(progname);
+        perror(progname);
         exit(1);
     }
 

@@ -20,6 +20,8 @@
 #include <stdlib.h>
 #include <libgen.h>
 #include <getopt.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
 
 #define DEVICE		"watchdog-device"
 
@@ -125,10 +127,7 @@ static void read_config(char *configfile, char *progname)
 
 int main(int argc, char *const argv[])
 {
-    FILE *fp;
     char *configfile = CONFIG_FILENAME;
-    char *filename_buf;
-    int count = 0;
     int c;
     struct watchdog_info ident;
     char *opts = "c:";
