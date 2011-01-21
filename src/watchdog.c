@@ -77,6 +77,11 @@ volatile sig_atomic_t _running = 1;
 #define HEARTBEAT	"heartbeat-file"
 #define HBSTAMPS	"heartbeat-stamps"
 #define LOGDIR		"log-dir"
+#define TESTDIR		"test-directory"
+
+#ifndef TESTBIN_PATH
+#define TESTBIN_PATH NULL
+#endif
 
 pid_t pid;
 int tint = 1, softboot = FALSE, watchdog = -1, load = -1, mem = -1, temp = -1;
@@ -246,7 +251,6 @@ static void do_check(int res, char *rbinary, char *name)
     wd_action(keep_alive(), rbinary, NULL, 0);
 }
 
-#ifdef TESTBIN_PATH
 static void do_check2(int res, char *r_specific, char *r_global, char *name)
 {
     wd_action(res, r_specific, name, 1);
@@ -255,7 +259,7 @@ static void do_check2(int res, char *r_specific, char *r_global, char *name)
 
 /* Self-repairing binaries list */
 struct list *tr_bin = NULL;
-#endif
+char *test_dir = TESTBIN_PATH;
 
 struct list *file = NULL, *target = NULL, *pidfile = NULL, *iface = NULL;
 char *tbinary, *rbinary, *admin;
@@ -479,6 +483,11 @@ static void read_config(char *configfile, char *progname)
 			fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 		else
 			logdir = strdup(line + i);
+	    } else if (strncmp(line + i, TESTDIR, strlen(TESTDIR)) == 0) {
+		if (spool(line, &i, strlen(TESTDIR)))
+			fprintf(stderr, "Ignoring invalid line in config file: %s ", line);
+		else
+			test_dir = strdup(line + i);
 	    } else {
 		fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 	    }
@@ -491,7 +500,6 @@ static void read_config(char *configfile, char *progname)
     }
 }
 
-#ifdef TESTBIN_PATH
 static void add_test_binaries(const char *path)
 {
     DIR *d;
@@ -502,6 +510,8 @@ static void add_test_binaries(const char *path)
     char fname[PATH_MAX];
     char *fdup;
 
+    if (!path)
+	return;
     ret = stat(path, &sb);
     if (ret < 0)
 	return;
@@ -541,7 +551,6 @@ static void add_test_binaries(const char *path)
 	add_list(&tr_bin, fdup);
     } while (1);
 }
-#endif
 
 static void old_option(int c, char *configfile)
 {
@@ -631,9 +640,7 @@ int main(int argc, char *const argv[])
     }
 
     read_config(configfile, progname);
-#ifdef TESTBIN_PATH
-    add_test_binaries(TESTBIN_PATH);
-#endif
+    add_test_binaries(test_dir);
 
     if (tint < 0)
 	usage();
@@ -1008,6 +1015,7 @@ int main(int argc, char *const argv[])
 #ifdef TESTBIN_PATH
 	/* test/repair binaries in the watchdog.d directory */
 	for (act = tr_bin; act != NULL; act = act->next)
+		/* Use version 1 for testbin-path */
 	    do_check2(check_bin(act->name, timeout, 1), act->name, rbinary, NULL);
 #endif
 
