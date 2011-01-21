@@ -118,7 +118,7 @@ static int sync_system(int sync_it)
 }
 
 /* execute repair binary */
-static int repair(char *rbinary, int result, char *name)
+static int repair(char *rbinary, int result, char *name, int version)
 {
     pid_t child_pid;
     pid_t r_pid;
@@ -146,10 +146,17 @@ static int repair(char *rbinary, int result, char *name)
 		exit (errno);
 
         /* now start binary */
-	if (name == NULL)
-		execl(rbinary, rbinary, parm, NULL);
-	else
-		execl(rbinary, rbinary, parm, name, NULL);
+	if (version == 0) {
+		if (name == NULL)
+			execl(rbinary, rbinary, parm, NULL);
+		else
+			execl(rbinary, rbinary, parm, name, NULL);
+	} else /* if (version == 1) */ {
+		if (name == NULL)
+			execl(rbinary, rbinary, "repair", parm, NULL);
+		else
+			execl(rbinary, rbinary, "repair", parm, name, NULL);
+	}
 
 	/* execl should only return in case of an error */
 	/* so we return the reboot code */
@@ -216,7 +223,7 @@ static int repair(char *rbinary, int result, char *name)
     return (ENOERR);
 }
 
-static void wd_action(int result, char *rbinary, char *name)
+static void wd_action(int result, char *rbinary, char *name, int version)
 {
     /* if no-action flag set, do nothing */
     /* no error, keep on working */
@@ -225,7 +232,7 @@ static void wd_action(int result, char *rbinary, char *name)
 
     /* error that might be repairable */
     if (result != EREBOOT)
-	result = repair(rbinary, result, name);
+	result = repair(rbinary, result, name, version);
 
     /* if still error, reboot */
     if (result != ENOERR)
@@ -235,15 +242,15 @@ static void wd_action(int result, char *rbinary, char *name)
 
 static void do_check(int res, char *rbinary, char *name)
 {
-    wd_action(res, rbinary, name);
-    wd_action(keep_alive(), rbinary, NULL);
+    wd_action(res, rbinary, name, 0);
+    wd_action(keep_alive(), rbinary, NULL, 0);
 }
 
 #ifdef TESTBIN_PATH
 static void do_check2(int res, char *r_specific, char *r_global, char *name)
 {
-    wd_action(res, r_specific, name);
-    wd_action(keep_alive(), r_global, NULL);
+    wd_action(res, r_specific, name, 1);
+    wd_action(keep_alive(), r_global, NULL, 0);
 }
 
 /* Self-repairing binaries list */
@@ -962,7 +969,7 @@ int main(int argc, char *const argv[])
 
     /* main loop: update after <tint> seconds */
     while (_running) {
-	wd_action(keep_alive(), rbinary, NULL);
+	wd_action(keep_alive(), rbinary, NULL, 0);
 
 	/* sync system if we have to */
 	do_check(sync_system(sync_it), rbinary, NULL);
@@ -996,12 +1003,12 @@ int main(int argc, char *const argv[])
 	    do_check(check_net(act->name, act->parameter.net.sock_fp, act->parameter.net.to, act->parameter.net.packet, tint , pingcount), rbinary, act->name);
 
 	/* in user mode execute the given binary or just test fork() call */
-	do_check(check_bin(tbinary, timeout), rbinary, NULL);
+	do_check(check_bin(tbinary, timeout, 0), rbinary, NULL);
 
 #ifdef TESTBIN_PATH
 	/* test/repair binaries in the watchdog.d directory */
 	for (act = tr_bin; act != NULL; act = act->next)
-	    do_check2(check_bin(act->name, timeout), act->name, rbinary, NULL);
+	    do_check2(check_bin(act->name, timeout, 1), act->name, rbinary, NULL);
 #endif
 
 	/* finally sleep some seconds */

@@ -77,7 +77,7 @@ static int check_processes (const char *name, time_t timeout)
 }
 
 /* execute test binary */
-int check_bin(char *tbinary, time_t timeout)
+int check_bin(char *tbinary, time_t timeout, int version)
 {
     pid_t child_pid;
     int result, res = 0;
@@ -110,7 +110,11 @@ int check_bin(char *tbinary, time_t timeout)
 	    exit (errno);
 
 	/* now start binary */
-	execl(tbinary, tbinary, NULL);
+	if (version == 0) {
+		execl(tbinary, tbinary, NULL);
+	} else {
+		execl(tbinary, tbinary, "test", NULL);
+	}
 
 	/* execl should only return in case of an error */
 	/* so we return that error */

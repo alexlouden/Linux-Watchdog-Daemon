@@ -65,7 +65,7 @@ int keep_alive(void);
 int check_load(void);
 int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *packet, int time, int count);
 int check_temp(void);
-int check_bin(char *, time_t);
+int check_bin(char *, time_t, int);
 int check_pidfile(struct list *);
 int check_iface(struct list *);
 int check_memory(void);
