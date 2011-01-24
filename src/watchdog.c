@@ -215,7 +215,7 @@ static int repair(char *rbinary, int result, char *name, int version)
     ret = WEXITSTATUS(result);
     if (ret != 0) {
 #if USE_SYSLOG
-	syslog(LOG_ERR, "repair binary returned %d", ret);
+	syslog(LOG_ERR, "repair binary %s returned %d", rbinary, ret);
 #endif				/* USE_SYSLOG */
 
 	if (ret == ERESET) /* repair script says force hard reset, we give it a try */

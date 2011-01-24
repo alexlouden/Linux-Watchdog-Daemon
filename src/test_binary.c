@@ -157,13 +157,13 @@ int check_bin(char *tbinary, time_t timeout, int version)
 		if (WIFEXITED(result) != 0) {
 			/* if one of the scripts returns an error code just return that code */
 #if USE_SYSLOG
-			syslog(LOG_ERR, "test binary returned %d", WEXITSTATUS(result));
+			syslog(LOG_ERR, "test binary %s returned %d", tbinary, WEXITSTATUS(result));
 #endif				/* USE_SYSLOG */
 		    	return (WEXITSTATUS(result));
 		} else if (WIFSIGNALED(result) != 0)  {
 			/* if one of the scripts was killed return ECHKILL */
 #if USE_SYSLOG
-			syslog(LOG_ERR, "test binary was killed by uncaught signal %d", WTERMSIG(result));
+			syslog(LOG_ERR, "test binary %s was killed by uncaught signal %d", tbinary, WTERMSIG(result));
 #endif				/* USE_SYSLOG */
 		    	return (ECHKILL);
 		}
