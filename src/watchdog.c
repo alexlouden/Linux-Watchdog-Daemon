@@ -537,9 +537,9 @@ static void add_test_binaries(const char *path)
 	    continue;
 	if (!S_ISREG(sb.st_mode))
 	    continue;
-	if (!sb.st_mode & S_IXUSR)
+	if (!(sb.st_mode & S_IXUSR))
 	    continue;
-	if (!sb.st_mode & S_IRUSR)
+	if (!(sb.st_mode & S_IRUSR))
 	    continue;
 
 	fdup = strdup(fname);
