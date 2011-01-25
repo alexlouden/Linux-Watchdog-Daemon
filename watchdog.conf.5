@@ -120,13 +120,20 @@ out.
 priority = <schedule priority>
 Set the schedule priority for realtime mode.
 .TP
+test-directory = <test directory>
+Set the directory to run user test/repair scripts.  Default is '/etc/watchdog.d'
+See the Test Directory section in watchdog(8) for more information.
+.TP
 log-dir = <log directory>
 Set the log directory to capture the standard output and standard error from
 repair-binary and test-binary execution. Default is '/var/log/watchdog'.
-.TP
 .SH FILES
 .TP
 .I /etc/watchdog.conf  
 The watchdog configuration file
+.TP
+.I /etc/watchdog.d
+A directory containing test-or-repair commands. See the Test Directory
+section in watchdog(8) for more information.
 .SH "SEE ALSO"
 .BR watchdog (8)

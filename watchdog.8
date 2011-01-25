@@ -55,6 +55,8 @@ Do network interfaces receive traffic?
 Is the temperature too high? (Temperature data not always available.)
 .IP \(bu 3
 Execute a user defined command to do arbitrary tests.
+.IP \(bu 3
+Execute one or more test/repair commands found in /etc/watchdog.d.  These commands are called with the argument \fBtest\fP or \fBrepair\fP.
 .PP
 If any of these checks fail watchdog will cause a shutdown. Should any of
 these tests except the user defined binary last longer than one minute the
@@ -327,6 +329,38 @@ are using the real-time properties since
 .B watchdog 
 will wait for
 the return of this binary before proceeding.
+.SH "TEST DIRECTORY"
+Executables placed in the test directory are discovered by watchdog on 
+startup and are automatically executed.  They are bounded time-wise by
+the test-timeout directive in watchdog.conf.
+
+These executables are called with either "test" as the first argument
+(if a test is being performed) or "repair" as the first argument (if a
+repair for a previously-failed "test" operation on is being performed).
+
+The as with test binaries and repair binaries, expected exit codes for
+a successful test or repair operation is always zero.
+
+If an executable's test operation fails, the same executable is automatically
+called with the "repair" argument as well as the return code of the
+previously-failed test operation.
+
+For example, if the following execution returns 42:
+
+    /etc/watchdog.d/my-test test
+
+The watchdog daemon will attempt to repair the problem by calling:
+
+    /etc/watchdog.d/my-test repair 42
+
+This enables administrators and application developers to make intelligent
+test/repair commands.  If the "repair" operation is not required (or is
+not likely to succeed), it is important that the author of the command
+return a non-zero value so the machine will still reboot as expected.
+
+Note that the watchdog daemon may interpret and act upon any of the reserved
+return codes noted in the Check Binary section prior to calling a given
+command in "repair" mode.
 .SH BUGS
 None known so far.
 .SH AUTHORS
