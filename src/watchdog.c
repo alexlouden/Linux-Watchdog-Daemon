@@ -751,23 +751,23 @@ int main(int argc, char *const argv[])
 		exit(1);
     	} else if (child_pid > 0)
 		exit(0);
+
+   	/* now we're free */
+#if USE_SYSLOG
+    	/* Okay, we're a daemon     */
+    	/* but we're still attached to the tty */
+    	/* create our own session */
+    	setsid();
+
+    	/* with USE_SYSLOG we don't do any console IO */
+    	close(0);
+    	close(1);
+    	close(2);
+#endif				/* USE_SYSLOG */
     }
 #endif				/* !DEBUG */
 
-    /* now we're free */
 #if USE_SYSLOG
-#if !defined(DEBUG)
-    /* Okay, we're a daemon     */
-    /* but we're still attached to the tty */
-    /* create our own session */
-    setsid();
-
-    /* with USE_SYSLOG we don't do any console IO */
-    close(0);
-    close(1);
-    close(2);
-#endif				/* !DEBUG */
-
     /* Log the starting message */
     openlog(progname, LOG_PID, LOG_DAEMON);
     syslog(LOG_INFO, "starting daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
