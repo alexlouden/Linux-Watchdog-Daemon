@@ -4,6 +4,7 @@
 watchdog \- a software watchdog daemon
 .SH SYNOPSIS
 .B watchdog
+.RB [ \-F | \-\-foreground ]
 .RB [ \-f | \-\-force ]
 .RB [ \-c " \fIfilename\fR|" \-\-config\-file " \fIfilename\fR]"
 .RB [ \-v | \-\-verbose ]
@@ -92,6 +93,9 @@ this does not apply to the opening of
 and 
 .IR /proc/loadavg ,
 which are opened before the main loop starts.
+.TP
+.BR \-F ", " \-\-foreground
+Run in foreground mode, useful for running under systemd (for example).
 .TP
 .BR \-f ", " \-\-force
 Force the usage of the interval given or the maximal load average given 

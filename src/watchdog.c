@@ -106,9 +106,9 @@ static void usage(void)
 {
     fprintf(stderr, "%s version %d.%d, usage:\n", progname, MAJOR_VERSION, MINOR_VERSION);
 #if USE_SYSLOG
-    fprintf(stderr, "%s [-f] [-c <config_file>] [-v] [-s] [-b] [-q]\n", progname);
+    fprintf(stderr, "%s [-F] [-f] [-c <config_file>] [-v] [-s] [-b] [-q]\n", progname);
 #else				/* USE_SYSLOG */
-    fprintf(stderr, "%s [-f] [-c <config_file>] [-s] [-b] [-q]\n", progname);
+    fprintf(stderr, "%s [-F] [-f] [-c <config_file>] [-s] [-b] [-q]\n", progname);
 #endif				/* USE_SYSLOG */
     exit(1);
 }
@@ -562,17 +562,18 @@ static void old_option(int c, char *configfile)
 int main(int argc, char *const argv[])
 {
     FILE *fp;
-    int c, force = FALSE, sync_it = FALSE;
+    int c, foreground = FALSE, force = FALSE, sync_it = FALSE;
     int hold;
     char *configfile = CONFIG_FILENAME;
     struct list *act;
     pid_t child_pid;
 
 #if USE_SYSLOG
-    char *opts = "d:i:n:fsvbql:p:t:c:r:m:a:";
+    char *opts = "d:i:n:Ffsvbql:p:t:c:r:m:a:";
     struct option long_options[] =
     {
 	{"config-file", required_argument, NULL, 'c'},
+	{"foreground", no_argument, NULL, 'F'},
 	{"force", no_argument, NULL, 'f'},
 	{"sync", no_argument, NULL, 's'},
 	{"no-action", no_argument, NULL, 'q'},
@@ -583,10 +584,11 @@ int main(int argc, char *const argv[])
     long count = 0L;
     struct watchdog_info ident;
 #else				/* USE_SYSLOG */
-    char *opts = "d:i:n:fsbql:p:t:c:r:m:a:";
+    char *opts = "d:i:n:Ffsbql:p:t:c:r:m:a:";
     struct option long_options[] =
     {
 	{"config-file", required_argument, NULL, 'c'},
+	{"foreground", no_argument, NULL, 'F'},
 	{"force", no_argument, NULL, 'f'},
 	{"sync", no_argument, NULL, 's'},
 	{"no-action", no_argument, NULL, 'q'},
@@ -617,6 +619,9 @@ int main(int argc, char *const argv[])
 	    break;
 	case 'c':
 	    configfile = optarg;
+	    break;
+	case 'F':
+	    foreground = TRUE;
 	    break;
 	case 'f':
 	    force = TRUE;
@@ -655,7 +660,7 @@ int main(int argc, char *const argv[])
     
     if (maxload1 > 0 && maxload1 < MINLOAD && !force) {
 	fprintf(stderr, "%s error:\n", progname);
-	fprintf(stderr, "Using this maximal load average might reboot the system to often!\n");
+	fprintf(stderr, "Using this maximal load average might reboot the system too often!\n");
 	fprintf(stderr, "To force this load average use the -f option.\n");
 	exit(1);
     }
@@ -725,26 +730,28 @@ int main(int argc, char *const argv[])
     }
 
 #if !defined(DEBUG)
-    /* fork to go into the background */
-    if ((child_pid = fork()) < 0) {
-	perror(progname);
-	exit(1);
-    } else if (child_pid > 0) {
-	/* fork was okay          */
-	/* wait for child to exit */
-	if (waitpid(child_pid, NULL, 0) != child_pid) {
-	    perror(progname);
-	    exit(1);
-	}
-	/* and exit myself */
-	exit(0);
+    if ( ! foreground ) {
+	/* fork to go into the background */
+    	if ((child_pid = fork()) < 0) {
+		perror(progname);
+		exit(1);
+    	} else if (child_pid > 0) {
+		/* fork was okay          */
+		/* wait for child to exit */
+		if (waitpid(child_pid, NULL, 0) != child_pid) {
+	    		perror(progname);
+	    		exit(1);
+		}
+		/* and exit myself */
+		exit(0);
+    	}
+    	/* and fork again to make sure we inherit all rights from init */
+    	if ((child_pid = fork()) < 0) {
+		perror(progname);
+		exit(1);
+    	} else if (child_pid > 0)
+		exit(0);
     }
-    /* and fork again to make sure we inherit all rights from init */
-    if ((child_pid = fork()) < 0) {
-	perror(progname);
-	exit(1);
-    } else if (child_pid > 0)
-	exit(0);
 #endif				/* !DEBUG */
 
     /* now we're free */
