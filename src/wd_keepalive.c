@@ -404,12 +404,39 @@ int main(int argc, char *const argv[])
 #endif
 
     /* tell oom killer to not kill this process */
-    sprintf(filename_buf, "/proc/%d/oom_adj", getpid());
-    fp = fopen(filename_buf, "w");
-    if (fp != NULL) {
-        fprintf(fp, "-17\n");
-        (void) fclose(fp);
-    }
+	{
+		int oom_adjusted = 0;
+		struct stat s;
+#ifdef OOM_SCORE_ADJ_MIN
+		sprintf(filename_buf, "/proc/self/oom_score_adj");
+		if ( ! stat(filename_buf, &s) ) {
+			fp = fopen(filename_buf, "w");
+			if (fp) {
+				fprintf(fp, "%d\n", OOM_SCORE_ADJ_MIN);
+				(void) fclose(fp);
+				oom_adjusted = 1;
+			}
+		}
+#endif
+#ifdef OOM_DISABLE
+		if ( ! oom_adjusted ) {
+			sprintf(filename_buf, "/proc/self/oom_adj");
+			if ( ! stat(filename_buf, &s) ) {
+				fp = fopen(filename_buf, "w");
+				if (fp) {
+					fprintf(fp, "%d\n", OOM_DISABLE);
+					(void) fclose(fp);
+					oom_adjusted = 1;
+				}
+			}
+		}
+#endif
+#if USE_SYSLOG
+		if ( ! oom_adjusted ) {
+			syslog(LOG_WARNING, "unable to disable oom handling!");
+		}
+#endif				/* USE_SYSLOG */
+	}
 
     /* main loop: update after <tint> seconds */
     while ( _running ) {
