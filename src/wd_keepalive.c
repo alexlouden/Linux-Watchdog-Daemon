@@ -212,10 +212,12 @@ int main(int argc, char *const argv[])
 {
     FILE *fp;
     char *configfile = CONFIG_FILENAME;
-    char *filename_buf;
     pid_t child_pid;
     int count = 0;
     int c;
+    int oom_adjusted = 0;
+    struct stat s;
+
     /* allow all options watchdog understands too */
 #if USE_SYSLOG
     char *opts = "d:i:n:fsvbql:p:t:c:r:m:a:";
@@ -279,14 +281,6 @@ int main(int argc, char *const argv[])
 
     /* make sure we're on the root partition */
     if ( chdir("/") < 0 ) {
-        perror(progname);
-        exit(1);
-    }
-
-    /* allocate some memory to store a filename, this is needed later on even
-     * if the system runs out of memory */
-    filename_buf = (char*)malloc(strlen("/proc//oom_adj") + sizeof(int) * CHAR_BIT * 10 / 3 + 1);
-    if (!filename_buf) {
         perror(progname);
         exit(1);
     }
@@ -404,39 +398,33 @@ int main(int argc, char *const argv[])
 #endif
 
     /* tell oom killer to not kill this process */
-	{
-		int oom_adjusted = 0;
-		struct stat s;
 #ifdef OOM_SCORE_ADJ_MIN
-		sprintf(filename_buf, "/proc/self/oom_score_adj");
-		if ( ! stat(filename_buf, &s) ) {
-			fp = fopen(filename_buf, "w");
-			if (fp) {
-				fprintf(fp, "%d\n", OOM_SCORE_ADJ_MIN);
-				(void) fclose(fp);
-				oom_adjusted = 1;
-			}
-		}
+   if ( ! stat("/proc/self/oom_score_adj", &s) ) {
+	fp = fopen("/proc/self/oom_score_adj", "w");
+	if (fp) {
+		fprintf(fp, "%d\n", OOM_SCORE_ADJ_MIN);
+		(void) fclose(fp);
+		oom_adjusted = 1;
+	}
+   }
 #endif
 #ifdef OOM_DISABLE
-		if ( ! oom_adjusted ) {
-			sprintf(filename_buf, "/proc/self/oom_adj");
-			if ( ! stat(filename_buf, &s) ) {
-				fp = fopen(filename_buf, "w");
-				if (fp) {
-					fprintf(fp, "%d\n", OOM_DISABLE);
-					(void) fclose(fp);
-					oom_adjusted = 1;
-				}
-			}
+   if ( ! oom_adjusted ) {
+	if ( ! stat("/proc/self/oom_adj", &s) ) {
+		fp = fopen("/proc/self/oom_adj", "w");
+		if (fp) {
+			fprintf(fp, "%d\n", OOM_DISABLE);
+			(void) fclose(fp);
+			oom_adjusted = 1;
 		}
+	}
+   }
 #endif
 #if USE_SYSLOG
-		if ( ! oom_adjusted ) {
-			syslog(LOG_WARNING, "unable to disable oom handling!");
-		}
+   if ( ! oom_adjusted ) {
+	syslog(LOG_WARNING, "unable to disable oom handling!");
+   }
 #endif				/* USE_SYSLOG */
-	}
 
     /* main loop: update after <tint> seconds */
     while ( _running ) {
