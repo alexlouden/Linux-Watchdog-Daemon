@@ -2,6 +2,7 @@ watchdog (5.10-1) unstable; urgency=low
 
   * New upstream version.
   * Updated Danish debconf translation. (Closes: #650855)
+  * Bumped Standards-Version to 3.9.2 no changes needed.
 
  -- Michael Meskes <meskes@debian.org>  Thu, 15 Dec 2011 17:36:21 +0100
 

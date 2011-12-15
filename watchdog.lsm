@@ -1,7 +1,7 @@
 Begin3
 Title:          watchdog
-Version:        5.9
-Entered-date:   17JUN10
+Version:        5.10
+Entered-date:   15Dec11
 Description:    A software watchdog.
 Keywords:       daemon automatic-reboot
 Author:         meskes@debian.org (Michael Meskes)
