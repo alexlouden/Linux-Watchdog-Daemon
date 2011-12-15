@@ -326,7 +326,10 @@ int main(int argc, char *const argv[])
     /* Log the starting message */
     openlog(progname, LOG_PID, LOG_DAEMON);
     syslog(LOG_INFO, "starting watchdog keepalive daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
-    syslog(LOG_INFO, " int=%d alive=%s realtime=%s", tint, devname, realtime ? "yes" : "no");
+    if (devname == NULL)
+	syslog(LOG_INFO, " no watchdog device configured, aborting");
+    else
+    	syslog(LOG_INFO, " int=%d alive=%s realtime=%s", tint, devname, realtime ? "yes" : "no");
 #endif                          /* USE_SYSLOG */
 
     /* this daemon has no other function than writing to this device 
