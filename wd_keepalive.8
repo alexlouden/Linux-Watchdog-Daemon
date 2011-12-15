@@ -6,8 +6,9 @@ wd_keepalive \- a simplified software watchdog daemon
 .B wd_keepalive
 .RB [ \-c " \fIfilename\fR|" \-\-config\-file " \fIfilename\fR]"
 .SH DESCRIPTION
-This is a simplified version of the watchdog daemon. It only opens
-.IR /dev/watchdog , 
+This is a simplified version of the watchdog daemon. If configured so it only
+opens
+ .IR /dev/watchdog , 
 and keeps writing to it often enough to keep the kernel from resetting,
 at least once per minute. Each write delays the reboot
 time another minute. After a minute of inactivity the watchdog hardware will
