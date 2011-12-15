@@ -12,7 +12,10 @@
 
 SHELL = /bin/bash
 
-build: Makefile
+build:	build-arch build-indep
+build-arch: build-stamp
+build-indep: build-stamp
+build-stamp: Makefile
 	$(checkdir)
 	$(MAKE) 
 	touch build
