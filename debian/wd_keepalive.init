@@ -34,6 +34,8 @@ DAEMON=/usr/sbin/wd_keepalive
 
 STOP_RETRY_SCHEDULE='TERM/10/forever/KILL/1'
 
+. /lib/lsb/init-functions
+
 case "$1" in
   start)
     if [ $run_watchdog = 1 ]
@@ -64,6 +66,10 @@ case "$1" in
     fi
     ;;
 
+  status)
+    status_of_proc "$DAEMON" "$NAME" && exit 0 || exit $?
+    ;;
+
   restart)
     $0 force-reload
     ;;
@@ -84,7 +90,7 @@ case "$1" in
     ;;
 
   *)
-    echo "Usage: /etc/init.d/wd_keepalive {start|stop|restart|force-reload}"
+    echo "Usage: /etc/init.d/wd_keepalive {start|stop|status|restart|force-reload}"
     exit 1
 
 esac

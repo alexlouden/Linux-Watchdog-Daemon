@@ -1,3 +1,10 @@
+watchdog (5.10-2) unstable; urgency=low
+
+  * Added support for "status" action to wd_keepalive init.d script. (Closes:
+    #653405) - thanks to Peter Eisentraut <petere@debian.org>
+
+ -- Michael Meskes <meskes@debian.org>  Wed, 28 Dec 2011 11:24:16 +0100
+
 watchdog (5.10-1) unstable; urgency=low
 
   * New upstream version. (Closes: #597213)
