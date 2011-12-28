@@ -1,5 +1,7 @@
-watchdog (5.10-2) unstable; urgency=low
+watchdog (5.11-1) unstable; urgency=low
 
+  * New upstream version fixing the timeout problem causing ping check to fail.
+    (Closes: #633528)
   * Added support for "status" action to wd_keepalive init.d script. (Closes:
     #653405) - thanks to Peter Eisentraut <petere@debian.org>
 
