@@ -12,7 +12,6 @@
 #include <mntent.h>		/* for MNTTYPE_SWAP */
 #include "fstab.h"
 #include "sundries.h"
-#include "nfsmount.h"
 
 
 /* String list constructor.  (car() and cdr() are defined in "sundries.h").  */

@@ -34,6 +34,10 @@
  * nfsmount.c,v 1.1.1.1 1993/11/18 08:40:51 jrs Exp
  */
 
+#include "config.h"
+
+#if HAVE_NFS
+
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -864,4 +868,6 @@ my_getport(struct in_addr server, struct timeval *timeo, ...)
         close(sock);
         return port;
 }
+#endif
+
 #endif

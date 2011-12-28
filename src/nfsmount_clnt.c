@@ -3,6 +3,9 @@
  * It was generated using rpcgen.
  */
 
+#include "config.h"
+#if HAVE_NFS
+
 #include "nfsmount.h"
 /*
  * Sun RPC is a product of Sun Microsystems, Inc. and is provided for
@@ -279,3 +282,5 @@ mountproc_pathconf_2(argp, clnt)
 	}
 	return (&clnt_res);
 }
+
+#endif

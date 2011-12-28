@@ -24,7 +24,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <time.h>
-#include <rpc/types.h>         /* for caddr_t */
 
 #include "watch_err.h"
 #include "extern.h"

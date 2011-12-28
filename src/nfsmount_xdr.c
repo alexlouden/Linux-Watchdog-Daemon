@@ -3,6 +3,9 @@
  * It was generated using rpcgen.
  */
 
+#include "config.h"
+#if HAVE_NFS
+
 #include "nfsmount.h"
 /*
  * Sun RPC is a product of Sun Microsystems, Inc. and is provided for
@@ -300,3 +303,5 @@ xdr_ppathcnf (XDR *xdrs, ppathcnf *objp)
 		 return FALSE;
 	return TRUE;
 }
+
+#endif
