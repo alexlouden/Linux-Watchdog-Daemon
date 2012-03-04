@@ -1,3 +1,10 @@
+watchdog (5.11-2) unstable; urgency=low
+
+  * Updated Dutch debconf translation. (Closes: #657588)
+  * Bumped Standards-Version to 3.9.3 no changes needed.
+
+ -- Michael Meskes <meskes@debian.org>  Sun, 04 Mar 2012 15:32:51 +0100
+
 watchdog (5.11-1) unstable; urgency=low
 
   * New upstream version fixing the timeout problem causing ping check to fail.
