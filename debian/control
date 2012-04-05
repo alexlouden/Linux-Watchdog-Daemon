@@ -9,14 +9,16 @@ Homepage: http://watchdog.sourceforge.net
 Package: watchdog
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, makedev (>= 2.3.1-24) | udev, lsb-base (>= 3.2-14)
-Description: System health checker that also trigger kernel watchdogs
- The watchdog program writes to /dev/watchdog every ten seconds.  If
+Description: system health checker and software/hardware watchdog handler
+ The watchdog program writes to /dev/watchdog every ten seconds. If
  the device is opened but not written to within a minute, the machine
  will reboot. This feature is available when the kernel is built with
- 'software watchdog' support (standard in Debian kernels).
+ "software watchdog" support (standard in Debian kernels) or if the
+ machine is equipped with a hardware watchdog (in which case this
+ package can also be used to "pet" it, resetting its timer).
  .
- The ability to reboot will depend on the state of the machine
- and interrupts if the kernel software watchdog is used.
+ The kernel software watchdog's ability to reboot will depend on the
+ state of the machine and interrupts.
  .
- The watchdog tool itself runs several health checks and acts accordingly if
- the system is not in a good shape.
+ The watchdog tool itself runs several health checks and acts
+ appropriately if the system is not in good shape.
