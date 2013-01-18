@@ -357,7 +357,7 @@ int main(int argc, char *const argv[])
     }
     else {
 	ident.identity[sizeof(ident.identity) - 1] = '\0'; /* Be sure */
-	syslog(LOG_INFO, "hardware wartchdog identity: %s", ident.identity);
+	syslog(LOG_INFO, "hardware watchdog identity: %s", ident.identity);
     }
 #endif
 

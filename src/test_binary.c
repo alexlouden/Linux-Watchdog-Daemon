@@ -97,9 +97,8 @@ int check_bin(char *tbinary, time_t timeout, int version)
     child_pid = fork();
     if (!child_pid) {
 
-	/* Don't want the stdin and stdout of our test program
-	 * to cause trouble
-	 * So make stdout and stderr go to their respective files */	
+	/* Don't want the stdout and stderr of our test program
+	 * to cause trouble, so make them go to their respective files */	
 	strcpy(filename_buf, logdir);
 	strcat(filename_buf, "/test-bin.stdout");
 	if (!freopen(filename_buf, "a+", stdout))
