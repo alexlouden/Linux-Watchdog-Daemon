@@ -114,11 +114,12 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 		    dtimeout.tv_usec += 1000000;
 		    dtimeout.tv_sec--;
 		}
+		/* Is this loop really needed? I have yet to see a usec value >= 1000000. */
 		while (dtimeout.tv_usec >= 1000000) {
 		    dtimeout.tv_usec -= 1000000;
 		    dtimeout.tv_sec++;
 		}
-		if (dtimeout.tv_sec <= 0)
+		if (dtimeout.tv_sec < 0)
 		    break;
 #if USE_SYSLOG
 		if (verbose && logtick && ticker == 1)
