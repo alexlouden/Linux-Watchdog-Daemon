@@ -1,3 +1,10 @@
+watchdog (5.13-1) unstable; urgency=low
+
+  * New upstream version.
+  * Added hardening build flags to Debian build.
+
+ -- Michael Meskes <meskes@debian.org>  Fri, 01 Feb 2013 12:15:10 +0100
+
 watchdog (5.12-1) unstable; urgency=low
 
   * Fixed copyright notice. (Closes: #664624)

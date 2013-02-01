@@ -1,5 +1,5 @@
 Title:          watchdog
-Version:        5.12
+Version:        5.13
 Description:    A software watchdog.
 Author:         meskes@debian.org (Michael Meskes)
 Maintained-by:  meskes@debian.org (Michael Meskes)
