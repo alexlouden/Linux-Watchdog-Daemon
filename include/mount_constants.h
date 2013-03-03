@@ -23,7 +23,7 @@
 #define MS_NOATIME	1024	/* Do not update access times. */
 #endif
 #ifndef MS_NODIRATIME
-#define MS_NODIRATIME   2048    /* Do not update directory access times */
+#define MS_NODIRATIME   2048	/* Do not update directory access times */
 #endif
 /*
  * Magic mount flag number. Has to be or-ed to the flag values.

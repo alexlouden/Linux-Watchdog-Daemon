@@ -13,9 +13,9 @@ typedef struct mntFILEstruct {
 	int mntent_softerrs;
 } mntFILE;
 
-mntFILE *my_setmntent (const char *file, char *mode);
-void my_endmntent (mntFILE *mfp);
-int my_addmntent (mntFILE *mfp, struct mntent *mnt);
-struct mntent *my_getmntent (mntFILE *mfp);
+mntFILE *my_setmntent(const char *file, char *mode);
+void my_endmntent(mntFILE * mfp);
+int my_addmntent(mntFILE * mfp, struct mntent *mnt);
+struct mntent *my_getmntent(mntFILE * mfp);
 
 #endif

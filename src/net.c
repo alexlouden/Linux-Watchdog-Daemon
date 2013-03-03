@@ -22,147 +22,153 @@
  */
 static int in_cksum(unsigned short *addr, int len)
 {
-    int nleft = len, sum = 0;
-    unsigned short *w = addr, answer = 0;
+	int nleft = len, sum = 0;
+	unsigned short *w = addr, answer = 0;
 
-    /*
-     * Our algorithm is simple, using a 32 bit accumulator (sum), we add
-     * sequential 16 bit words to it, and at the end, fold back all the
-     * carry bits from the top 16 bits into the lower 16 bits.
-     */
-    while (nleft > 1) {
-	sum += *w++;
-	nleft -= 2;
-    }				/* mop up an odd byte, if necessary */
-    if (nleft == 1) {
-	sum += htons(*(u_char *) w << 8);
-    }
-    /* add back carry outs from top 16 bits to low 16 bits */
-    sum = (sum >> 16) + (sum & 0xffff);	/* add hi 16 to low 16 */
-    sum += (sum >> 16);		/* add carry */
-    answer = ~sum;		/* truncate to 16 bits */
-    return (answer);
+	/*
+	 * Our algorithm is simple, using a 32 bit accumulator (sum), we add
+	 * sequential 16 bit words to it, and at the end, fold back all the
+	 * carry bits from the top 16 bits into the lower 16 bits.
+	 */
+	while (nleft > 1) {
+		sum += *w++;
+		nleft -= 2;
+	}			/* mop up an odd byte, if necessary */
+	if (nleft == 1) {
+		sum += htons(*(u_char *) w << 8);
+	}
+	/* add back carry outs from top 16 bits to low 16 bits */
+	sum = (sum >> 16) + (sum & 0xffff);	/* add hi 16 to low 16 */
+	sum += (sum >> 16);	/* add carry */
+	answer = ~sum;		/* truncate to 16 bits */
+	return (answer);
 }
 
 int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *packet, int time, int count)
 {
-    int i;
-    unsigned char outpack[MAXPACKET];
+	int i;
+	unsigned char outpack[MAXPACKET];
 
-    if (target == NULL)
-	return (ENOERR);
+	if (target == NULL)
+		return (ENOERR);
 
-    /* try "ping-count" times */
-    for (i = 0; i < count; i++) {
+	/* try "ping-count" times */
+	for (i = 0; i < count; i++) {
 
-	struct sockaddr_in from;
-	int fdmask, j;
-	socklen_t fromlen;
-	struct timeval timeout, dtimeout;
-	struct icmphdr *icp = (struct icmphdr *) outpack;
+		struct sockaddr_in from;
+		int fdmask, j;
+		socklen_t fromlen;
+		struct timeval timeout, dtimeout;
+		struct icmphdr *icp = (struct icmphdr *)outpack;
 
-	/* setup a ping message */
-	icp->type = ICMP_ECHO;
-	icp->code = icp->checksum = 0;
-	icp->un.echo.sequence = htons(i + 1);
-	icp->un.echo.id = pid;	/* ID */
+		/* setup a ping message */
+		icp->type = ICMP_ECHO;
+		icp->code = icp->checksum = 0;
+		icp->un.echo.sequence = htons(i + 1);
+		icp->un.echo.id = pid;	/* ID */
 
-	/* compute ICMP checksum here */
-	icp->checksum = in_cksum((unsigned short *) icp, DATALEN + 8);
+		/* compute ICMP checksum here */
+		icp->checksum = in_cksum((unsigned short *)icp, DATALEN + 8);
 
-	/* and send it out */
-	j = sendto(sock_fp, (char *) outpack, DATALEN + 8, 0, &to, sizeof(struct sockaddr));
+		/* and send it out */
+		j = sendto(sock_fp, (char *)outpack, DATALEN + 8, 0, &to, sizeof(struct sockaddr));
 
-	if (j < 0) {
-	    int err = errno;
-
-	    /* if our kernel tells us the network is unreachable we are done */
-	    if (err == ENETUNREACH) {
-#if USE_SYSLOG
-		syslog(LOG_ERR, "network is unreachable (target: %s)", target);
-#endif				/* USE_SYSLOG */
-
-		return (ENETUNREACH);
-
-	    } else {
-#if USE_SYSLOG
-		syslog(LOG_ERR, "sendto gave errno = %d = '%m'\n", err);
-#else				/* USE_SYSLOG */
-		perror(progname);
-#endif				/* USE_SYSLOG */
-
-		if (softboot)
-		    return (err);
-	    }
-
-	} else {
-	    gettimeofday(&timeout, NULL);
-	    /* set the timeout value */
-	    j = time / count;
-	    /* we have to wait at least one second */
-	    if (j == 0)
-		j = 1;
-	    timeout.tv_sec += j;
-
-	    /* wait for reply */
-	    fdmask = 1 << sock_fp;
-	    while (1) {
-		gettimeofday(&dtimeout, NULL);
-		dtimeout.tv_sec = timeout.tv_sec - dtimeout.tv_sec;
-		dtimeout.tv_usec = timeout.tv_usec - dtimeout.tv_usec;
-		if (dtimeout.tv_usec < 0) {
-		    dtimeout.tv_usec += 1000000;
-		    dtimeout.tv_sec--;
-		}
-		/* Is this loop really needed? I have yet to see a usec value >= 1000000. */
-		while (dtimeout.tv_usec >= 1000000) {
-		    dtimeout.tv_usec -= 1000000;
-		    dtimeout.tv_sec++;
-		}
-		if (dtimeout.tv_sec < 0)
-		    break;
-#if USE_SYSLOG
-		if (verbose && logtick && ticker == 1)
-		    syslog(LOG_ERR, "ping select timeout = %ld seconds and %ld useconds\n", dtimeout.tv_sec, dtimeout.tv_usec);
-#endif				/* USE_SYSLOG */
-
-		if (select(sock_fp + 1, (fd_set *) & fdmask, (fd_set *) NULL, (fd_set *) NULL, &dtimeout) >= 1) {
-
-		    /* read reply */
-		    fromlen = sizeof(from);
-		    if (recvfrom(sock_fp, (char *) packet, DATALEN + MAXIPLEN + MAXICMPLEN, 0, (struct sockaddr *) &from, &fromlen) < 0) {
+		if (j < 0) {
 			int err = errno;
 
-			if (err != EINTR)
+			/* if our kernel tells us the network is unreachable we are done */
+			if (err == ENETUNREACH) {
 #if USE_SYSLOG
-			    syslog(LOG_ERR, "recvfrom gave errno = %d = '%m'\n", err);
+				syslog(LOG_ERR, "network is unreachable (target: %s)", target);
+#endif				/* USE_SYSLOG */
+
+				return (ENETUNREACH);
+
+			} else {
+#if USE_SYSLOG
+				syslog(LOG_ERR, "sendto gave errno = %d = '%m'\n", err);
 #else				/* USE_SYSLOG */
-			    perror(progname);
+				perror(progname);
 #endif				/* USE_SYSLOG */
-			if (softboot)
-			    return (err);
 
-			continue;
-		    }
-
-		    /* check if packet is our ECHO */
-		    icp = (struct icmphdr *) (packet + (((struct ip *) packet)->ip_hl << 2));
-
-		    if (icp->type == ICMP_ECHOREPLY && icp->un.echo.id == pid) {
-			if (from.sin_addr.s_addr == ((struct sockaddr_in *) &to)->sin_addr.s_addr) {
-#if USE_SYSLOG
-			    if (verbose && logtick && ticker == 1)
-				syslog(LOG_INFO, "got answer from target %s", target);
-#endif
-			    return (ENOERR);
+				if (softboot)
+					return (err);
 			}
-		    }
-		}
-	    }
-	}
-    }
+
+		} else {
+			gettimeofday(&timeout, NULL);
+			/* set the timeout value */
+			j = time / count;
+			/* we have to wait at least one second */
+			if (j == 0)
+				j = 1;
+			timeout.tv_sec += j;
+
+			/* wait for reply */
+			fdmask = 1 << sock_fp;
+			while (1) {
+				gettimeofday(&dtimeout, NULL);
+				dtimeout.tv_sec = timeout.tv_sec - dtimeout.tv_sec;
+				dtimeout.tv_usec = timeout.tv_usec - dtimeout.tv_usec;
+				if (dtimeout.tv_usec < 0) {
+					dtimeout.tv_usec += 1000000;
+					dtimeout.tv_sec--;
+				}
+				/* Is this loop really needed? I have yet to see a usec value >= 1000000. */
+				while (dtimeout.tv_usec >= 1000000) {
+					dtimeout.tv_usec -= 1000000;
+					dtimeout.tv_sec++;
+				}
+				if (dtimeout.tv_sec < 0)
+					break;
 #if USE_SYSLOG
-    syslog(LOG_ERR, "no response from ping (target: %s)", target);
+				if (verbose && logtick && ticker == 1)
+					syslog(LOG_ERR, "ping select timeout = %ld seconds and %ld useconds\n",
+					       dtimeout.tv_sec, dtimeout.tv_usec);
 #endif				/* USE_SYSLOG */
-    return (ENETUNREACH);
+
+				if (select
+				    (sock_fp + 1, (fd_set *) & fdmask, (fd_set *) NULL, (fd_set *) NULL,
+				     &dtimeout) >= 1) {
+
+					/* read reply */
+					fromlen = sizeof(from);
+					if (recvfrom
+					    (sock_fp, (char *)packet, DATALEN + MAXIPLEN + MAXICMPLEN, 0,
+					     (struct sockaddr *)&from, &fromlen) < 0) {
+						int err = errno;
+
+						if (err != EINTR)
+#if USE_SYSLOG
+							syslog(LOG_ERR, "recvfrom gave errno = %d = '%m'\n", err);
+#else				/* USE_SYSLOG */
+							perror(progname);
+#endif				/* USE_SYSLOG */
+						if (softboot)
+							return (err);
+
+						continue;
+					}
+
+					/* check if packet is our ECHO */
+					icp = (struct icmphdr *)(packet + (((struct ip *)packet)->ip_hl << 2));
+
+					if (icp->type == ICMP_ECHOREPLY && icp->un.echo.id == pid) {
+						if (from.sin_addr.s_addr ==
+						    ((struct sockaddr_in *)&to)->sin_addr.s_addr) {
+#if USE_SYSLOG
+							if (verbose && logtick && ticker == 1)
+								syslog(LOG_INFO, "got answer from target %s", target);
+#endif
+							return (ENOERR);
+						}
+					}
+				}
+			}
+		}
+	}
+#if USE_SYSLOG
+	syslog(LOG_ERR, "no response from ping (target: %s)", target);
+#endif				/* USE_SYSLOG */
+	return (ENETUNREACH);
 }

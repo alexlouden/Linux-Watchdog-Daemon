@@ -50,7 +50,7 @@ int ifdown(void)
 	}
 	numif = ifc.ifc_len / sizeof(struct ifreq);
 
-	for(i = 0; i < numif; i++) {
+	for (i = 0; i < numif; i++) {
 		if (strcmp(ifr[i].ifr_name, "lo") == 0)
 			continue;
 		if (strchr(ifr[i].ifr_name, ':') != NULL)

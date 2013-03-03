@@ -9,45 +9,40 @@ extern pid_t pid;
 extern char *tempname, *admin, *devname, *progname, *timestamps, *heartbeat;
 extern time_t timeout, rtimeout;
 extern FILE *hb;
-extern char* logdir, *filename_buf;
+extern char *logdir, *filename_buf;
 
 /* variable types */
-struct pingmode
-{
+struct pingmode {
 	struct sockaddr to;
 	int sock_fp;
 	unsigned char *packet;
 };
 
-struct filemode
-{
+struct filemode {
 	int mtime;
 };
 
-struct ifmode
-{
+struct ifmode {
 	unsigned long bytes;
 };
 
-union wdog_options
-{
-        struct pingmode net;
-        struct filemode file;
-        struct ifmode iface;
+union wdog_options {
+	struct pingmode net;
+	struct filemode file;
+	struct ifmode iface;
 };
-                                        
-struct list
-{
-        char *name;
-        union wdog_options parameter;
-        struct list *next;
+
+struct list {
+	char *name;
+	union wdog_options parameter;
+	struct list *next;
 };
 
 /* constants */
 #define DATALEN         (64 - 8)
 #define MAXIPLEN        60
 #define MAXICMPLEN      76
-#define MAXPACKET       (65536 - 60 - 8)        /* max packet size */
+#define MAXPACKET       (65536 - 60 - 8)	/* max packet size */
 
 #ifndef TRUE
 #define TRUE  1
