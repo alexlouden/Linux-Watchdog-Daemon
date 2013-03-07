@@ -83,10 +83,10 @@ int write_heartbeat(void)
 /* write to the watchdog device */
 int keep_alive(void)
 {
-	if (watchdog == -1)
+	if (watchdog_fd == -1)
 		return (ENOERR);
 
-	if (write(watchdog, "\0", 1) < 0) {
+	if (write(watchdog_fd, "\0", 1) < 0) {
 		int err = errno;
 
 #if USE_SYSLOG

@@ -1,3 +1,6 @@
+#ifndef _WATCH_ERR_H
+#define _WATCH_ERR_H
+
 /*********************************/
 /* additional error return codes */
 /*********************************/
@@ -12,3 +15,5 @@
 #define EINVMEM		-7	/* /proc/meminfo contains invalid data */
 #define ECHKILL		-8	/* child was killed by signal */
 #define ETOOLONG	-9	/* child didn't return in time */
+
+#endif /*_WATCH_ERR_H*/

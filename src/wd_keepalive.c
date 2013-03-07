@@ -215,7 +215,6 @@ int main(int argc, char *const argv[])
 	int count = 0;
 	int c;
 	int oom_adjusted = 0;
-	struct stat s;
 
 	/* allow all options watchdog understands too */
 #if USE_SYSLOG
@@ -438,4 +437,5 @@ int main(int argc, char *const argv[])
 
 	terminate();
 	/* not reached */
+return 0;
 }

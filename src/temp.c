@@ -23,11 +23,11 @@ int check_temp(void)
 #endif				/* USE_SYSLOG */
 
 	/* is the temperature device open? */
-	if (temp == -1)
+	if (temp_fd == -1)
 		return (ENOERR);
 
 	/* read the line (there is only one) */
-	if (read(temp, &temperature, sizeof(temperature)) < 0) {
+	if (read(temp_fd, &temperature, sizeof(temperature)) < 0) {
 		int err = errno;
 
 #if USE_SYSLOG

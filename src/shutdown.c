@@ -58,7 +58,7 @@ static struct mntent rootfs;
 extern int mlocked, realtime;
 #endif				/* _POSIX_MEMLOCK */
 extern volatile sig_atomic_t _running;
-extern int devtimeout;		/* From watchdog.c */
+extern int dev_timeout;		/* From watchdog.c */
 
 jmp_buf ret2dog;
 
@@ -85,8 +85,8 @@ static void log_end()
 /* close the device and check for error */
 static void close_all()
 {
-	if (watchdog != -1) {
-		if (write(watchdog, "V", 1) < 0) {
+	if (watchdog_fd != -1) {
+		if (write(watchdog_fd, "V", 1) < 0) {
 			int err = errno;
 #if USE_SYSLOG
 			syslog(LOG_ERR, "write watchdog device gave error %d = '%m'!", err);
@@ -95,7 +95,7 @@ static void close_all()
 #endif				/* USE_SYSLOG */
 		}
 
-		if (close(watchdog) == -1) {
+		if (close(watchdog_fd) == -1) {
 #if USE_SYSLOG
 			syslog(LOG_ALERT, "cannot close %s (errno = %d)", devname, errno);
 #else				/* USE_SYSLOG */
@@ -104,7 +104,7 @@ static void close_all()
 		}
 	}
 
-	if (load != -1 && close(load) == -1) {
+	if (load_fd != -1 && close(load_fd) == -1) {
 #if USE_SYSLOG
 		syslog(LOG_ALERT, "cannot close /proc/loadavg (errno = %d)", errno);
 #else				/* USE_SYSLOG */
@@ -112,7 +112,7 @@ static void close_all()
 #endif				/* USE_SYSLOG */
 	}
 
-	if (mem != -1 && close(mem) == -1) {
+	if (mem_fd != -1 && close(mem_fd) == -1) {
 #if USE_SYSLOG
 		syslog(LOG_ALERT, "cannot close /proc/meminfo (errno = %d)", errno);
 #else				/* USE_SYSLOG */
@@ -120,7 +120,7 @@ static void close_all()
 #endif				/* USE_SYSLOG */
 	}
 
-	if (temp != -1 && close(temp) == -1) {
+	if (temp_fd != -1 && close(temp_fd) == -1) {
 #if USE_SYSLOG
 		syslog(LOG_ALERT, "cannot close /dev/temperature (errno = %d)", errno);
 #else				/* USE_SYSLOG */
@@ -169,10 +169,10 @@ static void panic(void)
 {
 	/* if we are still alive, we just exit */
 	close_all();
-	fprintf(stderr, "WATCHDOG PANIC: Still alive after sleeping %d seconds!\n", 4 * devtimeout);
+	fprintf(stderr, "WATCHDOG PANIC: Still alive after sleeping %d seconds!\n", 4 * dev_timeout);
 #if USE_SYSLOG
 	openlog(progname, LOG_PID, LOG_DAEMON);
-	syslog(LOG_ALERT, "still alive after sleeping %d seconds", 4 * devtimeout);
+	syslog(LOG_ALERT, "still alive after sleeping %d seconds", 4 * dev_timeout);
 	closelog();
 #endif
 	exit(1);
@@ -315,13 +315,13 @@ static void killall5(int sig)
 		return;
 	}
 	for (p = plist; p; p = p->next)
-		if (p->pid == pid) {
+		if (p->pid == daemon_pid) {
 			sid = p->sid;
 			break;
 		}
 	/* Now kill all processes except our session. */
 	for (p = plist; p; p = p->next)
-		if (p->pid != pid && p->sid != sid)
+		if (p->pid != daemon_pid && p->sid != sid)
 			kill(p->pid, sig);
 
 	/* And let them continue. */
@@ -426,7 +426,7 @@ void do_shutdown(int errorcode)
 		if (!isatty(i))
 			close(i);
 	for (i = 3; i < 20; i++)
-		if (i != watchdog)
+		if (i != watchdog_fd)
 			close(i);
 	close(255);
 
@@ -532,7 +532,7 @@ void do_shutdown(int errorcode)
 	/* okay we should never reach this point, */
 	/* but if we do we will cause the hard reset */
 
-	sleep(devtimeout * 4);
+	sleep(dev_timeout * 4);
 
 	/* unbelievable: we're still alive */
 	panic();

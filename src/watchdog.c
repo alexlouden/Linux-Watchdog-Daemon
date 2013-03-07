@@ -43,11 +43,6 @@
 #endif				/* USE_SYSLOG */
 
 static int no_act = FALSE;
-
-#if USE_SYSLOG
-int verbose = FALSE;
-#endif				/* USE_SYSLOG */
-
 volatile sig_atomic_t _running = 1;
 
 #define ADMIN		"admin"
@@ -82,23 +77,62 @@ volatile sig_atomic_t _running = 1;
 #define TESTBIN_PATH NULL
 #endif
 
-pid_t pid;
-int tint = 1, softboot = FALSE, watchdog = -1, load = -1, mem = -1, temp = -1;
-int logtick = 1, ticker = 1, schedprio = 1;
-int maxload1 = 0, maxload5 = 0, maxload15 = 0, minpages = 0;
-int maxtemp = 120, hbstamps = 300, lastts, nrts;
-int pingcount = 3;
-int devtimeout = TIMER_MARGIN;
-char *tempname = NULL, *devname = NULL, *admin = "root", *progname;
-char *timestamps, *heartbeat;
-time_t timeout = 0, rtimeout = 0;
-FILE *hb;
-char *logdir = "/var/log/watchdog";
-char *filename_buf;
+/* Global configuration variables */
 
-#if defined(_POSIX_MEMLOCK)
-int mlocked = FALSE, realtime = FALSE;
-#endif
+int tint = 1;
+int logtick = 1;
+int ticker = 1;
+int schedprio = 1;
+int maxload1 = 0;
+int maxload5 = 0;
+int maxload15 = 0;
+int minpages = 0;
+int maxtemp = 120;
+int pingcount = 3;
+
+char *devname = NULL;
+char *admin = "root";
+char *tempname = NULL;
+
+time_t	test_timeout = 0;				/* test-binary time out value. */
+time_t	repair_timeout = 0;				/* repair-binary time out value. */
+int		dev_timeout = TIMER_MARGIN;		/* Watchdog harware time-out. */
+
+char *logdir = "/var/log/watchdog";
+
+char *heartbeat = NULL;
+int hbstamps = 300;
+
+int realtime = FALSE;
+
+/* Self-repairing binaries list */
+struct list *tr_bin_list = NULL;
+char *test_dir = TESTBIN_PATH;
+
+struct list *file_list = NULL;
+struct list *target_list = NULL;
+struct list *pidfile_list = NULL;
+struct list *iface_list = NULL;
+
+char *tbinary = NULL;
+char *rbinary = NULL;
+
+char *sendmail_bin = PATH_SENDMAIL;
+
+/* Set when write_pid_file() is called. */
+pid_t daemon_pid = 0;
+
+/* Command line options also used globally. */
+int softboot = FALSE;
+int verbose = FALSE;
+
+/* Contineously open file descriptors. */
+int watchdog_fd = -1, load_fd = -1, mem_fd = -1, temp_fd = -1;
+int mlocked = 0;
+FILE *hb = NULL;
+int lastts, nrts;
+char *timestamps, *progname;
+char *filename_buf;
 
 static void usage(void)
 {
@@ -180,8 +214,8 @@ static int repair(char *rbinary, int result, char *name, int version)
 			return (ENOERR);
 	}
 
-	if (rtimeout > 0) {
-		time_t left = rtimeout;
+	if (repair_timeout > 0) {
+		time_t left = repair_timeout;
 		do {
 			sleep(1);
 			r_pid = waitpid(child_pid, &result, WNOHANG);
@@ -219,7 +253,7 @@ static int repair(char *rbinary, int result, char *name, int version)
 #endif				/* USE_SYSLOG */
 
 		if (ret == ERESET)	/* repair script says force hard reset, we give it a try */
-			sleep(devtimeout * 4);
+			sleep(dev_timeout * 4);
 
 		/* for all other errors or if we still live, we let shutdown handle it */
 		return (ret);
@@ -256,13 +290,6 @@ static void do_check2(int res, char *r_specific, char *r_global, char *name)
 	wd_action(res, r_specific, name, 1);
 	wd_action(keep_alive(), r_global, NULL, 0);
 }
-
-/* Self-repairing binaries list */
-struct list *tr_bin = NULL;
-char *test_dir = TESTBIN_PATH;
-
-struct list *file = NULL, *target = NULL, *pidfile = NULL, *iface = NULL;
-char *tbinary, *rbinary, *admin;
 
 static void add_list(struct list **list, char *name)
 {
@@ -340,18 +367,18 @@ static void read_config(char *configfile, char *progname)
 				if (spool(line, &i, strlen(FILENAME)))
 					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 				else
-					add_list(&file, strdup(line + i));
+					add_list(&file_list, strdup(line + i));
 			} else if (strncmp(line + i, CHANGE, strlen(CHANGE)) == 0) {
 				struct list *ptr;
 
 				if (spool(line, &i, strlen(CHANGE)))
 					continue;
 
-				if (!file) {	/* no file entered yet */
+				if (!file_list) {	/* no file entered yet */
 					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 					continue;
 				}
-				for (ptr = file; ptr->next != NULL; ptr = ptr->next) ;
+				for (ptr = file_list; ptr->next != NULL; ptr = ptr->next) ;
 				if (ptr->parameter.file.mtime != 0)
 					fprintf(stderr,
 						"Duplicate change interval option in config file. Ignoring first entry.\n");
@@ -361,7 +388,7 @@ static void read_config(char *configfile, char *progname)
 				if (spool(line, &i, strlen(SERVERPIDFILE)))
 					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 				else
-					add_list(&pidfile, strdup(line + i));
+					add_list(&pidfile_list, strdup(line + i));
 			} else if (strncmp(line + i, PINGCOUNT, strlen(PINGCOUNT)) == 0) {
 				if (spool(line, &i, strlen(PINGCOUNT)))
 					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
@@ -371,12 +398,12 @@ static void read_config(char *configfile, char *progname)
 				if (spool(line, &i, strlen(PING)))
 					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 				else
-					add_list(&target, strdup(line + i));
+					add_list(&target_list, strdup(line + i));
 			} else if (strncmp(line + i, INTERFACE, strlen(INTERFACE)) == 0) {
 				if (spool(line, &i, strlen(INTERFACE)))
 					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 				else
-					add_list(&iface, strdup(line + i));
+					add_list(&iface_list, strdup(line + i));
 			} else if (strncmp(line + i, REALTIME, strlen(REALTIME)) == 0) {
 				(void)spool(line, &i, strlen(REALTIME));
 				realtime = (strncmp(line + i, "yes", 3) == 0) ? TRUE : FALSE;
@@ -392,9 +419,9 @@ static void read_config(char *configfile, char *progname)
 					rbinary = strdup(line + i);
 			} else if (strncmp(line + i, REPAIRTIMEOUT, strlen(REPAIRTIMEOUT)) == 0) {
 				if (spool(line, &i, strlen(REPAIRTIMEOUT)))
-					rtimeout = 0;
+					repair_timeout = 0;
 				else
-					rtimeout = atol(line + i);
+					repair_timeout = atol(line + i);
 			} else if (strncmp(line + i, TESTBIN, strlen(TESTBIN)) == 0) {
 				if (spool(line, &i, strlen(TESTBIN)))
 					tbinary = NULL;
@@ -402,9 +429,9 @@ static void read_config(char *configfile, char *progname)
 					tbinary = strdup(line + i);
 			} else if (strncmp(line + i, TESTTIMEOUT, strlen(TESTTIMEOUT)) == 0) {
 				if (spool(line, &i, strlen(TESTTIMEOUT)))
-					timeout = 0;
+					test_timeout = 0;
 				else
-					timeout = atol(line + i);
+					test_timeout = atol(line + i);
 			} else if (strncmp(line + i, HEARTBEAT, strlen(HEARTBEAT)) == 0) {
 				if (spool(line, &i, strlen(HEARTBEAT)))
 					heartbeat = NULL;
@@ -439,7 +466,7 @@ static void read_config(char *configfile, char *progname)
 				if (spool(line, &i, strlen(DEVICE_TIMEOUT)))
 					fprintf(stderr, "Ignoring invalid line in config file: %s ", line);
 				else
-					devtimeout = atol(line + i);
+					dev_timeout = atol(line + i);
 			} else if (strncmp(line + i, TEMP, strlen(TEMP)) == 0) {
 				if (spool(line, &i, strlen(TEMP)))
 					tempname = NULL;
@@ -547,7 +574,7 @@ static void add_test_binaries(const char *path)
 			continue;
 
 		syslog(LOG_DEBUG, "adding %s to list of auto-repair binaries", fdup);
-		add_list(&tr_bin, fdup);
+		add_list(&tr_bin_list, fdup);
 	} while (1);
 }
 
@@ -649,7 +676,7 @@ int main(int argc, char *const argv[])
 	if (tint < 0)
 		usage();
 
-	if (tint >= devtimeout && !force) {
+	if (tint >= dev_timeout && !force) {
 		fprintf(stderr, "%s error:\n", progname);
 		fprintf(stderr, "This interval length might reboot the system while the process sleeps!\n");
 		fprintf(stderr, "To force this interval length use the -f option.\n");
@@ -671,8 +698,8 @@ int main(int argc, char *const argv[])
 	}
 
 	/* set up pinging if in ping mode */
-	if (target != NULL) {
-		for (act = target; act != NULL; act = act->next) {
+	if (target_list != NULL) {
+		for (act = target_list; act != NULL; act = act->next) {
 			struct protoent *proto;
 			struct pingmode *net = (struct pingmode *)calloc(1, sizeof(struct pingmode));
 
@@ -771,33 +798,33 @@ int main(int argc, char *const argv[])
 	syslog(LOG_INFO, "int=%ds realtime=%s sync=%s soft=%s mla=%d mem=%d",
 	       tint, realtime ? "yes" : "no", sync_it ? "yes" : "no", softboot ? "yes" : "no", maxload1, minpages);
 
-	if (target == NULL)
+	if (target_list == NULL)
 		syslog(LOG_INFO, "ping: no machine to check");
 	else
-		for (act = target; act != NULL; act = act->next)
+		for (act = target_list; act != NULL; act = act->next)
 			syslog(LOG_INFO, "ping: %s", act->name);
 
-	if (file == NULL)
+	if (file_list == NULL)
 		syslog(LOG_INFO, "file: no file to check");
 	else
-		for (act = file; act != NULL; act = act->next)
+		for (act = file_list; act != NULL; act = act->next)
 			syslog(LOG_INFO, "file: %s:%d", act->name, act->parameter.file.mtime);
 
-	if (pidfile == NULL)
+	if (pidfile_list == NULL)
 		syslog(LOG_INFO, "pidfile: no server process to check");
 	else
-		for (act = pidfile; act != NULL; act = act->next)
+		for (act = pidfile_list; act != NULL; act = act->next)
 			syslog(LOG_INFO, "pidfile: %s", act->name);
 
-	if (iface == NULL)
+	if (iface_list == NULL)
 		syslog(LOG_INFO, "interface: no interface to check");
 	else
-		for (act = iface; act != NULL; act = act->next)
+		for (act = iface_list; act != NULL; act = act->next)
 			syslog(LOG_INFO, "interface: %s", act->name);
 
 	syslog(LOG_INFO, "test=%s(%ld) repair=%s(%ld) alive=%s heartbeat=%s temp=%s to=%s no_act=%s",
-	       (tbinary == NULL) ? "none" : tbinary, timeout,
-	       (rbinary == NULL) ? "none" : rbinary, rtimeout,
+	       (tbinary == NULL) ? "none" : tbinary, test_timeout,
+	       (rbinary == NULL) ? "none" : rbinary, repair_timeout,
 	       (devname == NULL) ? "none" : devname,
 	       (heartbeat == NULL) ? "none" : heartbeat,
 	       (tempname == NULL) ? "none" : tempname,
@@ -806,8 +833,8 @@ int main(int argc, char *const argv[])
 
 	/* open the device */
 	if (devname != NULL && no_act == FALSE) {
-		watchdog = open(devname, O_WRONLY);
-		if (watchdog == -1) {
+		watchdog_fd = open(devname, O_WRONLY);
+		if (watchdog_fd == -1) {
 #if USE_SYSLOG
 			syslog(LOG_ERR, "cannot open %s (errno = %d = '%m')", devname, errno);
 #else				/* USE_SYSLOG */
@@ -816,13 +843,13 @@ int main(int argc, char *const argv[])
 			/* do not exit here per default */
 			/* we can use watchdog even if there is no watchdog device */
 		}
-		if (watchdog >= 0) {
-			if (devtimeout > 0) {
+		if (watchdog_fd >= 0) {
+			if (dev_timeout > 0) {
 				/* Set the watchdog hard-stop timeout; default = unset (use
 				   driver default) */
-				if (ioctl(watchdog, WDIOC_SETTIMEOUT, &devtimeout) < 0) {
+				if (ioctl(watchdog_fd, WDIOC_SETTIMEOUT, &dev_timeout) < 0) {
 #if USE_SYSLOG
-					syslog(LOG_ERR, "cannot set timeout %d (errno = %d = '%m')", devtimeout, errno);
+					syslog(LOG_ERR, "cannot set timeout %d (errno = %d = '%m')", dev_timeout, errno);
 #else
 					perror(progname);
 #endif
@@ -830,7 +857,7 @@ int main(int argc, char *const argv[])
 			}
 #if USE_SYSLOG
 			/* Also log watchdog identity */
-			if (ioctl(watchdog, WDIOC_GETSUPPORT, &ident) < 0) {
+			if (ioctl(watchdog_fd, WDIOC_GETSUPPORT, &ident) < 0) {
 				syslog(LOG_ERR, "cannot get watchdog identity (errno = %d = '%m')", errno);
 			} else {
 				ident.identity[sizeof(ident.identity) - 1] = '\0';	/* Be sure */
@@ -890,8 +917,8 @@ int main(int argc, char *const argv[])
 
 	if (maxload1 > 0) {
 		/* open the load average file */
-		load = open("/proc/loadavg", O_RDONLY);
-		if (load == -1) {
+		load_fd = open("/proc/loadavg", O_RDONLY);
+		if (load_fd == -1) {
 #if USE_SYSLOG
 			syslog(LOG_ERR, "cannot open /proc/loadavg (errno = %d = '%m')", errno);
 #else				/* USE_SYSLOG */
@@ -902,8 +929,8 @@ int main(int argc, char *const argv[])
 
 	if (minpages > 0) {
 		/* open the memory info file */
-		mem = open("/proc/meminfo", O_RDONLY);
-		if (mem == -1) {
+		mem_fd = open("/proc/meminfo", O_RDONLY);
+		if (mem_fd == -1) {
 #if USE_SYSLOG
 			syslog(LOG_ERR, "cannot open /proc/meminfo (errno = %d = '%m')", errno);
 #else				/* USE_SYSLOG */
@@ -914,8 +941,8 @@ int main(int argc, char *const argv[])
 
 	if (tempname != NULL && no_act == FALSE) {
 		/* open the temperature file */
-		temp = open(tempname, O_RDONLY);
-		if (temp == -1) {
+		temp_fd = open(tempname, O_RDONLY);
+		if (temp_fd == -1) {
 #if USE_SYSLOG
 			syslog(LOG_ERR, "cannot open %s (errno = %d = '%m')", tempname, errno);
 #else				/* USE_SYSLOG */
@@ -925,10 +952,10 @@ int main(int argc, char *const argv[])
 	}
 
 	/* tuck my process id away */
-	pid = getpid();
+	daemon_pid = getpid();
 	fp = fopen(PIDFILE, "w");
 	if (fp != NULL) {
-		fprintf(fp, "%d\n", pid);
+		fprintf(fp, "%d\n", daemon_pid);
 		(void)fclose(fp);
 	}
 
@@ -1011,31 +1038,31 @@ int main(int argc, char *const argv[])
 		do_check(check_temp(), rbinary, NULL);
 
 		/* in filemode stat file */
-		for (act = file; act != NULL; act = act->next)
+		for (act = file_list; act != NULL; act = act->next)
 			do_check(check_file_stat(act), rbinary, act->name);
 
 		/* in pidmode kill -0 processes */
-		for (act = pidfile; act != NULL; act = act->next)
+		for (act = pidfile_list; act != NULL; act = act->next)
 			do_check(check_pidfile(act), rbinary, act->name);
 
 		/* in network mode check the given devices for input */
-		for (act = iface; act != NULL; act = act->next)
+		for (act = iface_list; act != NULL; act = act->next)
 			do_check(check_iface(act), rbinary, act->name);
 
 		/* in ping mode ping the ip address */
-		for (act = target; act != NULL; act = act->next)
+		for (act = target_list; act != NULL; act = act->next)
 			do_check(check_net
 				 (act->name, act->parameter.net.sock_fp, act->parameter.net.to,
 				  act->parameter.net.packet, tint, pingcount), rbinary, act->name);
 
 		/* in user mode execute the given binary or just test fork() call */
-		do_check(check_bin(tbinary, timeout, 0), rbinary, NULL);
+		do_check(check_bin(tbinary, test_timeout, 0), rbinary, NULL);
 
 #ifdef TESTBIN_PATH
 		/* test/repair binaries in the watchdog.d directory */
-		for (act = tr_bin; act != NULL; act = act->next)
+		for (act = tr_bin_list; act != NULL; act = act->next)
 			/* Use version 1 for testbin-path */
-			do_check2(check_bin(act->name, timeout, 1), act->name, rbinary, NULL);
+			do_check2(check_bin(act->name, test_timeout, 1), act->name, rbinary, NULL);
 #endif
 
 		/* finally sleep some seconds */

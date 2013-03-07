@@ -25,11 +25,11 @@ int check_memory(void)
 	unsigned int free;
 
 	/* is the memory file open? */
-	if (mem == -1)
+	if (mem_fd == -1)
 		return (ENOERR);
 
 	/* position pointer at start of file */
-	if (lseek(mem, 0, SEEK_SET) < 0) {
+	if (lseek(mem_fd, 0, SEEK_SET) < 0) {
 		int err = errno;
 
 #if USE_SYSLOG
@@ -44,7 +44,7 @@ int check_memory(void)
 	}
 
 	/* read the file */
-	if (read(mem, buf, sizeof(buf)) < 0) {
+	if (read(mem_fd, buf, sizeof(buf)) < 0) {
 		int err = errno;
 
 #if USE_SYSLOG

@@ -21,11 +21,11 @@ int check_load(void)
 	char buf[40], *ptr;
 
 	/* is the load average file open? */
-	if (load == -1 || maxload1 == 0 || maxload5 == 0 || maxload15 == 0)
+	if (load_fd == -1 || maxload1 == 0 || maxload5 == 0 || maxload15 == 0)
 		return (ENOERR);
 
 	/* position pointer at start of file */
-	if (lseek(load, 0, SEEK_SET) < 0) {
+	if (lseek(load_fd, 0, SEEK_SET) < 0) {
 		int err = errno;
 
 #if USE_SYSLOG
@@ -40,7 +40,7 @@ int check_load(void)
 	}
 
 	/* read the line (there is only one) */
-	if (read(load, buf, sizeof(buf)) < 0) {
+	if (read(load_fd, buf, sizeof(buf)) < 0) {
 		int err = errno;
 
 #if USE_SYSLOG
