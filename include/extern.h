@@ -101,7 +101,7 @@ extern pid_t daemon_pid;
 
 /* Globals to be removed soon */
 
-extern int mem_fd, temp_fd;
+extern int temp_fd;
 #endif
 
 /* === Function prototypes === */
@@ -148,7 +148,9 @@ int check_pidfile(struct list *);
 int check_iface(struct list *);
 
 /** memory.c **/
+int open_memcheck(void);
 int check_memory(void);
+int close_memcheck(void);
 
 /** shutdown.c **/
 void do_shutdown(int errorcode);

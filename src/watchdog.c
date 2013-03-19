@@ -120,7 +120,7 @@ int softboot = FALSE;
 int verbose = FALSE;
 
 /* Contineously open file descriptors. */
-int mem_fd = -1, temp_fd = -1;
+int temp_fd = -1;
 int mlocked = 0;
 char *filename_buf;
 
@@ -776,13 +776,7 @@ int main(int argc, char *const argv[])
 
 	open_loadcheck();
 
-	if (minpages > 0) {
-		/* open the memory info file */
-		mem_fd = open("/proc/meminfo", O_RDONLY);
-		if (mem_fd == -1) {
-			log_message(LOG_ERR, "cannot open /proc/meminfo (errno = %d = '%s')", errno, strerror(errno));
-		}
-	}
+	open_memcheck();
 
 	if (tempname != NULL && no_act == FALSE) {
 		/* open the temperature file */

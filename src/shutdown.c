@@ -81,9 +81,7 @@ static void close_all()
 
 	close_loadcheck();
 
-	if (mem_fd != -1 && close(mem_fd) == -1) {
-		log_message(LOG_ALERT, "cannot close /proc/meminfo (errno = %d)", errno);
-	}
+	close_memcheck();
 
 	if (temp_fd != -1 && close(temp_fd) == -1) {
 		log_message(LOG_ALERT, "cannot close /dev/temperature (errno = %d)", errno);
