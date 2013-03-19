@@ -769,8 +769,6 @@ int main(int argc, char *const argv[])
 		open_tempcheck(tempname);
 	}
 
-	/* MJ 16/2/2000, need to keep track of the watchdog writes so that
-	   I can have a potted history of recent reboots */
 	open_heartbeat();
 
 	open_loadcheck();
