@@ -79,9 +79,7 @@ static void close_all()
 {
 	close_watchdog();
 
-	if (load_fd != -1 && close(load_fd) == -1) {
-		log_message(LOG_ALERT, "cannot close /proc/loadavg (errno = %d)", errno);
-	}
+	close_loadcheck();
 
 	if (mem_fd != -1 && close(mem_fd) == -1) {
 		log_message(LOG_ALERT, "cannot close /proc/meminfo (errno = %d)", errno);

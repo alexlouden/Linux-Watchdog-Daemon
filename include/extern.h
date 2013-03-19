@@ -101,7 +101,7 @@ extern pid_t daemon_pid;
 
 /* Globals to be removed soon */
 
-extern int load_fd, mem_fd, temp_fd;
+extern int mem_fd, temp_fd;
 #endif
 
 /* === Function prototypes === */
@@ -128,7 +128,9 @@ int get_watchdog_fd(void);
 int close_watchdog(void);
 
 /** load.c **/
+int open_loadcheck(void);
 int check_load(void);
+int close_loadcheck(void);
 
 /** net.c **/
 int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *packet, int time, int count);
