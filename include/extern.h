@@ -169,4 +169,7 @@ void unlock_our_memory(void);
 /** daemon-pid.c **/
 int write_pid_file(const char *fname);
 
+/** configfile.c **/
+void read_config(char *configfile);
+
 #endif /*_EXTERN_H_*/

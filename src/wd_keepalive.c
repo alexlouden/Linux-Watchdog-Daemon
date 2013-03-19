@@ -37,15 +37,8 @@
 #define TRUE  1
 #define FALSE 0
 
-#define DEVICE		"watchdog-device"
-#define INTERVAL	"interval"
-#define PRIORITY        "priority"
-#define REALTIME        "realtime"
-
-int watchdog = -1, tint = 10, schedprio = 1;
-char *devname = NULL;
 volatile sig_atomic_t _running = 1;
-int realtime = FALSE;
+static int watchdog = -1;
 
 static void usage(char *progname)
 {
@@ -55,7 +48,7 @@ static void usage(char *progname)
 }
 
 /* write a log entry on exit */
-static void log_end()
+static void log_end(void)
 {
 	/* Log the closing message */
 	log_message(LOG_INFO, "stopping watchdog keepalive daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
@@ -65,7 +58,7 @@ static void log_end()
 }
 
 /* close the device and check for error */
-static void close_all()
+static void close_all(void)
 {
 	if (watchdog != -1) {
 		if (write(watchdog, "V", 1) < 0) {
@@ -90,90 +83,6 @@ void terminate(void)
 	close_all();
 	log_end();
 	exit(0);
-}
-
-static int spool(char *line, int *i, int offset)
-{
-	for ((*i) += offset; line[*i] == ' ' || line[*i] == '\t'; (*i)++) ;
-	if (line[*i] == '=')
-		(*i)++;
-	for (; line[*i] == ' ' || line[*i] == '\t'; (*i)++) ;
-	if (line[*i] == '\0')
-		return (1);
-	else
-		return (0);
-}
-
-static void read_config(char *configfile)
-{
-	FILE *wc;
-
-	if ((wc = fopen(configfile, "r")) == NULL) {
-		fatal_error(EX_SYSERR, "Can't open config file \"%s\" (%s)", configfile, strerror(errno));
-	}
-
-	while (!feof(wc)) {
-		char *line = NULL;
-		size_t n;
-
-		if (getline(&line, &n, wc) == -1) {
-			if (!ferror(wc))
-				break;
-			else {
-				fatal_error(EX_SYSERR, "Error reading config file (%s)", strerror(errno));
-			}
-		} else {
-			int i, j;
-
-			/* scan the actual line for an option */
-			/* first remove the leading blanks */
-			for (i = 0; line[i] == ' ' || line[i] == '\t'; i++) ;
-
-			/* if the next sign is a '#' we have a comment */
-			if (line[i] == '#')
-				continue;
-
-			/* also remove the trailing blanks and the \n */
-			for (j = strlen(line) - 1; line[j] == ' ' || line[j] == '\t' || line[j] == '\n'; j--) ;
-			line[j + 1] = '\0';
-
-			/* if the line is empty now, we don't have to parse it */
-			if (strlen(line + i) == 0)
-				continue;
-
-			/* now check for an option */
-			if (strncmp(line + i, INTERVAL, strlen(INTERVAL)) == 0) {
-				if (spool(line, &i, strlen(INTERVAL)))
-					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-				else
-					tint = atol(line + i);
-			} else if (strncmp(line + i, DEVICE, strlen(DEVICE)) == 0) {
-				if (spool(line, &i, strlen(DEVICE)))
-					devname = NULL;
-				else
-					devname = strdup(line + i);
-			} else if (strncmp(line + i, REALTIME, strlen(REALTIME)) == 0) {
-				(void)spool(line, &i, strlen(REALTIME));
-				realtime = (strncmp(line + i, "yes", 3) == 0) ? TRUE : FALSE;
-			} else if (strncmp(line + i, PRIORITY, strlen(PRIORITY)) == 0) {
-				if (spool(line, &i, strlen(PRIORITY)))
-					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-				else
-					schedprio = atol(line + i);
-			} else {
-				/*
-				 * do not print an error message here because we usually use
-				 * watchdog's config file which may contain far more valid
-				 * options than we understand 
-				 */
-				/* fprintf(stderr, "Ignoring config line: %s\n", line); */
-			}
-		}
-	}
-
-	if (fclose(wc) != 0) {
-		fatal_error(EX_SYSERR, "Error closing file (%s)", strerror(errno));
-	}
 }
 
 int main(int argc, char *const argv[])
