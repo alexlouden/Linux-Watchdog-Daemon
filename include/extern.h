@@ -100,11 +100,8 @@ extern char *filename_buf;
 extern pid_t daemon_pid;
 
 /* Globals to be removed soon */
-extern FILE *hb;
-extern int lastts, nrts;
-extern char *timestamps;
 
-extern int watchdog_fd, load_fd, mem_fd, temp_fd;
+extern int load_fd, mem_fd, temp_fd;
 #endif
 
 /* === Function prototypes === */
@@ -124,7 +121,11 @@ int check_file_stat(struct list *);
 int check_file_table(void);
 
 /** keep_alive.c **/
+int open_watchdog(char *name, int timeout);
+int set_watchdog_timeout(int timeout);
 int keep_alive(void);
+int get_watchdog_fd(void);
+int close_watchdog(void);
 
 /** load.c **/
 int check_load(void);
@@ -153,6 +154,8 @@ void sigterm_handler(int arg);
 void terminate(void) GCC_NORETURN;
 
 /** heartbeat.c **/
+int open_heartbeat(void);
 int write_heartbeat(void);
+int close_heartbeat(void);
 
 #endif /*_EXTERN_H_*/

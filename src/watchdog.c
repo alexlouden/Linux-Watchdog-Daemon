@@ -120,11 +120,8 @@ int softboot = FALSE;
 int verbose = FALSE;
 
 /* Contineously open file descriptors. */
-int watchdog_fd = -1, load_fd = -1, mem_fd = -1, temp_fd = -1;
+int load_fd = -1, mem_fd = -1, temp_fd = -1;
 int mlocked = 0;
-FILE *hb = NULL;
-int lastts, nrts;
-char *timestamps;
 char *filename_buf;
 
 static void usage(char *progname)
@@ -576,7 +573,6 @@ int main(int argc, char *const argv[])
 		{NULL, 0, NULL, 0}
 	};
 	long count = 0L;
-	struct watchdog_info ident;
 
 	progname = basename(argv[0]);
 	open_logging(progname, MSG_TO_STDERR | MSG_TO_SYSLOG);
@@ -770,66 +766,13 @@ int main(int argc, char *const argv[])
 	       (admin == NULL) ? "noone" : admin, (no_act == TRUE) ? "yes" : "no");
 
 	/* open the device */
-	if (devname != NULL && no_act == FALSE) {
-		watchdog_fd = open(devname, O_WRONLY);
-		if (watchdog_fd == -1) {
-			log_message(LOG_ERR, "cannot open %s (errno = %d = '%s')", devname, errno, strerror(errno));
-			/* do not exit here per default */
-			/* we can use watchdog even if there is no watchdog device */
-		}
-		if (watchdog_fd >= 0) {
-			if (dev_timeout > 0) {
-				/* Set the watchdog hard-stop timeout; default = unset (use
-				   driver default) */
-				if (ioctl(watchdog_fd, WDIOC_SETTIMEOUT, &dev_timeout) < 0) {
-					log_message(LOG_ERR, "cannot set timeout %d (errno = %d = '%s')", dev_timeout, errno, strerror(errno));
-				}
-			}
-
-			/* Also log watchdog identity */
-			if (ioctl(watchdog_fd, WDIOC_GETSUPPORT, &ident) < 0) {
-				log_message(LOG_ERR, "cannot get watchdog identity (errno = %d = '%s')", errno, strerror(errno));
-			} else {
-				ident.identity[sizeof(ident.identity) - 1] = '\0';	/* Be sure */
-				log_message(LOG_INFO, "hardware watchdog identity: %s", ident.identity);
-			}
-		}
+	if (no_act == FALSE) {
+		open_watchdog(devname, dev_timeout);
 	}
 
 	/* MJ 16/2/2000, need to keep track of the watchdog writes so that
 	   I can have a potted history of recent reboots */
-	if (heartbeat != NULL) {
-		hb = ((hb = fopen(heartbeat, "r+")) == NULL) ? fopen(heartbeat, "w+") : hb;
-		if (hb == NULL) {
-			log_message(LOG_ERR, "cannot open %s (errno = %d = '%s')", heartbeat, errno, strerror(errno));
-		} else {
-			char rbuf[TS_SIZE + 1];
-
-			/* Allocate  memory for keeping the timestamps in */
-			nrts = 0;
-			lastts = 0;
-			timestamps = (char *)xcalloc(hbstamps, TS_SIZE);
-			/* read any previous timestamps */
-			rewind(hb);
-			while (fgets(rbuf, TS_SIZE + 1, hb) != NULL) {
-				memcpy(timestamps + (TS_SIZE * lastts), rbuf, TS_SIZE);
-				if (nrts < hbstamps)
-					nrts++;
-				++lastts;
-				lastts = lastts % hbstamps;
-			}
-			/* Write an indication that the watchdog has started to the heartbeat file */
-			/* copy it to the buffer */
-			sprintf(rbuf, "%*s\n", TS_SIZE - 1, "--restart--");
-			memcpy(timestamps + (lastts * TS_SIZE), rbuf, TS_SIZE);
-
-			// success
-			if (nrts < hbstamps)
-				nrts++;
-			++lastts;
-			lastts = lastts % hbstamps;
-		}
-	}
+	open_heartbeat();
 
 	if (maxload1 > 0) {
 		/* open the load average file */

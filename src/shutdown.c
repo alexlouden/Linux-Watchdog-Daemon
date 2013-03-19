@@ -77,16 +77,7 @@ static void log_end()
 /* close the device and check for error */
 static void close_all()
 {
-	if (watchdog_fd != -1) {
-		if (write(watchdog_fd, "V", 1) < 0) {
-			int err = errno;
-			log_message(LOG_ERR, "write watchdog device gave error %d = '%s'!", err, strerror(err));
-		}
-
-		if (close(watchdog_fd) == -1) {
-			log_message(LOG_ALERT, "cannot close %s (errno = %d)", devname, errno);
-		}
-	}
+	close_watchdog();
 
 	if (load_fd != -1 && close(load_fd) == -1) {
 		log_message(LOG_ALERT, "cannot close /proc/loadavg (errno = %d)", errno);
@@ -100,9 +91,7 @@ static void close_all()
 		log_message(LOG_ALERT, "cannot close /dev/temperature (errno = %d)", errno);
 	}
 
-	if (hb != NULL && fclose(hb) == -1) {
-		log_message(LOG_ALERT, "cannot close %s (errno = %d)", heartbeat, errno);
-	}
+	close_heartbeat();
 }
 
 void sigterm_handler(int arg)
@@ -123,8 +112,6 @@ void terminate(void)
 #endif				/* _POSIX_MEMLOCK */
 	close_all();
 	log_end();
-	if (timestamps != NULL)
-		free(timestamps);
 	exit(0);
 }
 
@@ -358,7 +345,7 @@ void do_shutdown(int errorcode)
 		if (!isatty(i))
 			close(i);
 	for (i = 3; i < 20; i++)
-		if (i != watchdog_fd)
+		if (i != get_watchdog_fd())
 			close(i);
 	close(255);
 
