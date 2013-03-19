@@ -45,7 +45,6 @@
 int watchdog = -1, tint = 10, schedprio = 1;
 char *devname = NULL;
 volatile sig_atomic_t _running = 1;
-pid_t daemon_pid = 0;
 int realtime = FALSE;
 
 static void usage(char *progname)
@@ -179,7 +178,6 @@ static void read_config(char *configfile)
 
 int main(int argc, char *const argv[])
 {
-	FILE *fp;
 	char *configfile = CONFIG_FILENAME;
 	pid_t child_pid;
 	int count = 0;
@@ -302,14 +300,8 @@ int main(int argc, char *const argv[])
 		log_message(LOG_INFO, "hardware watchdog identity: %s", ident.identity);
 	}
 
-
 	/* tuck my process id away */
-	daemon_pid = getpid();
-	fp = fopen(KA_PIDFILE, "w");
-	if (fp != NULL) {
-		fprintf(fp, "%d\n", daemon_pid);
-		(void)fclose(fp);
-	}
+	write_pid_file(KA_PIDFILE);
 
 	/* set signal term to call sigterm_handler() */
 	/* to make sure watchdog device is closed */

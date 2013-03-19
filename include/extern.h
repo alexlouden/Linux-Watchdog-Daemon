@@ -165,5 +165,7 @@ int close_heartbeat(void);
 void lock_our_memory(int do_lock, int priority, pid_t pid);
 void unlock_our_memory(void);
 
+/** daemon-pid.c **/
+int write_pid_file(const char *fname);
 
 #endif /*_EXTERN_H_*/

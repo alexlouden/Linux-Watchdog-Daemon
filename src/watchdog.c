@@ -112,9 +112,6 @@ char *rbinary = NULL;
 
 char *sendmail_bin = PATH_SENDMAIL;
 
-/* Set when write_pid_file() is called. */
-pid_t daemon_pid = 0;
-
 /* Command line options also used globally. */
 int softboot = FALSE;
 int verbose = FALSE;
@@ -549,7 +546,6 @@ static void old_option(int c, char *configfile)
 
 int main(int argc, char *const argv[])
 {
-	FILE *fp;
 	int c, foreground = FALSE, force = FALSE, sync_it = FALSE;
 	int hold;
 	char *configfile = CONFIG_FILENAME;
@@ -773,12 +769,7 @@ int main(int argc, char *const argv[])
 	open_memcheck();
 
 	/* tuck my process id away */
-	daemon_pid = getpid();
-	fp = fopen(PIDFILE, "w");
-	if (fp != NULL) {
-		fprintf(fp, "%d\n", daemon_pid);
-		(void)fclose(fp);
-	}
+	write_pid_file(PIDFILE);
 
 	/* set signal term to set our run flag to 0 so that */
 	/* we make sure watchdog device is closed when receiving SIGTERM */
