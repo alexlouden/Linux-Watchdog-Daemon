@@ -125,7 +125,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 					break;
 
 				if (verbose && logtick && ticker == 1)
-					log_message(LOG_ERR, "ping select timeout = %ld seconds and %ld useconds",
+					log_message(LOG_ERR, "ping select timeout = %2ld.%06ld seconds",
 					       dtimeout.tv_sec, dtimeout.tv_usec);
 
 				if (select
