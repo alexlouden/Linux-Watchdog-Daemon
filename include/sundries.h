@@ -37,9 +37,6 @@ char *realpath(const char *path, char *resolved_path);
 void error(const char *fmt, ...);
 int matching_type(const char *type, string_list types);
 string_list parse_list(char *strings);
-void *xmalloc(size_t size);
-char *xstrdup(const char *s);
-char *xstrndup(const char *s, int n);
 char *xstrconcat2(const char *, const char *);
 char *xstrconcat3(const char *, const char *, const char *);
 char *xstrconcat4(const char *, const char *, const char *, const char *);
@@ -60,3 +57,4 @@ int nfsmount(const char *spec, const char *node, int *flags, char **orig_opts, c
 #endif
 
 #include "logmessage.h" /* Has EX_USAGE and other exit values. */
+#include "xmalloc.h"	/* Has xmalloc(), xstrdup() & xstrndup() */

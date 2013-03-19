@@ -24,7 +24,7 @@ static struct process *process_head = NULL;
 
 static void add_process(const char *name, pid_t pid)
 {
-	struct process *node = (struct process *)malloc(sizeof(struct process));
+	struct process *node = (struct process *)xmalloc(sizeof(struct process));
 
 	snprintf(node->proc_name, sizeof(node->proc_name), "%s", name);
 	node->pid = pid;

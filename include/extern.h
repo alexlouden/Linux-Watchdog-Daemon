@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "logmessage.h"
+#include "xmalloc.h"
 
 /* === Variable types === */
 struct pingmode {

@@ -271,9 +271,7 @@ static void add_list(struct list **list, char *name)
 {
 	struct list *new, *act;
 
-	if ((new = (struct list *)calloc(1, sizeof(struct list))) == NULL) {
-		fatal_error(EX_SYSERR, "out of memory");
-	}
+	new = (struct list *)xcalloc(1, sizeof(struct list));
 	new->name = name;
 	memset((char *)(&(new->parameter)), '\0', sizeof(union wdog_options));
 
@@ -340,7 +338,7 @@ static void read_config(char *configfile)
 				if (spool(line, &i, strlen(FILENAME)))
 					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 				else
-					add_list(&file_list, strdup(line + i));
+					add_list(&file_list, xstrdup(line + i));
 			} else if (strncmp(line + i, CHANGE, strlen(CHANGE)) == 0) {
 				struct list *ptr;
 
@@ -361,7 +359,7 @@ static void read_config(char *configfile)
 				if (spool(line, &i, strlen(SERVERPIDFILE)))
 					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 				else
-					add_list(&pidfile_list, strdup(line + i));
+					add_list(&pidfile_list, xstrdup(line + i));
 			} else if (strncmp(line + i, PINGCOUNT, strlen(PINGCOUNT)) == 0) {
 				if (spool(line, &i, strlen(PINGCOUNT)))
 					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
@@ -371,12 +369,12 @@ static void read_config(char *configfile)
 				if (spool(line, &i, strlen(PING)))
 					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 				else
-					add_list(&target_list, strdup(line + i));
+					add_list(&target_list, xstrdup(line + i));
 			} else if (strncmp(line + i, INTERFACE, strlen(INTERFACE)) == 0) {
 				if (spool(line, &i, strlen(INTERFACE)))
 					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 				else
-					add_list(&iface_list, strdup(line + i));
+					add_list(&iface_list, xstrdup(line + i));
 			} else if (strncmp(line + i, REALTIME, strlen(REALTIME)) == 0) {
 				(void)spool(line, &i, strlen(REALTIME));
 				realtime = (strncmp(line + i, "yes", 3) == 0) ? TRUE : FALSE;
@@ -389,7 +387,7 @@ static void read_config(char *configfile)
 				if (spool(line, &i, strlen(REPAIRBIN)))
 					rbinary = NULL;
 				else
-					rbinary = strdup(line + i);
+					rbinary = xstrdup(line + i);
 			} else if (strncmp(line + i, REPAIRTIMEOUT, strlen(REPAIRTIMEOUT)) == 0) {
 				if (spool(line, &i, strlen(REPAIRTIMEOUT)))
 					repair_timeout = 0;
@@ -399,7 +397,7 @@ static void read_config(char *configfile)
 				if (spool(line, &i, strlen(TESTBIN)))
 					tbinary = NULL;
 				else
-					tbinary = strdup(line + i);
+					tbinary = xstrdup(line + i);
 			} else if (strncmp(line + i, TESTTIMEOUT, strlen(TESTTIMEOUT)) == 0) {
 				if (spool(line, &i, strlen(TESTTIMEOUT)))
 					test_timeout = 0;
@@ -409,7 +407,7 @@ static void read_config(char *configfile)
 				if (spool(line, &i, strlen(HEARTBEAT)))
 					heartbeat = NULL;
 				else
-					heartbeat = strdup(line + i);
+					heartbeat = xstrdup(line + i);
 			} else if (strncmp(line + i, HBSTAMPS, strlen(HBSTAMPS)) == 0) {
 				if (spool(line, &i, strlen(HBSTAMPS)))
 					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
@@ -419,7 +417,7 @@ static void read_config(char *configfile)
 				if (spool(line, &i, strlen(ADMIN)))
 					admin = NULL;
 				else
-					admin = strdup(line + i);
+					admin = xstrdup(line + i);
 			} else if (strncmp(line + i, INTERVAL, strlen(INTERVAL)) == 0) {
 				if (spool(line, &i, strlen(INTERVAL)))
 					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
@@ -434,7 +432,7 @@ static void read_config(char *configfile)
 				if (spool(line, &i, strlen(DEVICE)))
 					devname = NULL;
 				else
-					devname = strdup(line + i);
+					devname = xstrdup(line + i);
 			} else if (strncmp(line + i, DEVICE_TIMEOUT, strlen(DEVICE_TIMEOUT)) == 0) {
 				if (spool(line, &i, strlen(DEVICE_TIMEOUT)))
 					fprintf(stderr, "Ignoring invalid line in config file: %s ", line);
@@ -444,7 +442,7 @@ static void read_config(char *configfile)
 				if (spool(line, &i, strlen(TEMP)))
 					tempname = NULL;
 				else
-					tempname = strdup(line + i);
+					tempname = xstrdup(line + i);
 			} else if (strncmp(line + i, MAXTEMP, strlen(MAXTEMP)) == 0) {
 				if (spool(line, &i, strlen(MAXTEMP)))
 					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
@@ -483,12 +481,12 @@ static void read_config(char *configfile)
 				if (spool(line, &i, strlen(LOGDIR)))
 					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 				else
-					logdir = strdup(line + i);
+					logdir = xstrdup(line + i);
 			} else if (strncmp(line + i, TESTDIR, strlen(TESTDIR)) == 0) {
 				if (spool(line, &i, strlen(TESTDIR)))
 					fprintf(stderr, "Ignoring invalid line in config file: %s ", line);
 				else
-					test_dir = strdup(line + i);
+					test_dir = xstrdup(line + i);
 			} else {
 				fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 			}
@@ -541,7 +539,7 @@ static void add_test_binaries(const char *path)
 		if (!(sb.st_mode & S_IRUSR))
 			continue;
 
-		fdup = strdup(fname);
+		fdup = xstrdup(fname);
 		if (!fdup)
 			continue;
 
@@ -655,11 +653,8 @@ int main(int argc, char *const argv[])
 	if (target_list != NULL) {
 		for (act = target_list; act != NULL; act = act->next) {
 			struct protoent *proto;
-			struct pingmode *net = (struct pingmode *)calloc(1, sizeof(struct pingmode));
+			struct pingmode *net = (struct pingmode *)xcalloc(1, sizeof(struct pingmode));
 
-			if (net == NULL) {
-				fatal_error(EX_SYSERR, "out of memory");
-			}
 			/* setup the socket */
 			memset(&(net->to), 0, sizeof(struct sockaddr));
 
@@ -668,9 +663,7 @@ int main(int argc, char *const argv[])
 			     inet_addr(act->name)) == (unsigned int)-1) {
 			     fatal_error(EX_USAGE, "unknown host %s", act->name);
 			}
-			if (!(net->packet = (unsigned char *)malloc((unsigned int)(DATALEN + MAXIPLEN + MAXICMPLEN)))) {
-				fatal_error(EX_SYSERR, "out of memory");
-			}
+			net->packet = (unsigned char *)xcalloc((unsigned int)(DATALEN + MAXIPLEN + MAXICMPLEN), sizeof(char));
 			if (!(proto = getprotobyname("icmp"))) {
 				fatal_error(EX_SYSERR, "unknown protocol icmp.");
 			}
@@ -691,10 +684,7 @@ int main(int argc, char *const argv[])
 
 	/* allocate some memory to store a filename, this is needed later on even
 	 * if the system runs out of memory */
-	filename_buf = (char *)malloc(strlen(logdir) + sizeof("/repair-bin.stdout") + 1);
-	if (!filename_buf) {
-		fatal_error(EX_SYSERR, "out of memory");
-	}
+	filename_buf = (char *)xcalloc(strlen(logdir) + sizeof("/repair-bin.stdout") + 1, sizeof(char));
 
 #if !defined(DEBUG)
 	if (!foreground) {
@@ -818,31 +808,26 @@ int main(int argc, char *const argv[])
 			/* Allocate  memory for keeping the timestamps in */
 			nrts = 0;
 			lastts = 0;
-			timestamps = (char *)calloc(hbstamps, TS_SIZE);
-			if (timestamps == NULL) {
-				log_message(LOG_ERR, "cannot allocate memory for timestamps (errno = %d = '%s')", errno, strerror(errno));
-			} else {
-				/* read any previous timestamps */
-				rewind(hb);
-				while (fgets(rbuf, TS_SIZE + 1, hb) != NULL) {
-					memcpy(timestamps + (TS_SIZE * lastts), rbuf, TS_SIZE);
-					if (nrts < hbstamps)
-						nrts++;
-					++lastts;
-					lastts = lastts % hbstamps;
-				}
-				/* Write an indication that the watchdog has started to the heartbeat file */
-				/* copy it to the buffer */
-				sprintf(rbuf, "%*s\n", TS_SIZE - 1, "--restart--");
-				memcpy(timestamps + (lastts * TS_SIZE), rbuf, TS_SIZE);
-
-				// success
+			timestamps = (char *)xcalloc(hbstamps, TS_SIZE);
+			/* read any previous timestamps */
+			rewind(hb);
+			while (fgets(rbuf, TS_SIZE + 1, hb) != NULL) {
+				memcpy(timestamps + (TS_SIZE * lastts), rbuf, TS_SIZE);
 				if (nrts < hbstamps)
 					nrts++;
 				++lastts;
 				lastts = lastts % hbstamps;
-
 			}
+			/* Write an indication that the watchdog has started to the heartbeat file */
+			/* copy it to the buffer */
+			sprintf(rbuf, "%*s\n", TS_SIZE - 1, "--restart--");
+			memcpy(timestamps + (lastts * TS_SIZE), rbuf, TS_SIZE);
+
+			// success
+			if (nrts < hbstamps)
+				nrts++;
+			++lastts;
+			lastts = lastts % hbstamps;
 		}
 	}
 

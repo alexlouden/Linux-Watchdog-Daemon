@@ -24,49 +24,6 @@ string_list cons(char *a, const string_list b)
 	return p;
 }
 
-void *xmalloc(size_t size)
-{
-	void *t;
-
-	if (size == 0)
-		return NULL;
-
-	t = malloc(size);
-	if (t == NULL)
-		die(EX_SYSERR, "not enough memory");
-
-	return t;
-}
-
-char *xstrdup(const char *s)
-{
-	char *t;
-
-	if (s == NULL)
-		return NULL;
-
-	t = strdup(s);
-
-	if (t == NULL)
-		die(EX_SYSERR, "not enough memory");
-
-	return t;
-}
-
-char *xstrndup(const char *s, int n)
-{
-	char *t;
-
-	if (s == NULL)
-		die(EX_SOFTWARE, "bug in xstrndup call");
-
-	t = xmalloc(n + 1);
-	strncpy(t, s, n);
-	t[n] = 0;
-
-	return t;
-}
-
 char *xstrconcat2(const char *s, const char *t)
 {
 	char *res;
