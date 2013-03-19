@@ -99,9 +99,6 @@ extern int verbose;
 extern char *filename_buf;
 extern pid_t daemon_pid;
 
-/* Globals to be removed soon */
-
-extern int temp_fd;
 #endif
 
 /* === Function prototypes === */
@@ -136,7 +133,9 @@ int close_loadcheck(void);
 int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *packet, int time, int count);
 
 /** temp.c **/
+int open_tempcheck(char *name);
 int check_temp(void);
+int close_tempcheck(void);
 
 /** test_binary.c **/
 int check_bin(char *, time_t, int);

@@ -2,11 +2,37 @@
 #include "config.h"
 #endif
 
+#include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 #include "extern.h"
 #include "watch_err.h"
+
+static int temp_fd = -1;
+
+/* ================================================================= */
+
+int open_tempcheck(char *name)
+{
+	int rv = -1;
+
+	if (name != NULL) {
+		/* open the temperature file */
+		temp_fd = open(name, O_RDONLY);
+		if (temp_fd == -1) {
+			log_message(LOG_ERR, "cannot open %s (errno = %d = '%s')", name, errno, strerror(errno));
+		} else {
+			rv = 0;
+		}
+	}
+
+	return rv;
+}
+
+/* ================================================================= */
 
 int check_temp(void)
 {
@@ -22,7 +48,7 @@ int check_temp(void)
 	/* read the line (there is only one) */
 	if (read(temp_fd, &temperature, sizeof(temperature)) < 0) {
 		int err = errno;
-		log_message(LOG_ERR, "read %s gave errno = %d = '%s'", tempname, err, strerror(err));
+		log_message(LOG_ERR, "read temperature gave errno = %d = '%s'", err, strerror(err));
 
 		if (softboot)
 			return (err);
@@ -64,4 +90,20 @@ int check_temp(void)
 		return (ETOOHOT);
 	}
 	return (ENOERR);
+}
+
+/* ================================================================= */
+
+int close_tempcheck(void)
+{
+	int rv = -1;
+
+	if (temp_fd != -1 && close(temp_fd) == -1) {
+		log_message(LOG_ALERT, "cannot close temperature device (errno = %d)", errno);
+	} else {
+		rv = 0;
+	}
+
+	temp_fd = -1;
+	return rv;
 }

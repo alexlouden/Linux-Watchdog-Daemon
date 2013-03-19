@@ -119,8 +119,6 @@ pid_t daemon_pid = 0;
 int softboot = FALSE;
 int verbose = FALSE;
 
-/* Contineously open file descriptors. */
-int temp_fd = -1;
 int mlocked = 0;
 char *filename_buf;
 
@@ -768,6 +766,7 @@ int main(int argc, char *const argv[])
 	/* open the device */
 	if (no_act == FALSE) {
 		open_watchdog(devname, dev_timeout);
+		open_tempcheck(tempname);
 	}
 
 	/* MJ 16/2/2000, need to keep track of the watchdog writes so that
@@ -777,14 +776,6 @@ int main(int argc, char *const argv[])
 	open_loadcheck();
 
 	open_memcheck();
-
-	if (tempname != NULL && no_act == FALSE) {
-		/* open the temperature file */
-		temp_fd = open(tempname, O_RDONLY);
-		if (temp_fd == -1) {
-			log_message(LOG_ERR, "cannot open %s (errno = %d = '%s')", tempname, errno, strerror(errno));
-		}
-	}
 
 	/* tuck my process id away */
 	daemon_pid = getpid();
