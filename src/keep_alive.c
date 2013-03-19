@@ -1,11 +1,8 @@
-/* $Header: /cvsroot/watchdog/watchdog/src/keep_alive.c,v 1.2 2006/07/31 09:39:23 meskes Exp $ */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 #include <errno.h>
-#include <sys/syslog.h>
 #include <unistd.h>
 #include <time.h>
 #include <string.h>
@@ -49,30 +46,18 @@ int write_heartbeat(void)
 			// write from the logical start of the buffer to the physical end
 			if (fwrite(timestamps + (lastts * TS_SIZE), TS_SIZE, hbstamps - lastts, hb) == 0) {
 				int err = errno;
-#if USE_SYSLOG
-				syslog(LOG_ERR, "write heartbeat file gave error %d = '%m'!", err);
-#else				/* USE_SYSLOG */
-				perror(progname);
-#endif				/* USE_SYSLOG */
+				log_message(LOG_ERR, "write heartbeat file gave error %d = '%s'!", err, strerror(err));
 			}
 			// write from the physical start of the buffer to the logical end
 			if (fwrite(timestamps, TS_SIZE, lastts, hb) == 0) {
 				int err = errno;
-#if USE_SYSLOG
-				syslog(LOG_ERR, "write heartbeat file gave error %d = '%m'!", err);
-#else				/* USE_SYSLOG */
-				perror(progname);
-#endif				/* USE_SYSLOG */
+				log_message(LOG_ERR, "write heartbeat file gave error %d = '%s'!", err, strerror(err));
 			}
 		} else {
 			// write from the physical start of the buffer to the logical end
 			if (fwrite(timestamps, TS_SIZE, nrts, hb) == 0) {
 				int err = errno;
-#if USE_SYSLOG
-				syslog(LOG_ERR, "write heartbeat file gave error %d = '%m'!", err);
-#else				/* USE_SYSLOG */
-				perror(progname);
-#endif				/* USE_SYSLOG */
+				log_message(LOG_ERR, "write heartbeat file gave error %d = '%s'!", err, strerror(err));
 			}
 		}
 		fflush(hb);
@@ -88,12 +73,8 @@ int keep_alive(void)
 
 	if (write(watchdog_fd, "\0", 1) < 0) {
 		int err = errno;
+		log_message(LOG_ERR, "write watchdog device gave error %d = '%s'!", err, strerror(err));
 
-#if USE_SYSLOG
-		syslog(LOG_ERR, "write watchdog device gave error %d = '%m'!", err);
-#else				/* USE_SYSLOG */
-		perror(progname);
-#endif				/* USE_SYSLOG */
 		if (softboot)
 			return (err);
 	}

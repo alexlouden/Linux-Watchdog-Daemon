@@ -4,6 +4,8 @@
 #include <netinet/in.h>
 #include <stdio.h>
 
+#include "logmessage.h"
+
 /* === Variable types === */
 struct pingmode {
 	struct sockaddr to;
@@ -99,7 +101,7 @@ extern pid_t daemon_pid;
 /* Globals to be removed soon */
 extern FILE *hb;
 extern int lastts, nrts;
-extern char *timestamps, *progname;
+extern char *timestamps;
 
 extern int watchdog_fd, load_fd, mem_fd, temp_fd;
 #endif

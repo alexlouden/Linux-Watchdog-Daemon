@@ -30,13 +30,9 @@
 #include <linux/watchdog.h>
 #include <libgen.h>
 #include <string.h>
-#include <syslog.h>
-
 #include <unistd.h>
 
-#if USE_SYSLOG
-#include <syslog.h>
-#endif
+#include "extern.h"
 
 #define TRUE  1
 #define FALSE 0
@@ -47,14 +43,14 @@
 #define REALTIME        "realtime"
 
 int watchdog = -1, tint = 10, schedprio = 1;
-char *devname = NULL, *progname = NULL;
+char *devname = NULL;
 volatile sig_atomic_t _running = 1;
 
 #if defined(_POSIX_MEMLOCK)
 int mlocked = FALSE, realtime = FALSE;
 #endif
 
-static void usage(void)
+static void usage(char *progname)
 {
 	fprintf(stderr, "%s version %d.%d, usage:\n", progname, MAJOR_VERSION, MINOR_VERSION);
 	fprintf(stderr, "%s \n", progname);
@@ -64,12 +60,10 @@ static void usage(void)
 /* write a log entry on exit */
 static void log_end()
 {
-#if USE_SYSLOG
 	/* Log the closing message */
-	syslog(LOG_INFO, "stopping watchdog keepalive daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
-	closelog();
+	log_message(LOG_INFO, "stopping watchdog keepalive daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
+	close_logging();
 	sleep(5);		/* make sure log is written */
-#endif				/* USE_SYSLOG */
 	return;
 }
 
@@ -79,18 +73,10 @@ static void close_all()
 	if (watchdog != -1) {
 		if (write(watchdog, "V", 1) < 0) {
 			int err = errno;
-#if USE_SYSLOG
-			syslog(LOG_ERR, "write watchdog device gave error %d = '%m'!", err);
-#else				/* USE_SYSLOG */
-			perror(progname);
-#endif				/* USE_SYSLOG */
+			log_message(LOG_ERR, "write watchdog device gave error %d = '%s'!", err, strerror(err));
 		}
 		if (close(watchdog) == -1) {
-#if USE_SYSLOG
-			syslog(LOG_ALERT, "cannot close %s (errno = %d)", devname, errno);
-#else				/* USE_SYSLOG */
-			perror(progname);
-#endif				/* USE_SYSLOG */
+			log_message(LOG_ALERT, "cannot close %s (errno = %d)", devname, errno);
 		}
 	}
 }
@@ -107,11 +93,7 @@ void terminate(void)
 	if (realtime == TRUE && mlocked == TRUE) {
 		/* unlock all locked pages */
 		if (munlockall() != 0) {
-#if USE_SYSLOG
-			syslog(LOG_ERR, "cannot unlock realtime memory (errno = %d)", errno);
-#else				/* USE_SYSLOG */
-			perror(progname);
-#endif				/* USE_SYSLOG */
+			log_message(LOG_ERR, "cannot unlock realtime memory (errno = %d)", errno);
 		}
 	}
 #endif				/* _POSIX_MEMLOCK */
@@ -132,13 +114,12 @@ static int spool(char *line, int *i, int offset)
 		return (0);
 }
 
-static void read_config(char *configfile, char *progname)
+static void read_config(char *configfile)
 {
 	FILE *wc;
 
 	if ((wc = fopen(configfile, "r")) == NULL) {
-		perror(progname);
-		exit(1);
+		fatal_error(EX_SYSERR, "Can't open config file \"%s\" (%s)", configfile, strerror(errno));
 	}
 
 	while (!feof(wc)) {
@@ -149,8 +130,7 @@ static void read_config(char *configfile, char *progname)
 			if (!ferror(wc))
 				break;
 			else {
-				perror(progname);
-				exit(1);
+				fatal_error(EX_SYSERR, "Error reading config file (%s)", strerror(errno));
 			}
 		} else {
 			int i, j;
@@ -202,8 +182,7 @@ static void read_config(char *configfile, char *progname)
 	}
 
 	if (fclose(wc) != 0) {
-		perror(progname);
-		exit(1);
+		fatal_error(EX_SYSERR, "Error closing file (%s)", strerror(errno));
 	}
 }
 
@@ -215,9 +194,9 @@ int main(int argc, char *const argv[])
 	int count = 0;
 	int c;
 	int oom_adjusted = 0;
+	char *progname;
 
 	/* allow all options watchdog understands too */
-#if USE_SYSLOG
 	char *opts = "d:i:n:fsvbql:p:t:c:r:m:a:";
 	struct option long_options[] = {
 		{"config-file", required_argument, NULL, 'c'},
@@ -229,19 +208,9 @@ int main(int argc, char *const argv[])
 		{NULL, 0, NULL, 0}
 	};
 	struct watchdog_info ident;
-#else				/* USE_SYSLOG */
-	char *opts = "d:i:n:fsbql:p:t:c:r:m:a:";
-	struct option long_options[] = {
-		{"config-file", required_argument, NULL, 'c'},
-		{"force", no_argument, NULL, 'f'},
-		{"sync", no_argument, NULL, 's'},
-		{"no-action", no_argument, NULL, 'q'},
-		{"softboot", no_argument, NULL, 'b'},
-		{NULL, 0, NULL, 0}
-	};
-#endif				/* USE_SYSLOG */
 
 	progname = basename(argv[0]);
+	open_logging(progname, MSG_TO_STDERR | MSG_TO_SYSLOG);
 
 	/* check for the one option we understand */
 	while ((c = getopt_long(argc, argv, opts, long_options, NULL)) != EOF) {
@@ -264,16 +233,14 @@ int main(int argc, char *const argv[])
 		case 's':
 		case 'b':
 		case 'q':
-#if USE_SYSLOG
 		case 'v':
-#endif				/* USE_SYSLOG */
 			break;
 		default:
-			usage();
+			usage(progname);
 		}
 	}
 
-	read_config(configfile, progname);
+	read_config(configfile);
 
 	/* make sure we're on the root partition */
 	if (chdir("/") < 0) {
@@ -304,7 +271,7 @@ int main(int argc, char *const argv[])
 #endif				/* !DEBUG */
 
 	/* now we're free */
-#if USE_SYSLOG
+
 #if !defined(DEBUG)
 	/* Okay, we're a daemon     */
 	/* but we're still attached to the tty */
@@ -317,13 +284,13 @@ int main(int argc, char *const argv[])
 #endif				/* !DEBUG */
 
 	/* Log the starting message */
-	openlog(progname, LOG_PID, LOG_DAEMON);
-	syslog(LOG_INFO, "starting watchdog keepalive daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
+	open_logging(NULL, MSG_TO_SYSLOG);
+	log_message(LOG_INFO, "starting watchdog keepalive daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
 	if (devname == NULL)
-		syslog(LOG_INFO, " no watchdog device configured, aborting");
+		log_message(LOG_INFO, " no watchdog device configured, aborting");
 	else
-		syslog(LOG_INFO, " int=%d alive=%s realtime=%s", tint, devname, realtime ? "yes" : "no");
-#endif				/* USE_SYSLOG */
+		log_message(LOG_INFO, " int=%d alive=%s realtime=%s", tint, devname, realtime ? "yes" : "no");
+
 
 	/* this daemon has no other function than writing to this device 
 	 * i.e. if there is no device given we better punt */
@@ -333,23 +300,18 @@ int main(int argc, char *const argv[])
 	/* open the device */
 	watchdog = open(devname, O_WRONLY);
 	if (watchdog == -1) {
-#if USE_SYSLOG
-		syslog(LOG_ERR, "cannot open %s (errno = %d = '%m')", devname, errno);
-#else				/* USE_SYSLOG */
-		perror(progname);
-#endif				/* USE_SYSLOG */
-
+		log_message(LOG_ERR, "cannot open %s (errno = %d = '%s')", devname, errno, strerror(errno));
 		exit(1);
 	}
-#if USE_SYSLOG
+
 	/* Also log watchdog identity */
 	if (ioctl(watchdog, WDIOC_GETSUPPORT, &ident) < 0) {
-		syslog(LOG_ERR, "cannot get watchdog identity (errno = %d = '%m')", errno);
+		log_message(LOG_ERR, "cannot get watchdog identity (errno = %d = '%s')", errno, strerror(errno));
 	} else {
 		ident.identity[sizeof(ident.identity) - 1] = '\0';	/* Be sure */
-		syslog(LOG_INFO, "hardware watchdog identity: %s", ident.identity);
+		log_message(LOG_INFO, "hardware watchdog identity: %s", ident.identity);
 	}
-#endif
+
 
 	/* tuck my process id away */
 	fp = fopen(KA_PIDFILE, "w");
@@ -366,23 +328,14 @@ int main(int argc, char *const argv[])
 	if (realtime == TRUE) {
 		/* lock all actual and future pages into memory */
 		if (mlockall(MCL_CURRENT | MCL_FUTURE) != 0) {
-#if USE_SYSLOG
-			syslog(LOG_ERR, "cannot lock realtime memory (errno = %d = '%m')", errno);
-#else				/* USE_SYSLOG */
-			perror(progname);
-#endif				/* USE_SYSLOG */
-
+			log_message(LOG_ERR, "cannot lock realtime memory (errno = %d = '%s')", errno, strerror(errno));
 		} else {
 			struct sched_param sp;
 
 			/* now set the scheduler */
 			sp.sched_priority = schedprio;
 			if (sched_setscheduler(0, SCHED_RR, &sp) != 0) {
-#if USE_SYSLOG
-				syslog(LOG_ERR, "cannot set scheduler (errno = %d = '%m')", errno);
-#else				/* USE_SYSLOG */
-				perror(progname);
-#endif				/* USE_SYSLOG */
+				log_message(LOG_ERR, "cannot set scheduler (errno = %d = '%s')", errno, strerror(errno));
 			} else
 				mlocked = TRUE;
 		}
@@ -412,21 +365,16 @@ int main(int argc, char *const argv[])
 		}
 	}
 #endif
-#if USE_SYSLOG
+
 	if (!oom_adjusted) {
-		syslog(LOG_WARNING, "unable to disable oom handling!");
+		log_message(LOG_WARNING, "unable to disable oom handling!");
 	}
-#endif				/* USE_SYSLOG */
 
 	/* main loop: update after <tint> seconds */
 	while (_running) {
 		if (write(watchdog, "\0", 1) < 0) {
 			int err = errno;
-#if USE_SYSLOG
-			syslog(LOG_ERR, "write watchdog device gave error %d = '%m'!", err);
-#else				/* USE_SYSLOG */
-			perror(progname);
-#endif				/* USE_SYSLOG */
+			log_message(LOG_ERR, "write watchdog device gave error %d = '%s'!", err, strerror(err));
 		}
 
 		/* finally sleep some seconds */

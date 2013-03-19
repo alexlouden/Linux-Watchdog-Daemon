@@ -1,5 +1,3 @@
-/* $Header: /cvsroot/watchdog/watchdog/src/pidfile.c,v 1.2 2006/07/31 09:39:23 meskes Exp $ */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -14,10 +12,6 @@
 #include "extern.h"
 #include "watch_err.h"
 
-#if USE_SYSLOG
-#include <syslog.h>
-#endif
-
 int check_pidfile(struct list *file)
 {
 	int fd = open(file->name, O_RDONLY), pid;
@@ -25,12 +19,7 @@ int check_pidfile(struct list *file)
 
 	if (fd == -1) {
 		int err = errno;
-
-#if USE_SYSLOG
-		syslog(LOG_ERR, "cannot open %s (errno = %d = '%m')", file->name, err);
-#else				/* USE_SYSLOG */
-		perror(progname);
-#endif				/* USE_SYSLOG */
+		log_message(LOG_ERR, "cannot open %s (errno = %d = '%s')", file->name, err, strerror(err));
 
 		/* on error ENETDOWN|ENETUNREACH we react as if we're in ping mode 
 		 * on ENOENT we assume that the server to be monitored has exited */
@@ -43,12 +32,7 @@ int check_pidfile(struct list *file)
 	/* position pointer at start of file */
 	if (lseek(fd, 0, SEEK_SET) < 0) {
 		int err = errno;
-
-#if USE_SYSLOG
-		syslog(LOG_ERR, "lseek %s gave errno = %d = '%m'", file->name, err);
-#else				/* USE_SYSLOG */
-		perror(progname);
-#endif				/* USE_SYSLOG */
+		log_message(LOG_ERR, "lseek %s gave errno = %d = '%s'", file->name, err, strerror(err));
 
 		close(fd);
 		if (softboot)
@@ -63,12 +47,7 @@ int check_pidfile(struct list *file)
 	/* read the line (there is only one) */
 	if (read(fd, buf, sizeof(buf)) < 0) {
 		int err = errno;
-
-#if USE_SYSLOG
-		syslog(LOG_ERR, "read %s gave errno = %d = '%m'", file->name, err);
-#else				/* USE_SYSLOG */
-		perror(progname);
-#endif				/* USE_SYSLOG */
+		log_message(LOG_ERR, "read %s gave errno = %d = '%s'", file->name, err, strerror(err));
 
 		close(fd);
 		if (softboot)
@@ -82,12 +61,7 @@ int check_pidfile(struct list *file)
 
 	if (close(fd) == -1) {
 		int err = errno;
-
-#if USE_SYSLOG
-		syslog(LOG_ERR, "could not close %s, errno = %d = '%m'", file->name, err);
-#else				/* USE_SYSLOG */
-		perror(progname);
-#endif				/* USE_SYSLOG */
+		log_message(LOG_ERR, "could not close %s, errno = %d = '%s'", file->name, err, strerror(err));
 
 		if (softboot)
 			return (err);
@@ -97,23 +71,17 @@ int check_pidfile(struct list *file)
 
 	if (kill(pid, 0) == -1) {
 		int err = errno;
-
-#if USE_SYSLOG
-		syslog(LOG_ERR, "pinging process %d (%s) gave errno = %d = '%m'", pid, file->name, err);
-#else				/* USE_SYSLOG */
-		perror(progname);
-#endif				/* USE_SYSLOG */
+		log_message(LOG_ERR, "pinging process %d (%s) gave errno = %d = '%s'", pid, file->name, err, strerror(err));
 
 		if (softboot || err == ESRCH)
 			return (err);
 
 		return (ENOERR);
 	}
-#if USE_SYSLOG
+
 	/* do verbose logging */
 	if (verbose && logtick && ticker == 1)
-		syslog(LOG_INFO, "was able to ping process %d (%s).", pid, file->name);
-#endif
+		log_message(LOG_INFO, "was able to ping process %d (%s).", pid, file->name);
 
 	return (ENOERR);
 }

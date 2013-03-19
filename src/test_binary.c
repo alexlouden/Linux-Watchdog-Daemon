@@ -1,5 +1,3 @@
-/* $Header: /cvsroot/watchdog/watchdog/src/test_binary.c,v 1.3 2006/09/12 09:17:01 meskes Exp $ */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -14,10 +12,6 @@
 
 #include "extern.h"
 #include "watch_err.h"
-
-#if USE_SYSLOG
-#include <syslog.h>
-#endif
 
 struct process {
 	char proc_name[PATH_MAX];
@@ -86,9 +80,7 @@ int check_bin(char *tbinary, time_t timeout, int version)
 	if (timeout > 0)
 		res = check_processes(tbinary, timeout);
 	if (res == ETOOLONG) {
-#if USE_SYSLOG
-		syslog(LOG_ERR, "test-binary %s exceeded time limit %ld", tbinary, timeout);
-#endif				/* USE_SYSLOG */
+		log_message(LOG_ERR, "test-binary %s exceeded time limit %ld", tbinary, timeout);
 		return res;
 	}
 
@@ -120,9 +112,7 @@ int check_bin(char *tbinary, time_t timeout, int version)
 		int err = errno;
 
 		if (errno == EAGAIN) {	/* process table full */
-#if USE_SYSLOG
-			syslog(LOG_ERR, "process table is full!");
-#endif				/* USE_SYSLOG */
+			log_message(LOG_ERR, "process table is full!");
 			return (EREBOOT);
 		} else if (softboot)
 			return (err);
@@ -153,29 +143,19 @@ int check_bin(char *tbinary, time_t timeout, int version)
 		if (ret > 0) {
 			if (WIFEXITED(result) != 0) {
 				/* if one of the scripts returns an error code just return that code */
-#if USE_SYSLOG
-				syslog(LOG_ERR, "test binary %s returned %d", tbinary, WEXITSTATUS(result));
-#endif				/* USE_SYSLOG */
+				log_message(LOG_ERR, "test binary %s returned %d", tbinary, WEXITSTATUS(result));
 				return (WEXITSTATUS(result));
 			} else if (WIFSIGNALED(result) != 0) {
 				/* if one of the scripts was killed return ECHKILL */
-#if USE_SYSLOG
-				syslog(LOG_ERR, "test binary %s was killed by uncaught signal %d", tbinary,
-				       WTERMSIG(result));
-#endif				/* USE_SYSLOG */
+				log_message(LOG_ERR, "test binary %s was killed by uncaught signal %d", tbinary, WTERMSIG(result));
 				return (ECHKILL);
 			}
 		} else {
 			/* in case there are still old childs running due to an error */
 			/* log that error */
 			if (ret != 0 && err != 0 && err != ECHILD) {
-#if USE_SYSLOG
 				errno = err;
-				syslog(LOG_ERR, "child %d did not exit immediately (error = %d = '%m')", child_pid,
-				       err);
-#else				/* USE_SYSLOG */
-				perror(progname);
-#endif				/* USE_SYSLOG */
+				log_message(LOG_ERR, "child %d did not exit immediately (error = %d = '%s')", child_pid, err, strerror(err));
 				if (softboot)
 					return (err);
 			}

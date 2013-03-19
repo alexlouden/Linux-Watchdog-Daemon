@@ -1,5 +1,3 @@
-/* $Header: /cvsroot/watchdog/watchdog/src/file_table.c,v 1.2 2006/07/31 09:39:23 meskes Exp $ */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -7,7 +5,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <sys/syslog.h>
 
 #include "extern.h"
 #include "watch_err.h"
@@ -23,17 +20,11 @@ int check_file_table(void)
 
 		if (err == ENFILE) {
 			/* we need a reboot if ENFILE is returned (file table overflow) */
-#if USE_SYSLOG
-			syslog(LOG_ERR, "file table overflow detected!\n");
-#endif				/* USE_SYSLOG */
+			log_message(LOG_ERR, "file table overflow detected!");
 			return (ENFILE);
 		} else {
-#if USE_SYSLOG
 			errno = err;
-			syslog(LOG_ERR, "cannot open /proc/uptime (errno = %d = '%m')", err);
-#else				/* USE_SYSLOG */
-			perror(progname);
-#endif				/* USE_SYSLOG */
+			log_message(LOG_ERR, "cannot open /proc/uptime (errno = %d = '%s')", err, strerror(err));
 
 			if (softboot)
 				return (err);
@@ -41,12 +32,8 @@ int check_file_table(void)
 	} else {
 		if (close(fd) < 0) {
 			int err = errno;
+			log_message(LOG_ERR, "close /proc/uptime gave errno = %d = '%s'", err, strerror(err));
 
-#if USE_SYSLOG
-			syslog(LOG_ERR, "close /proc/uptime gave errno = %d = '%m'", err);
-#else				/* USE_SYSLOG */
-			perror(progname);
-#endif				/* USE_SYSLOG */
 			if (softboot)
 				return (err);
 		}

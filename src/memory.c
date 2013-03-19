@@ -1,5 +1,3 @@
-/* $Header: /cvsroot/watchdog/watchdog/src/memory.c,v 1.2 2006/07/31 09:39:23 meskes Exp $ */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -9,12 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
+
 #include "extern.h"
 #include "watch_err.h"
-
-#if USE_SYSLOG
-#include <syslog.h>
-#endif
 
 #define FREEMEM		"MemFree:"
 #define FREESWAP	"SwapFree:"
@@ -31,12 +26,8 @@ int check_memory(void)
 	/* position pointer at start of file */
 	if (lseek(mem_fd, 0, SEEK_SET) < 0) {
 		int err = errno;
+		log_message(LOG_ERR, "lseek /proc/meminfo gave errno = %d = '%s'", err, strerror(err));
 
-#if USE_SYSLOG
-		syslog(LOG_ERR, "lseek /proc/meminfo gave errno = %d = '%m'", err);
-#else				/* USE_SYSLOG */
-		perror(progname);
-#endif				/* USE_SYSLOG */
 		if (softboot)
 			return (err);
 
@@ -46,12 +37,8 @@ int check_memory(void)
 	/* read the file */
 	if (read(mem_fd, buf, sizeof(buf)) < 0) {
 		int err = errno;
+		log_message(LOG_ERR, "read /proc/meminfo gave errno = %d = '%s'", err, strerror(err));
 
-#if USE_SYSLOG
-		syslog(LOG_ERR, "read /proc/meminfo gave errno = %d = '%m'", err);
-#else				/* USE_SYSLOG */
-		perror(progname);
-#endif				/* USE_SYSLOG */
 		if (softboot)
 			return (err);
 
@@ -62,11 +49,8 @@ int check_memory(void)
 	ptr2 = strstr(buf, FREESWAP);
 
 	if (!ptr1 || !ptr2) {
-#if USE_SYSLOG
-		syslog(LOG_ERR, "/proc/meminfo contains invalid data (read = %s)", buf);
-#else				/* USE_SYSLOG */
-		perror(progname);
-#endif				/* USE_SYSLOG */
+		log_message(LOG_ERR, "/proc/meminfo contains invalid data (read = %s)", buf);
+
 		if (softboot)
 			return (EINVMEM);
 
@@ -76,15 +60,11 @@ int check_memory(void)
 	/* we only care about integer values */
 	free = atoi(ptr1 + strlen(FREEMEM)) + atoi(ptr2 + strlen(FREESWAP));
 
-#if USE_SYSLOG
 	if (verbose && logtick && ticker == 1)
-		syslog(LOG_INFO, "currently there are %d kB of free memory available", free);
-#endif				/* USE_SYSLOG */
+		log_message(LOG_INFO, "currently there are %d kB of free memory available", free);
 
 	if (free < minpages * (EXEC_PAGESIZE / 1024)) {
-#if USE_SYSLOG
-		syslog(LOG_ERR, "memory %d kB is less than %d pages", free, minpages);
-#endif				/* USE_SYSLOG */
+		log_message(LOG_ERR, "memory %d kB is less than %d pages", free, minpages);
 		return (ENOMEM);
 	}
 

@@ -1,5 +1,3 @@
-/* $Header: /cvsroot/watchdog/watchdog/src/net.c,v 1.3 2007/01/08 12:01:58 meskes Exp $ */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -11,10 +9,6 @@
 
 #include "extern.h"
 #include "watch_err.h"
-
-#if USE_SYSLOG
-#include <syslog.h>
-#endif
 
 /*
  * in_cksum --
@@ -78,18 +72,12 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 
 			/* if our kernel tells us the network is unreachable we are done */
 			if (err == ENETUNREACH) {
-#if USE_SYSLOG
-				syslog(LOG_ERR, "network is unreachable (target: %s)", target);
-#endif				/* USE_SYSLOG */
+				log_message(LOG_ERR, "network is unreachable (target: %s)", target);
 
 				return (ENETUNREACH);
 
 			} else {
-#if USE_SYSLOG
-				syslog(LOG_ERR, "sendto gave errno = %d = '%m'\n", err);
-#else				/* USE_SYSLOG */
-				perror(progname);
-#endif				/* USE_SYSLOG */
+				log_message(LOG_ERR, "sendto gave errno = %d = '%s'", err, strerror(err));
 
 				if (softboot)
 					return (err);
@@ -121,11 +109,10 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 				}
 				if (dtimeout.tv_sec < 0)
 					break;
-#if USE_SYSLOG
+
 				if (verbose && logtick && ticker == 1)
-					syslog(LOG_ERR, "ping select timeout = %ld seconds and %ld useconds\n",
+					log_message(LOG_ERR, "ping select timeout = %ld seconds and %ld useconds",
 					       dtimeout.tv_sec, dtimeout.tv_usec);
-#endif				/* USE_SYSLOG */
 
 				if (select
 				    (sock_fp + 1, (fd_set *) & fdmask, (fd_set *) NULL, (fd_set *) NULL,
@@ -139,11 +126,8 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 						int err = errno;
 
 						if (err != EINTR)
-#if USE_SYSLOG
-							syslog(LOG_ERR, "recvfrom gave errno = %d = '%m'\n", err);
-#else				/* USE_SYSLOG */
-							perror(progname);
-#endif				/* USE_SYSLOG */
+							log_message(LOG_ERR, "recvfrom gave errno = %d = '%s'", err, strerror(err));
+
 						if (softboot)
 							return (err);
 
@@ -156,10 +140,10 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 					if (icp->type == ICMP_ECHOREPLY && icp->un.echo.id == daemon_pid) {
 						if (from.sin_addr.s_addr ==
 						    ((struct sockaddr_in *)&to)->sin_addr.s_addr) {
-#if USE_SYSLOG
+
 							if (verbose && logtick && ticker == 1)
-								syslog(LOG_INFO, "got answer from target %s", target);
-#endif
+								log_message(LOG_INFO, "got answer from target %s", target);
+
 							return (ENOERR);
 						}
 					}
@@ -167,8 +151,8 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 			}
 		}
 	}
-#if USE_SYSLOG
-	syslog(LOG_ERR, "no response from ping (target: %s)", target);
-#endif				/* USE_SYSLOG */
+
+	log_message(LOG_ERR, "no response from ping (target: %s)", target);
+
 	return (ENETUNREACH);
 }

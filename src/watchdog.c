@@ -1,5 +1,3 @@
-/* $Header: /cvsroot/watchdog/watchdog/src/watchdog.c,v 1.5 2009/02/25 09:38:18 meskes Exp $ */
-
 /*************************************************************/
 /* Original version was an example in the kernel source tree */
 /*                                                           */
@@ -10,8 +8,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
-#include "extern.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -37,10 +33,7 @@
 #include <unistd.h>
 
 #include "watch_err.h"
-
-#if USE_SYSLOG
-#include <syslog.h>
-#endif				/* USE_SYSLOG */
+#include "extern.h"
 
 static int no_act = FALSE;
 volatile sig_atomic_t _running = 1;
@@ -131,17 +124,13 @@ int watchdog_fd = -1, load_fd = -1, mem_fd = -1, temp_fd = -1;
 int mlocked = 0;
 FILE *hb = NULL;
 int lastts, nrts;
-char *timestamps, *progname;
+char *timestamps;
 char *filename_buf;
 
-static void usage(void)
+static void usage(char *progname)
 {
 	fprintf(stderr, "%s version %d.%d, usage:\n", progname, MAJOR_VERSION, MINOR_VERSION);
-#if USE_SYSLOG
 	fprintf(stderr, "%s [-F] [-f] [-c <config_file>] [-v] [-s] [-b] [-q]\n", progname);
-#else				/* USE_SYSLOG */
-	fprintf(stderr, "%s [-F] [-f] [-c <config_file>] [-s] [-b] [-q]\n", progname);
-#endif				/* USE_SYSLOG */
 	exit(1);
 }
 
@@ -204,9 +193,7 @@ static int repair(char *rbinary, int result, char *name, int version)
 		int err = errno;
 
 		if (errno == EAGAIN) {	/* process table full */
-#if USE_SYSLOG
-			syslog(LOG_ERR, "process table is full!");
-#endif				/* USE_SYSLOG */
+			log_message(LOG_ERR, "process table is full!");
 			return (EREBOOT);
 		} else if (softboot)
 			return (err);
@@ -227,20 +214,11 @@ static int repair(char *rbinary, int result, char *name, int version)
 	} else
 		r_pid = waitpid(child_pid, &result, 0);
 	if (r_pid == 0) {
-#if USE_SYSLOG
-		syslog(LOG_ERR, "repair child %d timed out", child_pid);
-#else				/* USE_SYSLOG */
-		perror(progname);
-#endif				/* USE_SYSLOG */
+		log_message(LOG_ERR, "repair child %d timed out", child_pid);
 		return (EREBOOT);
 	} else if (r_pid != child_pid) {
 		int err = errno;
-
-#if USE_SYSLOG
-		syslog(LOG_ERR, "child %d does not exist (errno = %d = '%m')", child_pid, err);
-#else				/* USE_SYSLOG */
-		perror(progname);
-#endif				/* USE_SYSLOG */
+		log_message(LOG_ERR, "child %d does not exist (errno = %d = '%s')", child_pid, err, strerror(err));
 		if (softboot)
 			return (err);
 	}
@@ -248,9 +226,7 @@ static int repair(char *rbinary, int result, char *name, int version)
 	/* check result */
 	ret = WEXITSTATUS(result);
 	if (ret != 0) {
-#if USE_SYSLOG
-		syslog(LOG_ERR, "repair binary %s returned %d", rbinary, ret);
-#endif				/* USE_SYSLOG */
+		log_message(LOG_ERR, "repair binary %s returned %d", rbinary, ret);
 
 		if (ret == ERESET)	/* repair script says force hard reset, we give it a try */
 			sleep(dev_timeout * 4);
@@ -296,8 +272,7 @@ static void add_list(struct list **list, char *name)
 	struct list *new, *act;
 
 	if ((new = (struct list *)calloc(1, sizeof(struct list))) == NULL) {
-		fprintf(stderr, "%s: out of memory\n", progname);
-		exit(1);
+		fatal_error(EX_SYSERR, "out of memory");
 	}
 	new->name = name;
 	memset((char *)(&(new->parameter)), '\0', sizeof(union wdog_options));
@@ -322,14 +297,13 @@ static int spool(char *line, int *i, int offset)
 		return (0);
 }
 
-static void read_config(char *configfile, char *progname)
+static void read_config(char *configfile)
 {
 	FILE *wc;
 	int gotload5 = FALSE, gotload15 = FALSE;
 
 	if ((wc = fopen(configfile, "r")) == NULL) {
-		fprintf(stderr, "%s: Can't open config file \"%s\": %s ", progname, configfile, strerror(errno));
-		exit(1);
+		fatal_error(EX_SYSERR, "Can't open config file \"%s\" (%s)", configfile, strerror(errno));
 	}
 
 	while (!feof(wc)) {
@@ -340,8 +314,7 @@ static void read_config(char *configfile, char *progname)
 			if (!ferror(wc))
 				break;
 			else {
-				perror(progname);
-				exit(1);
+				fatal_error(EX_SYSERR, "Error reading config file (%s)", strerror(errno));
 			}
 		} else {
 			int i, j;
@@ -523,8 +496,7 @@ static void read_config(char *configfile, char *progname)
 	}
 
 	if (fclose(wc) != 0) {
-		perror(progname);
-		exit(1);
+		fatal_error(EX_SYSERR, "Error closing file (%s)", strerror(errno));
 	}
 }
 
@@ -573,7 +545,7 @@ static void add_test_binaries(const char *path)
 		if (!fdup)
 			continue;
 
-		syslog(LOG_DEBUG, "adding %s to list of auto-repair binaries", fdup);
+		log_message(LOG_DEBUG, "adding %s to list of auto-repair binaries", fdup);
 		add_list(&tr_bin_list, fdup);
 	} while (1);
 }
@@ -581,7 +553,6 @@ static void add_test_binaries(const char *path)
 static void old_option(int c, char *configfile)
 {
 	fprintf(stderr, "Option -%c is no longer valid, please specify it in %s.\n", c, configfile);
-	usage();
 }
 
 int main(int argc, char *const argv[])
@@ -594,8 +565,7 @@ int main(int argc, char *const argv[])
 	pid_t child_pid;
 	int oom_adjusted = 0;
 	struct stat s;
-
-#if USE_SYSLOG
+	char *progname;
 	char *opts = "d:i:n:Ffsvbql:p:t:c:r:m:a:";
 	struct option long_options[] = {
 		{"config-file", required_argument, NULL, 'c'},
@@ -609,20 +579,9 @@ int main(int argc, char *const argv[])
 	};
 	long count = 0L;
 	struct watchdog_info ident;
-#else				/* USE_SYSLOG */
-	char *opts = "d:i:n:Ffsbql:p:t:c:r:m:a:";
-	struct option long_options[] = {
-		{"config-file", required_argument, NULL, 'c'},
-		{"foreground", no_argument, NULL, 'F'},
-		{"force", no_argument, NULL, 'f'},
-		{"sync", no_argument, NULL, 's'},
-		{"no-action", no_argument, NULL, 'q'},
-		{"softboot", no_argument, NULL, 'b'},
-		{NULL, 0, NULL, 0}
-	};
-#endif				/* USE_SYSLOG */
 
 	progname = basename(argv[0]);
+	open_logging(progname, MSG_TO_STDERR | MSG_TO_SYSLOG);
 
 	/* check the options */
 	/* there aren't that many any more */
@@ -641,6 +600,7 @@ int main(int argc, char *const argv[])
 		case 'm':
 		case 'i':
 			old_option(c, configfile);
+			usage(progname);
 			break;
 		case 'c':
 			configfile = optarg;
@@ -660,41 +620,35 @@ int main(int argc, char *const argv[])
 		case 'q':
 			no_act = TRUE;
 			break;
-#if USE_SYSLOG
 		case 'v':
 			verbose = TRUE;
 			break;
-#endif				/* USE_SYSLOG */
 		default:
-			usage();
+			usage(progname);
 		}
 	}
 
-	read_config(configfile, progname);
+	read_config(configfile);
 	add_test_binaries(test_dir);
 
 	if (tint < 0)
-		usage();
+		usage(progname);
 
 	if (tint >= dev_timeout && !force) {
-		fprintf(stderr, "%s error:\n", progname);
-		fprintf(stderr, "This interval length might reboot the system while the process sleeps!\n");
-		fprintf(stderr, "To force this interval length use the -f option.\n");
-		exit(1);
+		fatal_error(EX_USAGE, "Error:\n"
+			"This interval length might reboot the system while the process sleeps!\n"
+			"To force this interval length use the -f option.");
 	}
 
 	if (maxload1 > 0 && maxload1 < MINLOAD && !force) {
-		fprintf(stderr, "%s error:\n", progname);
-		fprintf(stderr, "Using this maximal load average might reboot the system too often!\n");
-		fprintf(stderr, "To force this load average use the -f option.\n");
-		exit(1);
+		fatal_error(EX_USAGE, "Error:\n"
+			"Using this maximal load average might reboot the system too often!\n"
+			"To force this load average use the -f option.");
 	}
 
 	/* make sure we get our own log directory */
 	if (mkdir(logdir, 0750) && errno != EEXIST) {
-		fprintf(stderr, "%s error:\n", progname);
-		fprintf(stderr, "Cannot create directory %s\n", logdir);
-		exit(1);
+		fatal_error(EX_SYSERR, "Cannot create directory %s (%s)", logdir, strerror(errno));
 	}
 
 	/* set up pinging if in ping mode */
@@ -704,8 +658,7 @@ int main(int argc, char *const argv[])
 			struct pingmode *net = (struct pingmode *)calloc(1, sizeof(struct pingmode));
 
 			if (net == NULL) {
-				fprintf(stderr, "%s: out of memory\n", progname);
-				exit(1);
+				fatal_error(EX_SYSERR, "out of memory");
 			}
 			/* setup the socket */
 			memset(&(net->to), 0, sizeof(struct sockaddr));
@@ -713,21 +666,17 @@ int main(int argc, char *const argv[])
 			((struct sockaddr_in *)&(net->to))->sin_family = AF_INET;
 			if ((((struct sockaddr_in *)&(net->to))->sin_addr.s_addr =
 			     inet_addr(act->name)) == (unsigned int)-1) {
-				(void)fprintf(stderr, "%s: unknown host %s\n", progname, act->name);
-				exit(1);
+			     fatal_error(EX_USAGE, "unknown host %s", act->name);
 			}
 			if (!(net->packet = (unsigned char *)malloc((unsigned int)(DATALEN + MAXIPLEN + MAXICMPLEN)))) {
-				fprintf(stderr, "%s: out of memory\n", progname);
-				exit(1);
+				fatal_error(EX_SYSERR, "out of memory");
 			}
 			if (!(proto = getprotobyname("icmp"))) {
-				(void)fprintf(stderr, "%s: unknown protocol icmp.\n", progname);
-				exit(1);
+				fatal_error(EX_SYSERR, "unknown protocol icmp.");
 			}
 			if ((net->sock_fp = socket(AF_INET, SOCK_RAW, proto->p_proto)) < 0
 			    || fcntl(net->sock_fp, F_SETFD, 1)) {
-				perror(progname);
-				exit(1);
+			    fatal_error(EX_SYSERR, "error opening socket (%s)", strerror(errno));
 			}
 
 			/* this is necessary for broadcast pings to work */
@@ -740,21 +689,22 @@ int main(int argc, char *const argv[])
 		}
 	}
 
-	/* make sure we're on the root partition */
-	if (chdir("/") < 0) {
-		perror(progname);
-		exit(1);
-	}
-
 	/* allocate some memory to store a filename, this is needed later on even
 	 * if the system runs out of memory */
 	filename_buf = (char *)malloc(strlen(logdir) + sizeof("/repair-bin.stdout") + 1);
 	if (!filename_buf) {
-		perror(progname);
-		exit(1);
+		fatal_error(EX_SYSERR, "out of memory");
 	}
+
 #if !defined(DEBUG)
 	if (!foreground) {
+		/* Become a daemon process: */
+		/* make sure we're on the root partition */
+		if (chdir("/") < 0) {
+			perror(progname);
+			exit(1);
+		}
+
 		/* fork to go into the background */
 		if ((child_pid = fork()) < 0) {
 			perror(progname);
@@ -775,71 +725,65 @@ int main(int argc, char *const argv[])
 			exit(1);
 		} else if (child_pid > 0)
 			exit(0);
-
 		/* now we're free */
-#if USE_SYSLOG
+
 		/* Okay, we're a daemon     */
 		/* but we're still attached to the tty */
 		/* create our own session */
 		setsid();
 
-		/* with USE_SYSLOG we don't do any console IO */
+		/* As daemon we don't do any console IO */
 		close(0);
 		close(1);
 		close(2);
-#endif				/* USE_SYSLOG */
+
+		open_logging(NULL, MSG_TO_SYSLOG); /* Close terminal output, keep syslog open. */
 	}
 #endif				/* !DEBUG */
 
-#if USE_SYSLOG
 	/* Log the starting message */
-	openlog(progname, LOG_PID, LOG_DAEMON);
-	syslog(LOG_INFO, "starting daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
-	syslog(LOG_INFO, "int=%ds realtime=%s sync=%s soft=%s mla=%d mem=%d",
+
+	log_message(LOG_INFO, "starting daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
+	log_message(LOG_INFO, "int=%ds realtime=%s sync=%s soft=%s mla=%d mem=%d",
 	       tint, realtime ? "yes" : "no", sync_it ? "yes" : "no", softboot ? "yes" : "no", maxload1, minpages);
 
 	if (target_list == NULL)
-		syslog(LOG_INFO, "ping: no machine to check");
+		log_message(LOG_INFO, "ping: no machine to check");
 	else
 		for (act = target_list; act != NULL; act = act->next)
-			syslog(LOG_INFO, "ping: %s", act->name);
+			log_message(LOG_INFO, "ping: %s", act->name);
 
 	if (file_list == NULL)
-		syslog(LOG_INFO, "file: no file to check");
+		log_message(LOG_INFO, "file: no file to check");
 	else
 		for (act = file_list; act != NULL; act = act->next)
-			syslog(LOG_INFO, "file: %s:%d", act->name, act->parameter.file.mtime);
+			log_message(LOG_INFO, "file: %s:%d", act->name, act->parameter.file.mtime);
 
 	if (pidfile_list == NULL)
-		syslog(LOG_INFO, "pidfile: no server process to check");
+		log_message(LOG_INFO, "pidfile: no server process to check");
 	else
 		for (act = pidfile_list; act != NULL; act = act->next)
-			syslog(LOG_INFO, "pidfile: %s", act->name);
+			log_message(LOG_INFO, "pidfile: %s", act->name);
 
 	if (iface_list == NULL)
-		syslog(LOG_INFO, "interface: no interface to check");
+		log_message(LOG_INFO, "interface: no interface to check");
 	else
 		for (act = iface_list; act != NULL; act = act->next)
-			syslog(LOG_INFO, "interface: %s", act->name);
+			log_message(LOG_INFO, "interface: %s", act->name);
 
-	syslog(LOG_INFO, "test=%s(%ld) repair=%s(%ld) alive=%s heartbeat=%s temp=%s to=%s no_act=%s",
+	log_message(LOG_INFO, "test=%s(%ld) repair=%s(%ld) alive=%s heartbeat=%s temp=%s to=%s no_act=%s",
 	       (tbinary == NULL) ? "none" : tbinary, test_timeout,
 	       (rbinary == NULL) ? "none" : rbinary, repair_timeout,
 	       (devname == NULL) ? "none" : devname,
 	       (heartbeat == NULL) ? "none" : heartbeat,
 	       (tempname == NULL) ? "none" : tempname,
 	       (admin == NULL) ? "noone" : admin, (no_act == TRUE) ? "yes" : "no");
-#endif				/* USE_SYSLOG */
 
 	/* open the device */
 	if (devname != NULL && no_act == FALSE) {
 		watchdog_fd = open(devname, O_WRONLY);
 		if (watchdog_fd == -1) {
-#if USE_SYSLOG
-			syslog(LOG_ERR, "cannot open %s (errno = %d = '%m')", devname, errno);
-#else				/* USE_SYSLOG */
-			perror(progname);
-#endif				/* USE_SYSLOG */
+			log_message(LOG_ERR, "cannot open %s (errno = %d = '%s')", devname, errno, strerror(errno));
 			/* do not exit here per default */
 			/* we can use watchdog even if there is no watchdog device */
 		}
@@ -848,22 +792,17 @@ int main(int argc, char *const argv[])
 				/* Set the watchdog hard-stop timeout; default = unset (use
 				   driver default) */
 				if (ioctl(watchdog_fd, WDIOC_SETTIMEOUT, &dev_timeout) < 0) {
-#if USE_SYSLOG
-					syslog(LOG_ERR, "cannot set timeout %d (errno = %d = '%m')", dev_timeout, errno);
-#else
-					perror(progname);
-#endif
+					log_message(LOG_ERR, "cannot set timeout %d (errno = %d = '%s')", dev_timeout, errno, strerror(errno));
 				}
 			}
-#if USE_SYSLOG
+
 			/* Also log watchdog identity */
 			if (ioctl(watchdog_fd, WDIOC_GETSUPPORT, &ident) < 0) {
-				syslog(LOG_ERR, "cannot get watchdog identity (errno = %d = '%m')", errno);
+				log_message(LOG_ERR, "cannot get watchdog identity (errno = %d = '%s')", errno, strerror(errno));
 			} else {
 				ident.identity[sizeof(ident.identity) - 1] = '\0';	/* Be sure */
-				syslog(LOG_INFO, "hardware watchdog identity: %s", ident.identity);
+				log_message(LOG_INFO, "hardware watchdog identity: %s", ident.identity);
 			}
-#endif
 		}
 	}
 
@@ -872,11 +811,7 @@ int main(int argc, char *const argv[])
 	if (heartbeat != NULL) {
 		hb = ((hb = fopen(heartbeat, "r+")) == NULL) ? fopen(heartbeat, "w+") : hb;
 		if (hb == NULL) {
-#if USE_SYSLOG
-			syslog(LOG_ERR, "cannot open %s (errno = %d = '%m')", heartbeat, errno);
-#else
-			perror(progname);
-#endif
+			log_message(LOG_ERR, "cannot open %s (errno = %d = '%s')", heartbeat, errno, strerror(errno));
 		} else {
 			char rbuf[TS_SIZE + 1];
 
@@ -885,11 +820,7 @@ int main(int argc, char *const argv[])
 			lastts = 0;
 			timestamps = (char *)calloc(hbstamps, TS_SIZE);
 			if (timestamps == NULL) {
-#if USE_SYSLOG
-				syslog(LOG_ERR, "cannot allocate memory for timestamps (errno = %d = '%m')", errno);
-#else				/* USE_SYSLOG */
-				perror(progname);
-#endif				/* USE_SYSLOG */
+				log_message(LOG_ERR, "cannot allocate memory for timestamps (errno = %d = '%s')", errno, strerror(errno));
 			} else {
 				/* read any previous timestamps */
 				rewind(hb);
@@ -919,11 +850,7 @@ int main(int argc, char *const argv[])
 		/* open the load average file */
 		load_fd = open("/proc/loadavg", O_RDONLY);
 		if (load_fd == -1) {
-#if USE_SYSLOG
-			syslog(LOG_ERR, "cannot open /proc/loadavg (errno = %d = '%m')", errno);
-#else				/* USE_SYSLOG */
-			perror(progname);
-#endif				/* USE_SYSLOG */
+			log_message(LOG_ERR, "cannot open /proc/loadavg (errno = %d = '%s')", errno, strerror(errno));
 		}
 	}
 
@@ -931,11 +858,7 @@ int main(int argc, char *const argv[])
 		/* open the memory info file */
 		mem_fd = open("/proc/meminfo", O_RDONLY);
 		if (mem_fd == -1) {
-#if USE_SYSLOG
-			syslog(LOG_ERR, "cannot open /proc/meminfo (errno = %d = '%m')", errno);
-#else				/* USE_SYSLOG */
-			perror(progname);
-#endif				/* USE_SYSLOG */
+			log_message(LOG_ERR, "cannot open /proc/meminfo (errno = %d = '%s')", errno, strerror(errno));
 		}
 	}
 
@@ -943,11 +866,7 @@ int main(int argc, char *const argv[])
 		/* open the temperature file */
 		temp_fd = open(tempname, O_RDONLY);
 		if (temp_fd == -1) {
-#if USE_SYSLOG
-			syslog(LOG_ERR, "cannot open %s (errno = %d = '%m')", tempname, errno);
-#else				/* USE_SYSLOG */
-			perror(progname);
-#endif				/* USE_SYSLOG */
+			log_message(LOG_ERR, "cannot open %s (errno = %d = '%s')", tempname, errno, strerror(errno));
 		}
 	}
 
@@ -967,22 +886,14 @@ int main(int argc, char *const argv[])
 	if (realtime == TRUE) {
 		/* lock all actual and future pages into memory */
 		if (mlockall(MCL_CURRENT | MCL_FUTURE) != 0) {
-#if USE_SYSLOG
-			syslog(LOG_ERR, "cannot lock realtime memory (errno = %d = '%m')", errno);
-#else				/* USE_SYSLOG */
-			perror(progname);
-#endif				/* USE_SYSLOG */
+			log_message(LOG_ERR, "cannot lock realtime memory (errno = %d = '%s')", errno, strerror(errno));
 		} else {
 			struct sched_param sp;
 
 			/* now set the scheduler */
 			sp.sched_priority = schedprio;
 			if (sched_setscheduler(0, SCHED_RR, &sp) != 0) {
-#if USE_SYSLOG
-				syslog(LOG_ERR, "cannot set scheduler (errno = %d = '%m')", errno);
-#else				/* USE_SYSLOG */
-				perror(progname);
-#endif				/* USE_SYSLOG */
+				log_message(LOG_ERR, "cannot set scheduler (errno = %d = '%s')", errno, strerror(errno));
 			} else
 				mlocked = TRUE;
 		}
@@ -1012,11 +923,10 @@ int main(int argc, char *const argv[])
 		}
 	}
 #endif
-#if USE_SYSLOG
+
 	if (!oom_adjusted) {
-		syslog(LOG_WARNING, "unable to disable oom handling!");
+		log_message(LOG_WARNING, "unable to disable oom handling!");
 	}
-#endif				/* USE_SYSLOG */
 
 	/* main loop: update after <tint> seconds */
 	while (_running) {
@@ -1069,14 +979,12 @@ int main(int argc, char *const argv[])
 		usleep(tint * 500000);	/* this should make watchdog sleep tint seconds alltogther */
 		/* sleep(tint); */
 
-#if USE_SYSLOG
 		/* do verbose logging */
 		if (verbose && logtick && (--ticker == 0)) {
 			ticker = logtick;
 			count += logtick;
-			syslog(LOG_INFO, "still alive after %ld interval(s)", count);
+			log_message(LOG_INFO, "still alive after %ld interval(s)", count);
 		}
-#endif				/* USE_SYSLOG */
 	}
 
 	terminate();

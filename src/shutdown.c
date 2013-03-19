@@ -1,5 +1,3 @@
-/* $Header: /cvsroot/watchdog/watchdog/src/shutdown.c,v 1.5 2009/02/11 14:01:05 meskes Exp $ */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -39,10 +37,6 @@
 
 #include <unistd.h>
 
-#if USE_SYSLOG
-#include <syslog.h>
-#endif				/* USE_SYSLOG */
-
 #ifndef NSIG
 #define NSIG _NSIG
 #endif
@@ -72,13 +66,11 @@ typedef struct _proc_ {
 /* write a log entry on exit */
 static void log_end()
 {
-#if USE_SYSLOG
 	/* Log the closing message */
-	syslog(LOG_INFO, "stopping daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
+	log_message(LOG_INFO, "stopping daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
 	closelog();
-
 	sleep(5);		/* make sure log is written */
-#endif				/* USE_SYSLOG */
+
 	return;
 }
 
@@ -88,52 +80,28 @@ static void close_all()
 	if (watchdog_fd != -1) {
 		if (write(watchdog_fd, "V", 1) < 0) {
 			int err = errno;
-#if USE_SYSLOG
-			syslog(LOG_ERR, "write watchdog device gave error %d = '%m'!", err);
-#else				/* USE_SYSLOG */
-			perror(progname);
-#endif				/* USE_SYSLOG */
+			log_message(LOG_ERR, "write watchdog device gave error %d = '%s'!", err, strerror(err));
 		}
 
 		if (close(watchdog_fd) == -1) {
-#if USE_SYSLOG
-			syslog(LOG_ALERT, "cannot close %s (errno = %d)", devname, errno);
-#else				/* USE_SYSLOG */
-			perror(progname);
-#endif				/* USE_SYSLOG */
+			log_message(LOG_ALERT, "cannot close %s (errno = %d)", devname, errno);
 		}
 	}
 
 	if (load_fd != -1 && close(load_fd) == -1) {
-#if USE_SYSLOG
-		syslog(LOG_ALERT, "cannot close /proc/loadavg (errno = %d)", errno);
-#else				/* USE_SYSLOG */
-		perror(progname);
-#endif				/* USE_SYSLOG */
+		log_message(LOG_ALERT, "cannot close /proc/loadavg (errno = %d)", errno);
 	}
 
 	if (mem_fd != -1 && close(mem_fd) == -1) {
-#if USE_SYSLOG
-		syslog(LOG_ALERT, "cannot close /proc/meminfo (errno = %d)", errno);
-#else				/* USE_SYSLOG */
-		perror(progname);
-#endif				/* USE_SYSLOG */
+		log_message(LOG_ALERT, "cannot close /proc/meminfo (errno = %d)", errno);
 	}
 
 	if (temp_fd != -1 && close(temp_fd) == -1) {
-#if USE_SYSLOG
-		syslog(LOG_ALERT, "cannot close /dev/temperature (errno = %d)", errno);
-#else				/* USE_SYSLOG */
-		perror(progname);
-#endif				/* USE_SYSLOG */
+		log_message(LOG_ALERT, "cannot close /dev/temperature (errno = %d)", errno);
 	}
 
 	if (hb != NULL && fclose(hb) == -1) {
-#if USE_SYSLOG
-		syslog(LOG_ALERT, "cannot close %s (errno = %d)", heartbeat, errno);
-#else				/* USE_SYSLOG */
-		perror(progname);
-#endif				/* USE_SYSLOG */
+		log_message(LOG_ALERT, "cannot close %s (errno = %d)", heartbeat, errno);
 	}
 }
 
@@ -149,11 +117,7 @@ void terminate(void)
 	if (realtime == TRUE && mlocked == TRUE) {
 		/* unlock all locked pages */
 		if (munlockall() != 0) {
-#if USE_SYSLOG
-			syslog(LOG_ERR, "cannot unlock realtime memory (errno = %d)", errno);
-#else				/* USE_SYSLOG */
-			perror(progname);
-#endif				/* USE_SYSLOG */
+			log_message(LOG_ERR, "cannot unlock realtime memory (errno = %d)", errno);
 		}
 	}
 #endif				/* _POSIX_MEMLOCK */
@@ -169,12 +133,9 @@ static void panic(void)
 {
 	/* if we are still alive, we just exit */
 	close_all();
-	fprintf(stderr, "WATCHDOG PANIC: Still alive after sleeping %d seconds!\n", 4 * dev_timeout);
-#if USE_SYSLOG
-	openlog(progname, LOG_PID, LOG_DAEMON);
-	syslog(LOG_ALERT, "still alive after sleeping %d seconds", 4 * dev_timeout);
-	closelog();
-#endif
+	open_logging(NULL, MSG_TO_STDERR | MSG_TO_SYSLOG);
+	log_message(LOG_ALERT, "WATCHDOG PANIC: still alive after sleeping %d seconds", 4 * dev_timeout);
+	close_logging();
 	exit(1);
 }
 
@@ -219,19 +180,11 @@ static void mnt_off()
 
 			/* did we get enough memory? */
 			if (rootfs.mnt_fsname == NULL || rootfs.mnt_dir == NULL || rootfs.mnt_type == NULL) {
-#if USE_SYSLOG
-				syslog(LOG_ERR, "out of memory");
-#else				/* USE_SYSLOG */
-				fprintf(stderr, "%s: out of memory\n", progname);
-#endif
+				log_message(LOG_ERR, "out of memory");
 			}
 
 			if ((rootfs.mnt_opts = malloc(strlen(mnt->mnt_opts) + strlen("remount,ro") + 2)) == NULL) {
-#if USE_SYSLOG
-				syslog(LOG_ERR, "out of memory");
-#else				/* USE_SYSLOG */
-				fprintf(stderr, "%s: out of memory\n", progname);
-#endif
+				log_message(LOG_ERR, "out of memory");
 			} else
 				sprintf(rootfs.mnt_opts, "%s,remount,ro", mnt->mnt_opts);
 		}
@@ -255,11 +208,7 @@ static int readproc()
 
 	/* Open the /proc directory. */
 	if ((dir = opendir("/proc")) == NULL) {
-#if USE_SYSLOG
-		syslog(LOG_ERR, "cannot opendir /proc");
-#else				/* USE_SYSLOG */
-		perror(progname);
-#endif
+		log_message(LOG_ERR, "cannot opendir /proc");
 		return (-1);
 	}
 	plist = NULL;
@@ -273,11 +222,7 @@ static int readproc()
 
 		/* Get a PROC struct . */
 		if ((p = (PROC *) calloc(1, sizeof(PROC))) == NULL) {
-#if USE_SYSLOG
-			syslog(LOG_ERR, "out of memory");
-#else				/* USE_SYSLOG */
-			fprintf(stderr, "%s: out of memory\n", progname);
-#endif
+			log_message(LOG_ERR, "out of memory");
 			return (-1);
 		}
 		p->sid = getsid(act_pid);
@@ -351,16 +296,12 @@ void do_shutdown(int errorcode)
 		 * non-executable sendmail binary means that the pipe is closed faster
 		 * than we can write to it. */
 		if ((stat(PATH_SENDMAIL, &buf) != 0) || ((buf.st_mode & S_IXUSR) == 0)) {
-#if USE_SYSLOG
-			syslog(LOG_ERR, "%s does not exist or is not executable (errno = %d)", PATH_SENDMAIL, errno);
-#endif				/* USE_SYSLOG */
+			log_message(LOG_ERR, "%s does not exist or is not executable (errno = %d)", PATH_SENDMAIL, errno);
 		} else {
 			sprintf(exe, "%s -i %s", PATH_SENDMAIL, admin);
 			ph = popen(exe, "w");
 			if (ph == NULL) {
-#if USE_SYSLOG
-				syslog(LOG_ERR, "cannot start %s (errno = %d)", PATH_SENDMAIL, errno);
-#endif				/* USE_SYSLOG */
+				log_message(LOG_ERR, "cannot start %s (errno = %d)", PATH_SENDMAIL, errno);
 			} else {
 				char myname[MAXHOSTNAMELEN + 1];
 				struct hostent *hp;
@@ -370,9 +311,7 @@ void do_shutdown(int errorcode)
 
 				fprintf(ph, "To: %s\n", admin);
 				if (ferror(ph) != 0) {
-#if USE_SYSLOG
-					syslog(LOG_ERR, "cannot send mail (errno = %d)", errno);
-#endif				/* USE_SYSLOG */
+					log_message(LOG_ERR, "cannot send mail (errno = %d)", errno);
 				}
 				/* if possible use the full name including domain */
 				if ((hp = gethostbyname(myname)) != NULL)
@@ -380,9 +319,7 @@ void do_shutdown(int errorcode)
 				else
 					fprintf(ph, "Subject: %s is going down!\n\n", myname);
 				if (ferror(ph) != 0) {
-#if USE_SYSLOG
-					syslog(LOG_ERR, "cannot send mail (errno = %d)", errno);
-#endif				/* USE_SYSLOG */
+					log_message(LOG_ERR, "cannot send mail (errno = %d)", errno);
 				}
 
 				if (errorcode == ETOOHOT)
@@ -393,24 +330,19 @@ void do_shutdown(int errorcode)
 						"Message from watchdog:\nThe system will be rebooted because of error %d!\n",
 						errorcode);
 				if (ferror(ph) != 0) {
-#if USE_SYSLOG
-					syslog(LOG_ERR, "cannot send mail (errno = %d)", errno);
-#endif				/* USE_SYSLOG */
+					log_message(LOG_ERR, "cannot send mail (errno = %d)", errno);
 				}
 				if (pclose(ph) == -1) {
-#if USE_SYSLOG
-					syslog(LOG_ERR, "cannot finish mail (errno = %d)", errno);
-#endif				/* USE_SYSLOG */
+					log_message(LOG_ERR, "cannot finish mail (errno = %d)", errno);
 				}
 				/* finally give the system a little bit of time to deliver */
 			}
 		}
 	}
-#if USE_SYSLOG
+
 	/* now tell syslog what's happening */
-	syslog(LOG_ALERT, "shutting down the system because of error %d", errorcode);
-	closelog();
-#endif				/* USE_SYSLOG */
+	log_message(LOG_ALERT, "shutting down the system because of error %d", errorcode);
+	close_logging();
 
 	keep_alive();
 	sleep(10);		/* make sure log is written and mail is send */
@@ -456,7 +388,7 @@ void do_shutdown(int errorcode)
 		wtmp.ut_type = RUN_LVL;
 		wtmp.ut_time = t;
 		if (write(fd, (char *)&wtmp, sizeof(wtmp)) < 0)
-			perror(progname);
+			log_message(LOG_ERR, "failed writing wtmp (%s)", strerror(errno));
 		close(fd);
 	}
 
@@ -473,7 +405,7 @@ void do_shutdown(int errorcode)
 
 				if (read(fd_seed, buf, 512) == 512) {
 					if (write(fd_bck, buf, 512) < 0)
-						perror(progname);
+						log_message(LOG_ERR, "failed writing urandom (%s)", strerror(errno));
 				}
 				close(fd_bck);
 			}
@@ -483,7 +415,7 @@ void do_shutdown(int errorcode)
 
 	/* Turn off accounting */
 	if (acct(NULL) < 0)
-		perror(progname);
+		log_message(LOG_ERR, "failed stopping acct() (%s)", strerror(errno));
 
 	keep_alive();
 

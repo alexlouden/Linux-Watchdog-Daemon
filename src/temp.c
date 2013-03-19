@@ -1,26 +1,19 @@
-/* $Header: /cvsroot/watchdog/watchdog/src/temp.c,v 1.2 2006/07/31 09:39:23 meskes Exp $ */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 #include <errno.h>
 #include <unistd.h>
+
 #include "extern.h"
 #include "watch_err.h"
-
-#if USE_SYSLOG
-#include <syslog.h>
-#endif
 
 int check_temp(void)
 {
 	unsigned char temperature;
-#if USE_SYSLOG
 	int templevel1 = maxtemp * 9 / 10, have1 = FALSE;
 	int templevel2 = maxtemp * 95 / 100, have2 = FALSE;
 	int templevel3 = maxtemp * 98 / 100, have3 = FALSE;
-#endif				/* USE_SYSLOG */
 
 	/* is the temperature device open? */
 	if (temp_fd == -1)
@@ -29,25 +22,21 @@ int check_temp(void)
 	/* read the line (there is only one) */
 	if (read(temp_fd, &temperature, sizeof(temperature)) < 0) {
 		int err = errno;
+		log_message(LOG_ERR, "read %s gave errno = %d = '%s'", tempname, err, strerror(err));
 
-#if USE_SYSLOG
-		syslog(LOG_ERR, "read %s gave errno = %d = '%m'", tempname, err);
-#else				/* USE_SYSLOG */
-		perror(progname);
-#endif				/* USE_SYSLOG */
 		if (softboot)
 			return (err);
 
 		return (ENOERR);
 	}
-#if USE_SYSLOG
+
 	if (verbose && logtick && ticker == 1)
-		syslog(LOG_INFO, "current temperature is %d", temperature);
+		log_message(LOG_INFO, "current temperature is %d", temperature);
 
 	if (temperature > templevel3) {
 		if (!have3) {
 			/* once we reach level3, issue a warning */
-			syslog(LOG_WARNING, "temperature increases %d", templevel3);
+			log_message(LOG_WARNING, "temperature increases %d", templevel3);
 			have1 = have2 = have3 = TRUE;
 		}
 	} else {
@@ -55,7 +44,7 @@ int check_temp(void)
 		if (temperature > templevel2) {
 			if (!have2) {
 				/* once we reach level2, issue a warning */
-				syslog(LOG_WARNING, "temperature increases %d", templevel2);
+				log_message(LOG_WARNING, "temperature increases %d", templevel2);
 				have1 = have2 = TRUE;
 			}
 		} else {
@@ -63,21 +52,15 @@ int check_temp(void)
 			if (temperature > templevel1) {
 				if (!have1) {
 					/* once we reach level1, issue a warning */
-					syslog(LOG_WARNING, "temperature increases %d", templevel1);
+					log_message(LOG_WARNING, "temperature increases %d", templevel1);
 					have1 = TRUE;
 				}
 			}
 		}
 	}
-#endif				/* USE_SYSLOG */
 
 	if (temperature >= maxtemp) {
-#if USE_SYSLOG
-		syslog(LOG_ERR, "it is too hot inside (temperature = %d)", temperature);
-#else				/* USE_SYSLOG */
-		fprintf(stderr, "%s: it is too hot inside (temperature = %d\n", progname, temperature);
-#endif				/* USE_SYSLOG */
-
+		log_message(LOG_ERR, "it is too hot inside (temperature = %d)", temperature);
 		return (ETOOHOT);
 	}
 	return (ENOERR);
