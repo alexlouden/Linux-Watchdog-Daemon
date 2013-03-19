@@ -48,9 +48,6 @@ extern int mount_one(char *, char *, char *, char *, int, int);
 static struct mntent rootfs;
 #endif
 
-#if defined(_POSIX_MEMLOCK)
-extern int mlocked, realtime;
-#endif				/* _POSIX_MEMLOCK */
 extern volatile sig_atomic_t _running;
 extern int dev_timeout;		/* From watchdog.c */
 
@@ -96,14 +93,7 @@ void sigterm_handler(int arg)
 /* on exit we close the device and log that we stop */
 void terminate(void)
 {
-#if defined(_POSIX_MEMLOCK)
-	if (realtime == TRUE && mlocked == TRUE) {
-		/* unlock all locked pages */
-		if (munlockall() != 0) {
-			log_message(LOG_ERR, "cannot unlock realtime memory (errno = %d)", errno);
-		}
-	}
-#endif				/* _POSIX_MEMLOCK */
+	unlock_our_memory();
 	close_all();
 	log_end();
 	exit(0);

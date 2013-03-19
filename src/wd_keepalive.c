@@ -45,10 +45,8 @@
 int watchdog = -1, tint = 10, schedprio = 1;
 char *devname = NULL;
 volatile sig_atomic_t _running = 1;
-
-#if defined(_POSIX_MEMLOCK)
-int mlocked = FALSE, realtime = FALSE;
-#endif
+pid_t daemon_pid = 0;
+int realtime = FALSE;
 
 static void usage(char *progname)
 {
@@ -89,14 +87,7 @@ void sigterm_handler(int arg)
 /* on exit we close the device and log that we stop */
 void terminate(void)
 {
-#if defined(_POSIX_MEMLOCK)
-	if (realtime == TRUE && mlocked == TRUE) {
-		/* unlock all locked pages */
-		if (munlockall() != 0) {
-			log_message(LOG_ERR, "cannot unlock realtime memory (errno = %d)", errno);
-		}
-	}
-#endif				/* _POSIX_MEMLOCK */
+	unlock_our_memory();
 	close_all();
 	log_end();
 	exit(0);
@@ -193,7 +184,6 @@ int main(int argc, char *const argv[])
 	pid_t child_pid;
 	int count = 0;
 	int c;
-	int oom_adjusted = 0;
 	char *progname;
 
 	/* allow all options watchdog understands too */
@@ -314,9 +304,10 @@ int main(int argc, char *const argv[])
 
 
 	/* tuck my process id away */
+	daemon_pid = getpid();
 	fp = fopen(KA_PIDFILE, "w");
 	if (fp != NULL) {
-		fprintf(fp, "%d\n", getpid());
+		fprintf(fp, "%d\n", daemon_pid);
 		(void)fclose(fp);
 	}
 
@@ -324,51 +315,7 @@ int main(int argc, char *const argv[])
 	/* to make sure watchdog device is closed */
 	signal(SIGTERM, sigterm_handler);
 
-#if defined(_POSIX_MEMLOCK)
-	if (realtime == TRUE) {
-		/* lock all actual and future pages into memory */
-		if (mlockall(MCL_CURRENT | MCL_FUTURE) != 0) {
-			log_message(LOG_ERR, "cannot lock realtime memory (errno = %d = '%s')", errno, strerror(errno));
-		} else {
-			struct sched_param sp;
-
-			/* now set the scheduler */
-			sp.sched_priority = schedprio;
-			if (sched_setscheduler(0, SCHED_RR, &sp) != 0) {
-				log_message(LOG_ERR, "cannot set scheduler (errno = %d = '%s')", errno, strerror(errno));
-			} else
-				mlocked = TRUE;
-		}
-	}
-#endif
-
-	/* tell oom killer to not kill this process */
-#ifdef OOM_SCORE_ADJ_MIN
-	if (!stat("/proc/self/oom_score_adj", &s)) {
-		fp = fopen("/proc/self/oom_score_adj", "w");
-		if (fp) {
-			fprintf(fp, "%d\n", OOM_SCORE_ADJ_MIN);
-			(void)fclose(fp);
-			oom_adjusted = 1;
-		}
-	}
-#endif
-#ifdef OOM_DISABLE
-	if (!oom_adjusted) {
-		if (!stat("/proc/self/oom_adj", &s)) {
-			fp = fopen("/proc/self/oom_adj", "w");
-			if (fp) {
-				fprintf(fp, "%d\n", OOM_DISABLE);
-				(void)fclose(fp);
-				oom_adjusted = 1;
-			}
-		}
-	}
-#endif
-
-	if (!oom_adjusted) {
-		log_message(LOG_WARNING, "unable to disable oom handling!");
-	}
+	lock_our_memory(realtime, schedprio, daemon_pid);
 
 	/* main loop: update after <tint> seconds */
 	while (_running) {

@@ -119,7 +119,6 @@ pid_t daemon_pid = 0;
 int softboot = FALSE;
 int verbose = FALSE;
 
-int mlocked = 0;
 char *filename_buf;
 
 static void usage(char *progname)
@@ -556,8 +555,6 @@ int main(int argc, char *const argv[])
 	char *configfile = CONFIG_FILENAME;
 	struct list *act;
 	pid_t child_pid;
-	int oom_adjusted = 0;
-	struct stat s;
 	char *progname;
 	char *opts = "d:i:n:Ffsvbql:p:t:c:r:m:a:";
 	struct option long_options[] = {
@@ -787,51 +784,7 @@ int main(int argc, char *const argv[])
 	/* we make sure watchdog device is closed when receiving SIGTERM */
 	signal(SIGTERM, sigterm_handler);
 
-#if defined(_POSIX_MEMLOCK)
-	if (realtime == TRUE) {
-		/* lock all actual and future pages into memory */
-		if (mlockall(MCL_CURRENT | MCL_FUTURE) != 0) {
-			log_message(LOG_ERR, "cannot lock realtime memory (errno = %d = '%s')", errno, strerror(errno));
-		} else {
-			struct sched_param sp;
-
-			/* now set the scheduler */
-			sp.sched_priority = schedprio;
-			if (sched_setscheduler(0, SCHED_RR, &sp) != 0) {
-				log_message(LOG_ERR, "cannot set scheduler (errno = %d = '%s')", errno, strerror(errno));
-			} else
-				mlocked = TRUE;
-		}
-	}
-#endif
-
-	/* tell oom killer to not kill this process */
-#ifdef OOM_SCORE_ADJ_MIN
-	if (!stat("/proc/self/oom_score_adj", &s)) {
-		fp = fopen("/proc/self/oom_score_adj", "w");
-		if (fp) {
-			fprintf(fp, "%d\n", OOM_SCORE_ADJ_MIN);
-			(void)fclose(fp);
-			oom_adjusted = 1;
-		}
-	}
-#endif
-#ifdef OOM_DISABLE
-	if (!oom_adjusted) {
-		if (!stat("/proc/self/oom_adj", &s)) {
-			fp = fopen("/proc/self/oom_adj", "w");
-			if (fp) {
-				fprintf(fp, "%d\n", OOM_DISABLE);
-				(void)fclose(fp);
-				oom_adjusted = 1;
-			}
-		}
-	}
-#endif
-
-	if (!oom_adjusted) {
-		log_message(LOG_WARNING, "unable to disable oom handling!");
-	}
+	lock_our_memory(realtime, schedprio, daemon_pid);
 
 	/* main loop: update after <tint> seconds */
 	while (_running) {

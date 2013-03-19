@@ -161,4 +161,9 @@ int open_heartbeat(void);
 int write_heartbeat(void);
 int close_heartbeat(void);
 
+/** lock_mem.c **/
+void lock_our_memory(int do_lock, int priority, pid_t pid);
+void unlock_our_memory(void);
+
+
 #endif /*_EXTERN_H_*/
