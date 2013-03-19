@@ -547,7 +547,6 @@ static void old_option(int c, char *configfile)
 int main(int argc, char *const argv[])
 {
 	int c, foreground = FALSE, force = FALSE, sync_it = FALSE;
-	int hold;
 	char *configfile = CONFIG_FILENAME;
 	struct list *act;
 	pid_t child_pid;
@@ -638,35 +637,7 @@ int main(int argc, char *const argv[])
 
 	/* set up pinging if in ping mode */
 	if (target_list != NULL) {
-		for (act = target_list; act != NULL; act = act->next) {
-			struct protoent *proto;
-			struct pingmode *net = (struct pingmode *)xcalloc(1, sizeof(struct pingmode));
-
-			/* setup the socket */
-			memset(&(net->to), 0, sizeof(struct sockaddr));
-
-			((struct sockaddr_in *)&(net->to))->sin_family = AF_INET;
-			if ((((struct sockaddr_in *)&(net->to))->sin_addr.s_addr =
-			     inet_addr(act->name)) == (unsigned int)-1) {
-			     fatal_error(EX_USAGE, "unknown host %s", act->name);
-			}
-			net->packet = (unsigned char *)xcalloc((unsigned int)(DATALEN + MAXIPLEN + MAXICMPLEN), sizeof(char));
-			if (!(proto = getprotobyname("icmp"))) {
-				fatal_error(EX_SYSERR, "unknown protocol icmp.");
-			}
-			if ((net->sock_fp = socket(AF_INET, SOCK_RAW, proto->p_proto)) < 0
-			    || fcntl(net->sock_fp, F_SETFD, 1)) {
-			    fatal_error(EX_SYSERR, "error opening socket (%s)", strerror(errno));
-			}
-
-			/* this is necessary for broadcast pings to work */
-			(void)setsockopt(net->sock_fp, SOL_SOCKET, SO_BROADCAST, (char *)&hold, sizeof(hold));
-
-			hold = 48 * 1024;
-			(void)setsockopt(net->sock_fp, SOL_SOCKET, SO_RCVBUF, (char *)&hold, sizeof(hold));
-
-			act->parameter.net = *net;
-		}
+		open_netcheck(target_list);
 	}
 
 	/* allocate some memory to store a filename, this is needed later on even

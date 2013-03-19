@@ -131,6 +131,7 @@ int close_loadcheck(void);
 
 /** net.c **/
 int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *packet, int time, int count);
+int open_netcheck(struct list *tlist);
 
 /** temp.c **/
 int open_tempcheck(char *name);

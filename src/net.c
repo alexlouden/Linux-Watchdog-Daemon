@@ -1,3 +1,9 @@
+/* > net.c
+ *
+ * Code for checking network access. The open_netcheck() funcion is from set-up
+ * code originally in watchdog.c
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -6,6 +12,14 @@
 #include <sys/time.h>
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
+#include <fcntl.h>
+#include <string.h>
+#include <unistd.h>		/* for gethostname() etc */
+#include <netdb.h>		/* for gethostbyname() */
+#include <sys/param.h>	/* for MAXHOSTNAMELEN */
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "extern.h"
 #include "watch_err.h"
@@ -155,4 +169,48 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 	log_message(LOG_ERR, "no response from ping (target: %s)", target);
 
 	return (ENETUNREACH);
+}
+
+/*
+ * Set up pinging if in ping mode
+ */
+
+int open_netcheck(struct list *tlist)
+{
+	struct list *act;
+	int hold;
+
+	if (tlist != NULL) {
+		for (act = tlist; act != NULL; act = act->next) {
+			struct protoent *proto;
+			struct pingmode *net = (struct pingmode *)xcalloc(1, sizeof(struct pingmode));
+
+			/* setup the socket */
+			memset(&(net->to), 0, sizeof(struct sockaddr));
+
+			((struct sockaddr_in *)&(net->to))->sin_family = AF_INET;
+			if ((((struct sockaddr_in *)&(net->to))->sin_addr.s_addr =
+			     inet_addr(act->name)) == (unsigned int)-1) {
+			     fatal_error(EX_USAGE, "unknown host %s", act->name);
+			}
+			net->packet = (unsigned char *)xcalloc((unsigned int)(DATALEN + MAXIPLEN + MAXICMPLEN), sizeof(char));
+			if (!(proto = getprotobyname("icmp"))) {
+				fatal_error(EX_SYSERR, "unknown protocol icmp.");
+			}
+			if ((net->sock_fp = socket(AF_INET, SOCK_RAW, proto->p_proto)) < 0
+			    || fcntl(net->sock_fp, F_SETFD, 1)) {
+			    fatal_error(EX_SYSERR, "error opening socket (%s)", strerror(errno));
+			}
+
+			/* this is necessary for broadcast pings to work */
+			(void)setsockopt(net->sock_fp, SOL_SOCKET, SO_BROADCAST, (char *)&hold, sizeof(hold));
+
+			hold = 48 * 1024;
+			(void)setsockopt(net->sock_fp, SOL_SOCKET, SO_RCVBUF, (char *)&hold, sizeof(hold));
+
+			act->parameter.net = *net;
+		}
+	}
+
+	return 0;
 }
