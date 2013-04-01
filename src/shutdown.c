@@ -283,25 +283,25 @@ void do_shutdown(int errorcode)
 				fprintf(ph, "To: %s\n", admin);
 				if (ferror(ph) != 0) {
 					log_message(LOG_ERR, "cannot send mail (errno = %d)", errno);
-				}
-				/* if possible use the full name including domain */
-				if ((hp = gethostbyname(myname)) != NULL)
-					fprintf(ph, "Subject: %s is going down!\n\n", hp->h_name);
-				else
-					fprintf(ph, "Subject: %s is going down!\n\n", myname);
-				if (ferror(ph) != 0) {
-					log_message(LOG_ERR, "cannot send mail (errno = %d)", errno);
-				}
-
-				if (errorcode == ETOOHOT)
-					fprintf(ph,
-						"Message from watchdog:\nIt is too hot to keep on working. The system will be halted!\n");
-				else
-					fprintf(ph,
-						"Message from watchdog:\nThe system will be rebooted because of error %d!\n",
-						errorcode);
-				if (ferror(ph) != 0) {
-					log_message(LOG_ERR, "cannot send mail (errno = %d)", errno);
+				} else {
+					/* if possible use the full name including domain */
+					if ((hp = gethostbyname(myname)) != NULL)
+						fprintf(ph, "Subject: %s is going down!\n\n", hp->h_name);
+					else
+						fprintf(ph, "Subject: %s is going down!\n\n", myname);
+					if (ferror(ph) != 0) {
+						log_message(LOG_ERR, "cannot send mail (errno = %d)", errno);
+					} else {
+						if (errorcode == ETOOHOT)
+							fprintf(ph,
+								"Message from watchdog:\nIt is too hot to keep on working. The system will be halted!\n");
+						else
+							fprintf(ph,
+								"Message from watchdog:\nThe system will be rebooted because of error %d!\n", errorcode);
+						if (ferror(ph) != 0) {
+							log_message(LOG_ERR, "cannot send mail (errno = %d)", errno);
+						}
+					}
 				}
 				if (pclose(ph) == -1) {
 					log_message(LOG_ERR, "cannot finish mail (errno = %d)", errno);
