@@ -60,13 +60,25 @@ typedef struct _proc_ {
 	struct _proc_ *next;	/* Pointer to next struct.        */
 } PROC;
 
+/* A version of sleep() that keeps the watchdog timer alive. */
+static void safe_sleep(int nsec)
+{
+	int i;
+
+	keep_alive();
+	for (i=0; i<nsec; i++) {
+		sleep(1);
+		keep_alive();
+	}
+}
+
 /* write a log entry on exit */
 static void log_end(void)
 {
 	/* Log the closing message */
 	log_message(LOG_INFO, "stopping daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
 	closelog();
-	sleep(5);		/* make sure log is written */
+	safe_sleep(5);		/* make sure log is written */
 
 	return;
 }
@@ -324,9 +336,7 @@ void do_shutdown(int errorcode)
 	log_message(LOG_ALERT, "shutting down the system because of error %d", errorcode);
 	close_logging();
 
-	keep_alive();
-	sleep(10);		/* make sure log is written and mail is send */
-	keep_alive();
+	safe_sleep(10);		/* make sure log is written and mail is send */
 
 	/* We cannot start shutdown, since init might not be able to fork. */
 	/* That would stop the reboot process. So we try rebooting the system */
@@ -349,9 +359,15 @@ void do_shutdown(int errorcode)
 	/* Stop init; it is insensitive to the signals sent by the kernel. */
 	kill(1, SIGTSTP);
 
-	/* Kill all processes. */
+	/* Kill all other processes. */
 	(void)killall5(SIGTERM);
-	sleep(5);
+	safe_sleep(1);
+	/* Do this twice in case we have out-of-memory problems. */
+	(void)killall5(SIGTERM);
+        safe_sleep(4);
+	(void)killall5(SIGKILL);
+	keep_alive();
+	/* Out-of-memory safeguard again. */
 	(void)killall5(SIGKILL);
 	keep_alive();
 
