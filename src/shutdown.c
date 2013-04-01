@@ -48,8 +48,8 @@ extern int mount_one(char *, char *, char *, char *, int, int);
 static struct mntent rootfs;
 #endif
 
-extern volatile sig_atomic_t _running;
-extern int dev_timeout;		/* From watchdog.c */
+extern volatile sig_atomic_t _running;	/* From watchdog.c */
+extern int dev_timeout;			/* From watchdog.c */
 
 jmp_buf ret2dog;
 
@@ -61,7 +61,7 @@ typedef struct _proc_ {
 } PROC;
 
 /* write a log entry on exit */
-static void log_end()
+static void log_end(void)
 {
 	/* Log the closing message */
 	log_message(LOG_INFO, "stopping daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
@@ -72,7 +72,7 @@ static void log_end()
 }
 
 /* close the device and check for error */
-static void close_all()
+static void close_all(void)
 {
 	close_watchdog();
 
@@ -182,6 +182,8 @@ static int readproc()
 		log_message(LOG_ERR, "cannot opendir /proc");
 		return (-1);
 	}
+
+	/* Don't worry about free'ing the list first, we are going down anyway. */
 	plist = NULL;
 
 	/* Walk through the directory. */
@@ -191,7 +193,11 @@ static int readproc()
 		if ((act_pid = atoi(d->d_name)) == 0)
 			continue;
 
-		/* Get a PROC struct . */
+		/*
+                * Get a PROC struct. If this fails, which is likely if we have an
+                * out-of-memory error, we return gracefully with what we have managed
+                * so hopefully a 2nd call after killing some processes will give us more.
+                */
 		if ((p = (PROC *) calloc(1, sizeof(PROC))) == NULL) {
 			log_message(LOG_ERR, "out of memory");
 			return (-1);
@@ -237,8 +243,11 @@ static void killall5(int sig)
 		}
 	/* Now kill all processes except our session. */
 	for (p = plist; p; p = p->next)
-		if (p->pid != daemon_pid && p->sid != sid)
-			kill(p->pid, sig);
+		if (p->pid != daemon_pid &&	/* Skip our process */
+			p->sid != sid && 	/* Skip our session */
+			p->pid != 1 &&		/* Skip any kernel process. */
+			p->sid != 0) 		/* Skip any kernel process. */
+				kill(p->pid, sig);
 
 	/* And let them continue. */
 	kill(-1, SIGCONT);
