@@ -23,6 +23,14 @@ static FILE *hb = NULL;
 static int lastts, nrts;
 static char *timestamps = NULL;
 
+static void next_value(void)
+{
+	if (nrts < hbstamps)
+		nrts++;
+	++lastts;
+	lastts = lastts % hbstamps;
+}
+
 /*
  * Open the heartbeat file based on the global variable 'heartbeat' and allocate enough
  * memory for a buffer based on the global variable 'hbstamps'.
@@ -58,11 +66,8 @@ int open_heartbeat(void)
 			sprintf(rbuf, "%*s\n", TS_SIZE - 1, "--restart--");
 			memcpy(timestamps + (lastts * TS_SIZE), rbuf, TS_SIZE);
 
-			// success
-			if (nrts < hbstamps)
-				nrts++;
-			++lastts;
-			lastts = lastts % hbstamps;
+			/* success */
+			next_value();
 		}
 	}
 
@@ -93,27 +98,24 @@ int write_heartbeat(void)
 		/* copy it to the buffer */
 		memcpy(timestamps + (lastts * TS_SIZE), tbufw, TS_SIZE);
 
-		// success
-		if (nrts < hbstamps)
-			nrts++;
-		++lastts;
-		lastts = lastts % hbstamps;
+		/* success */
+		next_value();
 
-		// write the buffer to the file
+		/* write the buffer to the file */
 		rewind(hb);
 		if (nrts == hbstamps) {
-			// write from the logical start of the buffer to the physical end
+			/* write from the logical start of the buffer to the physical end */
 			if (fwrite(timestamps + (lastts * TS_SIZE), TS_SIZE, hbstamps - lastts, hb) == 0) {
 				int err = errno;
 				log_message(LOG_ERR, "write heartbeat file gave error %d = '%s'!", err, strerror(err));
 			}
-			// write from the physical start of the buffer to the logical end
+			/* write from the physical start of the buffer to the logical end */
 			if (fwrite(timestamps, TS_SIZE, lastts, hb) == 0) {
 				int err = errno;
 				log_message(LOG_ERR, "write heartbeat file gave error %d = '%s'!", err, strerror(err));
 			}
 		} else {
-			// write from the physical start of the buffer to the logical end
+			/* write from the physical start of the buffer to the logical end */
 			if (fwrite(timestamps, TS_SIZE, nrts, hb) == 0) {
 				int err = errno;
 				log_message(LOG_ERR, "write heartbeat file gave error %d = '%s'!", err, strerror(err));
