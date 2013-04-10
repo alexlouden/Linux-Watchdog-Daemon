@@ -116,21 +116,31 @@ static void add_list(struct list **list, char *name)
 	}
 }
 
+/* skip from argument to value */
 static int spool(char *line, int *i, int offset)
 {
 	for ((*i) += offset; line[*i] == ' ' || line[*i] == '\t'; (*i)++) ;
-	if (line[*i] == '=')
-		(*i)++;
-	for (; line[*i] == ' ' || line[*i] == '\t'; (*i)++) ;
-	if (line[*i] == '\0')
+	if (line[*i] != '=') {
+		/* = sign is missing */
+		fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 		return (1);
-	else
-		return (0);
+	}
+
+	(*i)++;
+	for (; line[*i] == ' ' || line[*i] == '\t'; (*i)++) ;
+	if (line[*i] == '\0') {
+		/* no value given */
+		fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
+		return (1);
+	}
+	
+	return (0);
 }
 
 void read_config(char *configfile)
 {
 	FILE *wc;
+	char *line = NULL;
 	int gotload5 = FALSE, gotload15 = FALSE;
 
 	if ((wc = fopen(configfile, "r")) == NULL) {
@@ -168,9 +178,7 @@ void read_config(char *configfile)
 
 			/* now check for an option */
 			if (strncmp(line + i, FILENAME, strlen(FILENAME)) == 0) {
-				if (spool(line, &i, strlen(FILENAME)))
-					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-				else
+				if (!spool(line, &i, strlen(FILENAME)))
 					add_list(&file_list, xstrdup(line + i));
 			} else if (strncmp(line + i, CHANGE, strlen(CHANGE)) == 0) {
 				struct list *ptr;
@@ -189,109 +197,69 @@ void read_config(char *configfile)
 
 				ptr->parameter.file.mtime = atoi(line + i);
 			} else if (strncmp(line + i, SERVERPIDFILE, strlen(SERVERPIDFILE)) == 0) {
-				if (spool(line, &i, strlen(SERVERPIDFILE)))
-					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-				else
+				if (!spool(line, &i, strlen(SERVERPIDFILE)))
 					add_list(&pidfile_list, xstrdup(line + i));
 			} else if (strncmp(line + i, PINGCOUNT, strlen(PINGCOUNT)) == 0) {
-				if (spool(line, &i, strlen(PINGCOUNT)))
-					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-				else
+				if (!spool(line, &i, strlen(PINGCOUNT)))
 					pingcount = atol(line + i);
 			} else if (strncmp(line + i, PING, strlen(PING)) == 0) {
-				if (spool(line, &i, strlen(PING)))
-					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-				else
+				if (!spool(line, &i, strlen(PING)))
 					add_list(&target_list, xstrdup(line + i));
 			} else if (strncmp(line + i, INTERFACE, strlen(INTERFACE)) == 0) {
-				if (spool(line, &i, strlen(INTERFACE)))
-					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-				else
+				if (!spool(line, &i, strlen(INTERFACE)))
 					add_list(&iface_list, xstrdup(line + i));
 			} else if (strncmp(line + i, REALTIME, strlen(REALTIME)) == 0) {
-				(void)spool(line, &i, strlen(REALTIME));
-				realtime = (strncmp(line + i, "yes", 3) == 0) ? TRUE : FALSE;
+				if (!spool(line, &i, strlen(REALTIME)))
+					realtime = (strncmp(line + i, "yes", 3) == 0) ? TRUE : FALSE;
 			} else if (strncmp(line + i, PRIORITY, strlen(PRIORITY)) == 0) {
-				if (spool(line, &i, strlen(PRIORITY)))
-					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-				else
+				if (!spool(line, &i, strlen(PRIORITY)))
 					schedprio = atol(line + i);
 			} else if (strncmp(line + i, REPAIRBIN, strlen(REPAIRBIN)) == 0) {
-				if (spool(line, &i, strlen(REPAIRBIN)))
-					rbinary = NULL;
-				else
+				if (!spool(line, &i, strlen(REPAIRBIN)))
 					rbinary = xstrdup(line + i);
 			} else if (strncmp(line + i, REPAIRTIMEOUT, strlen(REPAIRTIMEOUT)) == 0) {
-				if (spool(line, &i, strlen(REPAIRTIMEOUT)))
-					repair_timeout = 0;
-				else
+				if (!spool(line, &i, strlen(REPAIRTIMEOUT)))
 					repair_timeout = atol(line + i);
 			} else if (strncmp(line + i, TESTBIN, strlen(TESTBIN)) == 0) {
-				if (spool(line, &i, strlen(TESTBIN)))
-					tbinary = NULL;
-				else
+				if (!spool(line, &i, strlen(TESTBIN)))
 					tbinary = xstrdup(line + i);
 			} else if (strncmp(line + i, TESTTIMEOUT, strlen(TESTTIMEOUT)) == 0) {
-				if (spool(line, &i, strlen(TESTTIMEOUT)))
-					test_timeout = 0;
-				else
+				if (!spool(line, &i, strlen(TESTTIMEOUT)))
 					test_timeout = atol(line + i);
 			} else if (strncmp(line + i, HEARTBEAT, strlen(HEARTBEAT)) == 0) {
-				if (spool(line, &i, strlen(HEARTBEAT)))
-					heartbeat = NULL;
-				else
+				if (!spool(line, &i, strlen(HEARTBEAT)))
 					heartbeat = xstrdup(line + i);
 			} else if (strncmp(line + i, HBSTAMPS, strlen(HBSTAMPS)) == 0) {
-				if (spool(line, &i, strlen(HBSTAMPS)))
-					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-				else
+				if (!spool(line, &i, strlen(HBSTAMPS)))
 					hbstamps = atol(line + i);
 			} else if (strncmp(line + i, ADMIN, strlen(ADMIN)) == 0) {
-				if (spool(line, &i, strlen(ADMIN)))
-					admin = NULL;
-				else
+				if (!spool(line, &i, strlen(ADMIN)))
 					admin = xstrdup(line + i);
 			} else if (strncmp(line + i, INTERVAL, strlen(INTERVAL)) == 0) {
-				if (spool(line, &i, strlen(INTERVAL)))
-					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-				else
+				if (!spool(line, &i, strlen(INTERVAL)))
 					tint = atol(line + i);
 			} else if (strncmp(line + i, LOGTICK, strlen(LOGTICK)) == 0) {
-				if (spool(line, &i, strlen(LOGTICK)))
-					logtick = ticker = 1;
-				else
+				if (!spool(line, &i, strlen(LOGTICK)))
 					logtick = ticker = atol(line + i);
 			} else if (strncmp(line + i, DEVICE, strlen(DEVICE)) == 0) {
-				if (spool(line, &i, strlen(DEVICE)))
-					devname = NULL;
-				else
+				if (!spool(line, &i, strlen(DEVICE)))
 					devname = xstrdup(line + i);
 			} else if (strncmp(line + i, DEVICE_TIMEOUT, strlen(DEVICE_TIMEOUT)) == 0) {
-				if (spool(line, &i, strlen(DEVICE_TIMEOUT)))
-					fprintf(stderr, "Ignoring invalid line in config file: %s ", line);
-				else
+				if (!spool(line, &i, strlen(DEVICE_TIMEOUT)))
 					dev_timeout = atol(line + i);
 			} else if (strncmp(line + i, TEMP, strlen(TEMP)) == 0) {
-				if (spool(line, &i, strlen(TEMP)))
-					tempname = NULL;
-				else
+				if (!spool(line, &i, strlen(TEMP)))
 					tempname = xstrdup(line + i);
 			} else if (strncmp(line + i, MAXTEMP, strlen(MAXTEMP)) == 0) {
-				if (spool(line, &i, strlen(MAXTEMP)))
-					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-				else
+				if (!spool(line, &i, strlen(MAXTEMP)))
 					maxtemp = atol(line + i);
 			} else if (strncmp(line + i, MAXLOAD15, strlen(MAXLOAD15)) == 0) {
-				if (spool(line, &i, strlen(MAXLOAD15)))
-					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-				else {
+				if (!spool(line, &i, strlen(MAXLOAD15))) {
 					maxload15 = atol(line + i);
 					gotload15 = TRUE;
 				}
 			} else if (strncmp(line + i, MAXLOAD1, strlen(MAXLOAD1)) == 0) {
-				if (spool(line, &i, strlen(MAXLOAD1)))
-					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-				else {
+				if (!spool(line, &i, strlen(MAXLOAD1))) {
 					maxload1 = atol(line + i);
 					if (!gotload5)
 						maxload5 = maxload1 * 3 / 4;
@@ -299,26 +267,18 @@ void read_config(char *configfile)
 						maxload15 = maxload1 / 2;
 				}
 			} else if (strncmp(line + i, MAXLOAD5, strlen(MAXLOAD5)) == 0) {
-				if (spool(line, &i, strlen(MAXLOAD5)))
-					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-				else {
+				if (!spool(line, &i, strlen(MAXLOAD5))) {
 					maxload5 = atol(line + i);
 					gotload5 = TRUE;
 				}
 			} else if (strncmp(line + i, MINMEM, strlen(MINMEM)) == 0) {
-				if (spool(line, &i, strlen(MINMEM)))
-					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-				else
+				if (!spool(line, &i, strlen(MINMEM)))
 					minpages = atol(line + i);
 			} else if (strncmp(line + i, LOGDIR, strlen(LOGDIR)) == 0) {
-				if (spool(line, &i, strlen(LOGDIR)))
-					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-				else
+				if (!spool(line, &i, strlen(LOGDIR)))
 					logdir = xstrdup(line + i);
 			} else if (strncmp(line + i, TESTDIR, strlen(TESTDIR)) == 0) {
-				if (spool(line, &i, strlen(TESTDIR)))
-					fprintf(stderr, "Ignoring invalid line in config file: %s ", line);
-				else
+				if (!spool(line, &i, strlen(TESTDIR)))
 					test_dir = xstrdup(line + i);
 			} else {
 				fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
