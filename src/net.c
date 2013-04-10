@@ -178,7 +178,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 int open_netcheck(struct list *tlist)
 {
 	struct list *act;
-	int hold;
+	int hold = 0;
 
 	if (tlist != NULL) {
 		for (act = tlist; act != NULL; act = act->next) {
