@@ -148,7 +148,6 @@ void read_config(char *configfile)
 	}
 
 	while (!feof(wc)) {
-		char *line = NULL;
 		size_t n;
 
 		if (getline(&line, &n, wc) == -1) {
@@ -163,6 +162,10 @@ void read_config(char *configfile)
 			/* scan the actual line for an option */
 			/* first remove the leading blanks */
 			for (i = 0; line[i] == ' ' || line[i] == '\t'; i++) ;
+
+			/* check for empty line */
+			if (line[i] == '\0' || line[i] == '\n')
+				continue;
 
 			/* if the next sign is a '#' we have a comment */
 			if (line[i] == '#')
@@ -285,6 +288,9 @@ void read_config(char *configfile)
 			}
 		}
 	}
+
+	if (line)
+		free(line);
 
 	if (fclose(wc) != 0) {
 		fatal_error(EX_SYSERR, "Error closing file (%s)", strerror(errno));
