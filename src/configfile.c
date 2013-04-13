@@ -142,13 +142,13 @@ void read_config(char *configfile)
 	FILE *wc;
 	char *line = NULL;
 	int gotload5 = FALSE, gotload15 = FALSE;
+	size_t n = 0;
 
 	if ((wc = fopen(configfile, "r")) == NULL) {
 		fatal_error(EX_SYSERR, "Can't open config file \"%s\" (%s)", configfile, strerror(errno));
 	}
 
 	while (!feof(wc)) {
-		size_t n;
 
 		if (getline(&line, &n, wc) == -1) {
 			if (!ferror(wc))
@@ -180,6 +180,7 @@ void read_config(char *configfile)
 				continue;
 
 			/* now check for an option */
+			/* order of the comparisons is important to prevent partial matches */
 			if (strncmp(line + i, FILENAME, strlen(FILENAME)) == 0) {
 				if (!spool(line, &i, strlen(FILENAME)))
 					add_list(&file_list, xstrdup(line + i));
