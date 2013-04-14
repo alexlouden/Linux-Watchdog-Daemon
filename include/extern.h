@@ -79,18 +79,13 @@ extern int hbstamps;
 extern int realtime;
 
 extern struct list *tr_bin_list;
-extern char *test_dir;
-
 extern struct list *file_list;
 extern struct list *target_list;
 extern struct list *pidfile_list;
 extern struct list *iface_list;
 
-
 extern char *tbinary;
 extern char *rbinary;
-
-extern char *sendmail_bin;
 
 /* = Not (yet) from config file. = */
 

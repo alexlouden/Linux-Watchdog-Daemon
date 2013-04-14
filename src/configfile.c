@@ -25,7 +25,7 @@ static void add_test_binaries(const char *path);
 #define ADMIN			"admin"
 #define CHANGE			"change"
 #define DEVICE			"watchdog-device"
-#define DEVICE_TIMEOUT		"watchdog-timeout"
+#define DEVICE_TIMEOUT	"watchdog-timeout"
 #define	FILENAME		"file"
 #define INTERFACE		"interface"
 #define INTERVAL		"interval"
@@ -35,13 +35,13 @@ static void add_test_binaries(const char *path);
 #define MAXLOAD15		"max-load-15"
 #define MAXTEMP			"max-temperature"
 #define MINMEM			"min-memory"
-#define SERVERPIDFILE		"pidfile"
+#define SERVERPIDFILE	"pidfile"
 #define PING			"ping"
 #define PINGCOUNT		"ping-count"
 #define PRIORITY		"priority"
 #define REALTIME		"realtime"
 #define REPAIRBIN		"repair-binary"
-#define REPAIRTIMEOUT		"repair-timeout"
+#define REPAIRTIMEOUT	"repair-timeout"
 #define TEMP			"temperature-device"
 #define TESTBIN			"test-binary"
 #define TESTTIMEOUT		"test-timeout"
@@ -84,7 +84,7 @@ int realtime = FALSE;
 
 /* Self-repairing binaries list */
 struct list *tr_bin_list = NULL;
-char *test_dir = TESTBIN_PATH;
+static char *test_dir = TESTBIN_PATH;
 
 struct list *file_list = NULL;
 struct list *target_list = NULL;
@@ -94,19 +94,16 @@ struct list *iface_list = NULL;
 char *tbinary = NULL;
 char *rbinary = NULL;
 
-char *sendmail_bin = PATH_SENDMAIL;
-
 /* Command line options also used globally. */
 int softboot = FALSE;
 int verbose = FALSE;
 
-static void add_list(struct list **list, char *name)
+static void add_list(struct list **list, const char *name)
 {
 	struct list *new, *act;
 
 	new = (struct list *)xcalloc(1, sizeof(struct list));
-	new->name = name;
-	memset((char *)(&(new->parameter)), '\0', sizeof(union wdog_options));
+	new->name = xstrdup(name);
 
 	if (*list == NULL)
 		*list = new;
@@ -183,7 +180,7 @@ void read_config(char *configfile)
 			/* order of the comparisons is important to prevent partial matches */
 			if (strncmp(line + i, FILENAME, strlen(FILENAME)) == 0) {
 				if (!spool(line, &i, strlen(FILENAME)))
-					add_list(&file_list, xstrdup(line + i));
+					add_list(&file_list, line + i);
 			} else if (strncmp(line + i, CHANGE, strlen(CHANGE)) == 0) {
 				struct list *ptr;
 
@@ -202,16 +199,16 @@ void read_config(char *configfile)
 				ptr->parameter.file.mtime = atoi(line + i);
 			} else if (strncmp(line + i, SERVERPIDFILE, strlen(SERVERPIDFILE)) == 0) {
 				if (!spool(line, &i, strlen(SERVERPIDFILE)))
-					add_list(&pidfile_list, xstrdup(line + i));
+					add_list(&pidfile_list, line + i);
 			} else if (strncmp(line + i, PINGCOUNT, strlen(PINGCOUNT)) == 0) {
 				if (!spool(line, &i, strlen(PINGCOUNT)))
 					pingcount = atol(line + i);
 			} else if (strncmp(line + i, PING, strlen(PING)) == 0) {
 				if (!spool(line, &i, strlen(PING)))
-					add_list(&target_list, xstrdup(line + i));
+					add_list(&target_list, line + i);
 			} else if (strncmp(line + i, INTERFACE, strlen(INTERFACE)) == 0) {
 				if (!spool(line, &i, strlen(INTERFACE)))
-					add_list(&iface_list, xstrdup(line + i));
+					add_list(&iface_list, line + i);
 			} else if (strncmp(line + i, REALTIME, strlen(REALTIME)) == 0) {
 				if (!spool(line, &i, strlen(REALTIME)))
 					realtime = (strncmp(line + i, "yes", 3) == 0) ? TRUE : FALSE;
@@ -313,7 +310,6 @@ static void add_test_binaries(const char *path)
 	struct stat sb;
 	int ret;
 	char fname[PATH_MAX];
-	char *fdup;
 
 	if (!path)
 		return;
@@ -346,11 +342,7 @@ static void add_test_binaries(const char *path)
 		if (!(sb.st_mode & S_IRUSR))
 			continue;
 
-		fdup = xstrdup(fname);
-		if (!fdup)
-			continue;
-
-		log_message(LOG_DEBUG, "adding %s to list of auto-repair binaries", fdup);
-		add_list(&tr_bin_list, fdup);
+		log_message(LOG_DEBUG, "adding %s to list of auto-repair binaries", fname);
+		add_list(&tr_bin_list, fname);
 	} while (1);
 }
