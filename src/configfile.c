@@ -69,7 +69,6 @@ int pingcount = 3;
 
 char *devname = NULL;
 char *admin = "root";
-char *tempname = NULL;
 
 time_t	test_timeout = 0;				/* test-binary time out value. */
 time_t	repair_timeout = 0;				/* repair-binary time out value. */
@@ -90,6 +89,7 @@ struct list *file_list = NULL;
 struct list *target_list = NULL;
 struct list *pidfile_list = NULL;
 struct list *iface_list = NULL;
+struct list *temp_list = NULL;
 
 char *tbinary = NULL;
 char *rbinary = NULL;
@@ -250,7 +250,7 @@ void read_config(char *configfile)
 					dev_timeout = atol(line + i);
 			} else if (strncmp(line + i, TEMP, strlen(TEMP)) == 0) {
 				if (!spool(line, &i, strlen(TEMP)))
-					tempname = xstrdup(line + i);
+					add_list(&temp_list, line + i);
 			} else if (strncmp(line + i, MAXTEMP, strlen(MAXTEMP)) == 0) {
 				if (!spool(line, &i, strlen(MAXTEMP)))
 					maxtemp = atol(line + i);

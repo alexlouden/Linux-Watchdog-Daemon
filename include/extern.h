@@ -22,10 +22,15 @@ struct ifmode {
 	unsigned long bytes;
 };
 
+struct tempmode {
+	unsigned char have1, have2, have3;
+};
+
 union wdog_options {
 	struct pingmode net;
 	struct filemode file;
 	struct ifmode iface;
+	struct tempmode temp;
 };
 
 struct list {
@@ -65,7 +70,6 @@ extern int pingcount;
 
 extern char *devname;
 extern char *admin;
-extern char *tempname;
 
 extern time_t	test_timeout;		/* test-binary time out value. */
 extern time_t	repair_timeout;		/* repair-binary time out value. */
@@ -83,6 +87,7 @@ extern struct list *file_list;
 extern struct list *target_list;
 extern struct list *pidfile_list;
 extern struct list *iface_list;
+extern struct list *temp_list;
 
 extern char *tbinary;
 extern char *rbinary;
@@ -129,8 +134,8 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 int open_netcheck(struct list *tlist);
 
 /** temp.c **/
-int open_tempcheck(char *name);
-int check_temp(void);
+int open_tempcheck(struct list *tlist);
+int check_temp(struct list *act);
 int close_tempcheck(void);
 
 /** test_binary.c **/

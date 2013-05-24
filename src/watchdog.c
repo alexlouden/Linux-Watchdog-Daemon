@@ -367,12 +367,19 @@ int main(int argc, char *const argv[])
 		for (act = iface_list; act != NULL; act = act->next)
 			log_message(LOG_INFO, "interface: %s", act->name);
 
-	log_message(LOG_INFO, "test=%s(%ld) repair=%s(%ld) alive=%s heartbeat=%s temp=%s to=%s no_act=%s force=%s",
+	if (temp_list == NULL)
+		log_message(LOG_INFO, "temperature: no sensors to check");
+	else {
+		log_message(LOG_INFO, "temperature: maximum = %d", maxtemp);
+		for (act = temp_list; act != NULL; act = act->next)
+			log_message(LOG_INFO, "temperature: %s", act->name);
+	}
+
+	log_message(LOG_INFO, "test=%s(%ld) repair=%s(%ld) alive=%s heartbeat=%s to=%s no_act=%s force=%s",
 		(tbinary == NULL) ? "none" : tbinary, test_timeout,
 		(rbinary == NULL) ? "none" : rbinary, repair_timeout,
 		(devname == NULL) ? "none" : devname,
 		(heartbeat == NULL) ? "none" : heartbeat,
-		(tempname == NULL) ? "none" : tempname,
 		(admin == NULL) ? "noone" : admin, 
 		(no_act == TRUE) ? "yes" : "no",
 		(force == TRUE) ? "yes" : "no");
@@ -380,7 +387,7 @@ int main(int argc, char *const argv[])
 	/* open the device */
 	if (no_act == FALSE) {
 		open_watchdog(devname, dev_timeout);
-		open_tempcheck(tempname);
+		open_tempcheck(temp_list);
 	}
 
 	open_heartbeat();
@@ -412,7 +419,8 @@ int main(int argc, char *const argv[])
 		do_check(check_memory(), rbinary, NULL);
 
 		/* check temperature */
-		do_check(check_temp(), rbinary, NULL);
+		for (act = temp_list; act != NULL; act = act->next)
+			do_check(check_temp(act), rbinary, NULL);
 
 		/* in filemode stat file */
 		for (act = file_list; act != NULL; act = act->next)

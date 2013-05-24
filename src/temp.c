@@ -13,31 +13,31 @@
 
 static int temp_fd = -1;
 
-static int templevel1, have1;
-static int templevel2, have2;
-static int templevel3, have3;
+static int templevel1;
+static int templevel2;
+static int templevel3;
 
 /* ================================================================= */
 
-int open_tempcheck(char *name)
+int open_tempcheck(struct list *tlist)
 {
 	int rv = -1;
+	struct list *act;
 
-	if (name != NULL) {
-		/* open the temperature file */
-		temp_fd = open(name, O_RDONLY);
-		if (temp_fd == -1) {
-			log_message(LOG_ERR, "cannot open %s (errno = %d = '%s')", name, errno, strerror(errno));
-		} else {
-			rv = 0;
-		}
+	if (tlist != NULL) {
+		/* Use temp_fd as in-use flag. */
+		temp_fd = 0;
 
 		/*
 		 * Clear flags and set/compute warning and max thresholds. Make
 		 * sure that each level is distinct and properly orderd so that
 		 * we have templevel1 < templevel2 < templevel3 < maxtemp
 		 */
-		have1 = have2 = have3 = FALSE;
+		for (act = tlist; act != NULL; act = act->next) {
+			act->parameter.temp.have1 = FALSE;
+			act->parameter.temp.have2 = FALSE;
+			act->parameter.temp.have3 = FALSE;
+		}
 
 		templevel3 = (maxtemp * 98) / 100;
 		if (templevel3 >= maxtemp) {
@@ -58,59 +58,114 @@ int open_tempcheck(char *name)
 	return rv;
 }
 
+/*
+ * Code to read the ASCII "files" presented by the lm-sensors package with paths such as:
+ *
+ * -r--r--r-- 1 root root 4096 2013-03-09 09:27 /sys/class/hwmon/hwmon0/device/temp1_input
+ * -r--r--r-- 1 root root 4096 2013-03-09 09:01 /sys/class/hwmon/hwmon0/device/temp2_input
+ * -r--r--r-- 1 root root 4096 2013-03-09 09:27 /sys/class/hwmon/hwmon0/device/temp3_input
+ *
+ * Location varies with hardware devices, and you may find two sensors as hwmon0 & hwmon1, etcv
+ * but in my case the above paths are really sym-links to the hardware driver, such as:
+ *
+ * -r--r--r-- 1 root root 4096 2013-03-09 09:27 /sys/devices/platform/w83627ehf.656/temp1_input
+ * -r--r--r-- 1 root root 4096 2013-03-09 09:01 /sys/devices/platform/w83627ehf.656/temp2_input
+ * -r--r--r-- 1 root root 4096 2013-03-09 09:27 /sys/devices/platform/w83627ehf.656/temp3_input
+ *
+ * They have the temperature in C x 1000 but resolution may only be 0.5C or 1C. Typical result is:
+ *
+ * > cat /sys/class/hwmon/hwmon0/device/temp1_input
+ * 36000
+ *
+ * For 36.0C so we read and print as fraction, but truncate so only the whole deg C is used
+ * for the watchdog tests below.
+ */
+
+static int read_temp_sensor(const char *name, int *val)
+{
+	float temp;
+	char buf[128];
+	char *p;
+	int err;
+	FILE *fp;
+
+	fp = fopen(name, "r");
+	if (fp == NULL) {
+		err = errno;
+		log_message(LOG_ERR, "failed to open %s (%s)", name, strerror(err));
+		return err;
+	}
+
+	buf[0] = 0; /* to be safe... */
+	p = fgets(buf, sizeof(buf)-1, fp);
+	err = errno;
+	fclose(fp);
+
+	if (p == NULL) {
+		log_message(LOG_ERR, "failed to read %s (%s)", name, strerror(err));
+		return err;
+	}
+
+	/* New style sensors read in milli-Celsius, convert to deg C as float. */
+	temp = 1.0e-3F * atof(buf);
+
+	if (verbose && logtick && ticker == 1)
+		log_message(LOG_INFO, "current temperature is %.3f for %s", temp, name);
+
+	/* convert to integer of whole deg C, small addition to make sure matches integer version. */
+	*val = (int)(1.0e-5F + temp);
+
+	return ENOERR;
+}
+
 /* ================================================================= */
 
-int check_temp(void)
+int check_temp(struct list *act)
 {
-	unsigned char temperature;
+	int temperature = 0;
+	int err;
 
 	/* is the temperature device open? */
 	if (temp_fd == -1)
 		return (ENOERR);
 
-	/* read the line (there is only one) */
-	if (read(temp_fd, &temperature, sizeof(temperature)) < 0) {
-		int err = errno;
-		log_message(LOG_ERR, "read temperature gave errno = %d = '%s'", err, strerror(err));
-
+	err = read_temp_sensor(act->name, &temperature);
+	if (err != ENOERR) {
 		if (softboot)
 			return (err);
 
 		return (ENOERR);
 	}
 
-	if (verbose && logtick && ticker == 1)
-		log_message(LOG_INFO, "current temperature is %d", temperature);
-
 	/* Print out warnings as we cross the 90/95/98 percent thresholds. */
 	if (temperature > templevel3) {
-		if (!have3) {
+		if (!act->parameter.temp.have3) {
 			/* once we reach level3, issue a warning once. */
-			log_message(LOG_WARNING, "temperature increases above %d", templevel3);
-			have1 = have2 = have3 = TRUE;
+			log_message(LOG_WARNING, "temperature increases above %d (%s)", templevel3, act->name);
+			act->parameter.temp.have1 = act->parameter.temp.have2 = act->parameter.temp.have3 = TRUE;
 		}
 	} else if (temperature > templevel2) {
-		if (!have2) {
-			log_message(LOG_WARNING, "temperature increases above %d", templevel2);
-			have1 = have2 = TRUE;
+		if (!act->parameter.temp.have2) {
+			log_message(LOG_WARNING, "temperature increases above %d (%s)", templevel2, act->name);
+			act->parameter.temp.have1 = act->parameter.temp.have2 = TRUE;
 		}
-		have3 = FALSE;
+		act->parameter.temp.have3 = FALSE;
 	} else if (temperature > templevel1) {
-		if (!have1) {
-			log_message(LOG_WARNING, "temperature increases above %d", templevel1);
-			have1 = TRUE;
+		if (!act->parameter.temp.have1) {
+			log_message(LOG_WARNING, "temperature increases above %d (%s)", templevel1, act->name);
+			act->parameter.temp.have1 = TRUE;
 		}
-		have2 = have3 = FALSE;
+		act->parameter.temp.have2 = act->parameter.temp.have3 = FALSE;
 	} else {
 		/* Below all thresholds, report clear only if previously set. */
-		if (have1 || have2 || have3) {
-			log_message(LOG_INFO, "temperature now OK again");
+		if (act->parameter.temp.have1 || act->parameter.temp.have2 || act->parameter.temp.have3) {
+			log_message(LOG_INFO, "temperature now OK again for %s", act->name);
 		}
-		have1 = have2 = have3 = FALSE;
+		act->parameter.temp.have1 = act->parameter.temp.have2 = act->parameter.temp.have3 = FALSE;
 	}
 
 	if (temperature >= maxtemp) {
-		log_message(LOG_ERR, "it is too hot inside (temperature = %d >= %d)", temperature, maxtemp);
+		log_message(LOG_ERR, "it is too hot inside (temperature = %d >= %d for %s)", temperature, maxtemp, act->name);
 		return (ETOOHOT);
 	}
 	return (ENOERR);
@@ -122,9 +177,7 @@ int close_tempcheck(void)
 {
 	int rv = -1;
 
-	if (temp_fd != -1 && close(temp_fd) == -1) {
-		log_message(LOG_ALERT, "cannot close temperature device (errno = %d)", errno);
-	} else {
+	if (temp_fd != -1) {
 		rv = 0;
 	}
 
