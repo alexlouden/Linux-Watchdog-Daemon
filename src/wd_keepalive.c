@@ -43,7 +43,7 @@ static int watchdog = -1;
 static void usage(char *progname)
 {
 	fprintf(stderr, "%s version %d.%d, usage:\n", progname, MAJOR_VERSION, MINOR_VERSION);
-	fprintf(stderr, "%s \n", progname);
+	fprintf(stderr, "%s [-c | --config-file <config_file>]\n", progname);
 	exit(1);
 }
 
