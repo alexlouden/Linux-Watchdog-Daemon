@@ -87,13 +87,9 @@ static void log_end(void)
 static void close_all(void)
 {
 	close_watchdog();
-
 	close_loadcheck();
-
 	close_memcheck();
-
 	close_tempcheck();
-
 	close_heartbeat();
 }
 
@@ -107,6 +103,7 @@ void terminate(void)
 {
 	unlock_our_memory();
 	close_all();
+	remove_pid_file();
 	log_end();
 	exit(0);
 }
@@ -117,6 +114,7 @@ static void panic(void)
 	/* if we are still alive, we just exit */
 	close_all();
 	open_logging(NULL, MSG_TO_STDERR | MSG_TO_SYSLOG);
+	remove_pid_file();
 	log_message(LOG_ALERT, "WATCHDOG PANIC: still alive after sleeping %d seconds", 4 * dev_timeout);
 	close_logging();
 	exit(1);

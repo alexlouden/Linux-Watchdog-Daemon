@@ -81,6 +81,7 @@ void terminate(void)
 {
 	unlock_our_memory();
 	close_all();
+	remove_pid_file();
 	log_end();
 	exit(0);
 }
@@ -180,6 +181,11 @@ int main(int argc, char *const argv[])
 	close(2);
 #endif				/* !DEBUG */
 
+	/* tuck my process id away */
+	if (write_pid_file(KA_PIDFILE)) {
+		fatal_error(EX_USAGE, "unable to gain lock via PID file");
+	}
+
 	/* Log the starting message */
 	open_logging(NULL, MSG_TO_SYSLOG);
 	log_message(LOG_INFO, "starting watchdog keepalive daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
@@ -187,7 +193,6 @@ int main(int argc, char *const argv[])
 		log_message(LOG_INFO, " no watchdog device configured, aborting");
 	else
 		log_message(LOG_INFO, " int=%d alive=%s realtime=%s", tint, devname, realtime ? "yes" : "no");
-
 
 	/* this daemon has no other function than writing to this device 
 	 * i.e. if there is no device given we better punt */
@@ -208,9 +213,6 @@ int main(int argc, char *const argv[])
 		ident.identity[sizeof(ident.identity) - 1] = '\0';	/* Be sure */
 		log_message(LOG_INFO, "hardware watchdog identity: %s", ident.identity);
 	}
-
-	/* tuck my process id away */
-	write_pid_file(KA_PIDFILE);
 
 	/* set signal term to call sigterm_handler() */
 	/* to make sure watchdog device is closed */

@@ -163,6 +163,7 @@ void unlock_our_memory(void);
 
 /** daemon-pid.c **/
 int write_pid_file(const char *fname);
+int remove_pid_file(void);
 
 /** configfile.c **/
 void read_config(char *configfile);

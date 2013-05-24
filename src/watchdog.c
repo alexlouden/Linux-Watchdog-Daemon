@@ -333,8 +333,12 @@ int main(int argc, char *const argv[])
 	}
 #endif				/* !DEBUG */
 
-	/* Log the starting message */
+	/* tuck my process id away */
+	if (write_pid_file(PIDFILE)) {
+		fatal_error(EX_USAGE, "unable to gain lock via PID file");
+	}
 
+	/* Log the starting message */
 	log_message(LOG_INFO, "starting daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
 	log_message(LOG_INFO, "int=%ds realtime=%s sync=%s soft=%s mla=%d mem=%d",
 	       tint, realtime ? "yes" : "no", sync_it ? "yes" : "no", softboot ? "yes" : "no", maxload1, minpages);
@@ -363,13 +367,15 @@ int main(int argc, char *const argv[])
 		for (act = iface_list; act != NULL; act = act->next)
 			log_message(LOG_INFO, "interface: %s", act->name);
 
-	log_message(LOG_INFO, "test=%s(%ld) repair=%s(%ld) alive=%s heartbeat=%s temp=%s to=%s no_act=%s",
-	       (tbinary == NULL) ? "none" : tbinary, test_timeout,
-	       (rbinary == NULL) ? "none" : rbinary, repair_timeout,
-	       (devname == NULL) ? "none" : devname,
-	       (heartbeat == NULL) ? "none" : heartbeat,
-	       (tempname == NULL) ? "none" : tempname,
-	       (admin == NULL) ? "noone" : admin, (no_act == TRUE) ? "yes" : "no");
+	log_message(LOG_INFO, "test=%s(%ld) repair=%s(%ld) alive=%s heartbeat=%s temp=%s to=%s no_act=%s force=%s",
+		(tbinary == NULL) ? "none" : tbinary, test_timeout,
+		(rbinary == NULL) ? "none" : rbinary, repair_timeout,
+		(devname == NULL) ? "none" : devname,
+		(heartbeat == NULL) ? "none" : heartbeat,
+		(tempname == NULL) ? "none" : tempname,
+		(admin == NULL) ? "noone" : admin, 
+		(no_act == TRUE) ? "yes" : "no",
+		(force == TRUE) ? "yes" : "no");
 
 	/* open the device */
 	if (no_act == FALSE) {
@@ -382,9 +388,6 @@ int main(int argc, char *const argv[])
 	open_loadcheck();
 
 	open_memcheck();
-
-	/* tuck my process id away */
-	write_pid_file(PIDFILE);
 
 	/* set signal term to set our run flag to 0 so that */
 	/* we make sure watchdog device is closed when receiving SIGTERM */
