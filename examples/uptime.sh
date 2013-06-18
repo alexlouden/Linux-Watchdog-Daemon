@@ -18,9 +18,9 @@ days=`expr $upt / 8640000`
 if [ $days -ge 2 ]
 then
 #	
-#	return code -1 means reboot
+#	return code 201 means reboot
 #
-	exit -1
+	exit 201
 fi
 
 exit 0

@@ -23,7 +23,7 @@ then
 #	so we have to create our own (system codes are > 0): -2.
 #	note that -1 means reboot
 #
-	result=-2
+	result=202
 fi
 
 exit $result
