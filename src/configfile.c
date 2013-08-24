@@ -72,7 +72,7 @@ char *admin = "root";
 
 time_t	test_timeout = 0;				/* test-binary time out value. */
 time_t	repair_timeout = 0;				/* repair-binary time out value. */
-int		dev_timeout = TIMER_MARGIN;		/* Watchdog harware time-out. */
+int	dev_timeout = TIMER_MARGIN;			/* Watchdog hardware time-out. */
 
 char *logdir = "/var/log/watchdog";
 
