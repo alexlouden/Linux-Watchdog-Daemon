@@ -1,4 +1,4 @@
-.TH WATCHDOG 8 "January 2005"
+.TH WATCHDOG 8 "August 2013"
 .UC 4
 .SH NAME
 watchdog \- a software watchdog daemon
@@ -218,7 +218,7 @@ repair binary.
 .PP
 .B watchdog
 can run an external command for user-defined tests. A return code not equal 0
-means an error occured and watchdog should react. If the external command is
+means an error occurred and watchdog should react. If the external command is
 killed by an uncaught signal this is considered an error by watchdog too.
 The command may take longer than the time slice defined for the kernel device
 without a problem. However, error messages are
@@ -271,52 +271,57 @@ error and reboot the system. Be careful with this if you are using the
 real-time properties of watchdog since 
 .B watchdog 
 will wait for the return of
-this binary before proceeding. An exit code smaller than 200 is interpreted as an
+this binary before proceeding. An exit code smaller than 245 is interpreted as an
 system error code (see 
 .I errno.h 
-for details). Values larger than 200 are special to
+for details). Values of 245 or larger than are special to
 .BR watchdog :
 .TP
-201 
+255 (based on \-1 as unsigned 8\-bit number) 
 Reboot the system. This is not exactly an error message but a command to
 .BR watchdog . 
-If the return code is 201 
+If the return code is this the 
 .B watchdog 
 will not try to run a shutdown
 script instead.
 .TP
-202 
+254 
 Reset the system. This is not exactly an error message but a command to
 .BR watchdog . 
-If the return code is 202 
+If the return code is this the 
 .B watchdog will simply refuse to write the
 kernel device again.
 .TP
-203 
+253 
 Maximum load average exceeded.
 .TP
-204 
+252 
 The temperature inside is too high.
 .TP
-205 
+251 
 .I /proc/loadavg 
 contains no (or not enough) data.
 .TP
-206 
+250 
 The given file was not changed in the given interval.
 .TP
-207 
+249 
 .I /proc/meminfo 
 contains invalid data.
 .TP
-208
+248
 Child process was killed by a signal.
 .TP
-209
+247
 Child process did not return in time.
 .TP
-210 
-Free for personal use.
+246 
+Free for personal watchdog-specific use (was \-10 as an unsigned 8\-bit 
+number).
+.TP
+245 
+Reserved for an unknown result, for example a slow background test that is 
+still running so neither a success nor an error.
 .SH "REPAIR BINARY"
 The repair binary is started with one parameter: the error number that
 caused 

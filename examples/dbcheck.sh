@@ -21,9 +21,10 @@ then
 #
 #	obviously there is no system error code for this
 #	so we have to create our own (system codes are > 0): -2.
-#	note that -1 means reboot
+#	note that 255 (-1 as unsigned 8-bit) means reboot
+#	and 254 (-2) means hard reset.
 #
-	result=202
+	result=254
 fi
 
 exit $result
