@@ -6,7 +6,7 @@
  * Author:      Marcel Jansen, 22 February 2001
  * 		Michael Meskes, since then
  * Purpose:     This program can be run during critical periods
- *              when the normal watcdog shouldn't be run. It will
+ *              when the normal watchdog shouldn't be run. It will
  *              read from the same configuration file, it will do
  *              no checks but will keep writing to the device
  *
@@ -38,7 +38,6 @@
 #define FALSE 0
 
 volatile sig_atomic_t _running = 1;
-static int watchdog = -1;
 
 static void usage(char *progname)
 {
@@ -53,22 +52,20 @@ static void log_end(void)
 	/* Log the closing message */
 	log_message(LOG_INFO, "stopping watchdog keepalive daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
 	close_logging();
-	sleep(5);		/* make sure log is written */
+	usleep(100000);		/* 0.1s to make sure log is written */
 	return;
+}
+
+/* Dummy function for keep_alive.c use */
+int write_heartbeat(void)
+{
+return 0;
 }
 
 /* close the device and check for error */
 static void close_all(void)
 {
-	if (watchdog != -1) {
-		if (write(watchdog, "V", 1) < 0) {
-			int err = errno;
-			log_message(LOG_ERR, "write watchdog device gave error %d = '%s'!", err, strerror(err));
-		}
-		if (close(watchdog) == -1) {
-			log_message(LOG_ALERT, "cannot close %s (errno = %d)", devname, errno);
-		}
-	}
+	close_watchdog();
 }
 
 void sigterm_handler(int arg)
@@ -105,7 +102,6 @@ int main(int argc, char *const argv[])
 		{"softboot", no_argument, NULL, 'b'},
 		{NULL, 0, NULL, 0}
 	};
-	struct watchdog_info ident;
 
 	progname = basename(argv[0]);
 	open_logging(progname, MSG_TO_STDERR | MSG_TO_SYSLOG);
@@ -200,18 +196,10 @@ int main(int argc, char *const argv[])
 		terminate();
 
 	/* open the device */
-	watchdog = open(devname, O_WRONLY);
-	if (watchdog == -1) {
-		log_message(LOG_ERR, "cannot open %s (errno = %d = '%s')", devname, errno, strerror(errno));
+	if (open_watchdog(devname, dev_timeout) < 0) {
+		remove_pid_file();
+		log_end();
 		exit(1);
-	}
-
-	/* Also log watchdog identity */
-	if (ioctl(watchdog, WDIOC_GETSUPPORT, &ident) < 0) {
-		log_message(LOG_ERR, "cannot get watchdog identity (errno = %d = '%s')", errno, strerror(errno));
-	} else {
-		ident.identity[sizeof(ident.identity) - 1] = '\0';	/* Be sure */
-		log_message(LOG_INFO, "hardware watchdog identity: %s", ident.identity);
 	}
 
 	/* set signal term to call sigterm_handler() */
@@ -222,11 +210,7 @@ int main(int argc, char *const argv[])
 
 	/* main loop: update after <tint> seconds */
 	while (_running) {
-		if (write(watchdog, "\0", 1) < 0) {
-			int err = errno;
-			log_message(LOG_ERR, "write watchdog device gave error %d = '%s'!", err, strerror(err));
-		}
-
+		keep_alive();
 		/* finally sleep some seconds */
 		sleep(tint);
 

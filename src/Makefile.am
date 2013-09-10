@@ -6,7 +6,8 @@ watchdog_SOURCES = file_stat.c file_table.c fstab.c iface.c ifdown.c keep_alive.
 			temp.c test_binary.c umount.c version.c watchdog.c \
 			logmessage.c xmalloc.c heartbeat.c lock_mem.c daemon-pid.c configfile.c
 
-wd_keepalive_SOURCES = wd_keepalive.c logmessage.c lock_mem.c daemon-pid.c xmalloc.c configfile.c
+wd_keepalive_SOURCES = wd_keepalive.c logmessage.c lock_mem.c daemon-pid.c xmalloc.c \
+			configfile.c keep_alive.c
 
 wd_identify_SOURCES = wd_identify.c logmessage.c xmalloc.c configfile.c
 
