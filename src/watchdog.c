@@ -42,15 +42,15 @@ char *filename_buf;
 static void usage(char *progname)
 {
 	fprintf(stderr, "%s version %d.%d, usage:\n", progname, MAJOR_VERSION, MINOR_VERSION);
-	fprintf(stderr, "%s [options] ", progname);
-	fprintf(stderr, "options: ");
-	fprintf(stderr, "  -F | --foreground          run in foreground ");
-	fprintf(stderr, "  -f | --force               don't sanity-check config ");
-	fprintf(stderr, "  -c | --config-file <file>  specify location of config file ");
-	fprintf(stderr, "  -s | --sync                sync filesystem ");
-	fprintf(stderr, "  -b | --softboot            soft-boot on error ");
-	fprintf(stderr, "  -q | --no-action           do not reboot or halt ");
-	fprintf(stderr, "  -v | --verbose             verbose messages ");
+	fprintf(stderr, "%s [options]\n", progname);
+	fprintf(stderr, "options:\n");
+	fprintf(stderr, "  -c | --config-file <file>  specify location of config file\n");
+	fprintf(stderr, "  -f | --force               don't sanity-check config\n");
+	fprintf(stderr, "  -F | --foreground          run in foreground\n");
+	fprintf(stderr, "  -q | --no-action           do not reboot or halt\n");
+	fprintf(stderr, "  -b | --softboot            soft-boot on error\n");
+	fprintf(stderr, "  -s | --sync                sync filesystem\n");
+	fprintf(stderr, "  -v | --verbose             verbose messages\n");
 	exit(1);
 }
 
