@@ -23,103 +23,13 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
-#define DEVICE		"watchdog-device"
+#include "extern.h"
 
-int watchdog = -1;
-char *devname = NULL, *progname = NULL;
-
-static void usage(void)
+static void usage(char *progname)
 {
 	fprintf(stderr, "%s version %d.%d, usage:\n", progname, MAJOR_VERSION, MINOR_VERSION);
 	fprintf(stderr, "%s [-c | --config-file <config_file>]\n", progname);
 	exit(1);
-}
-
-void terminate(void)
-{
-	if (watchdog != -1) {
-		if (write(watchdog, "V", 1) < 0)
-			perror(progname);
-
-		if (close(watchdog) == -1)
-			perror(progname);
-	}
-
-	exit(0);
-}
-
-static int spool(char *line, int *i, int offset)
-{
-	for ((*i) += offset; line[*i] == ' ' || line[*i] == '\t'; (*i)++) ;
-	if (line[*i] == '=')
-		(*i)++;
-	for (; line[*i] == ' ' || line[*i] == '\t'; (*i)++) ;
-	if (line[*i] == '\0')
-		return (1);
-	else
-		return (0);
-}
-
-static void read_config(char *configfile, char *progname)
-{
-	FILE *wc;
-
-	if ((wc = fopen(configfile, "r")) == NULL) {
-		perror(progname);
-		exit(1);
-	}
-
-	while (!feof(wc)) {
-		char *line = NULL;
-		size_t n;
-
-		if (getline(&line, &n, wc) == -1) {
-			if (!ferror(wc))
-				break;
-			else {
-				perror(progname);
-				exit(1);
-			}
-		} else {
-			int i, j;
-
-			/* scan the actual line for an option */
-			/* first remove the leading blanks */
-			for (i = 0; line[i] == ' ' || line[i] == '\t'; i++) ;
-
-			/* if the next sign is a '#' we have a comment */
-			if (line[i] == '#')
-				continue;
-
-			/* also remove the trailing blanks and the \n */
-			for (j = strlen(line) - 1; line[j] == ' ' || line[j] == '\t' || line[j] == '\n'; j--) ;
-			line[j + 1] = '\0';
-
-			/* if the line is empty now, we don't have to parse it */
-			if (strlen(line + i) == 0)
-				continue;
-
-			/* now check for an option */
-			if (strncmp(line + i, DEVICE, strlen(DEVICE)) == 0) {
-				if (spool(line, &i, strlen(DEVICE)))
-					devname = NULL;
-				else
-					devname = strdup(line + i);
-			} else {
-				/*
-				 * do not print an error message here because we usually use
-				 * watchdog's config file which may contain far more valid
-				 * options than we understand 
-				 */
-				/* fprintf(stderr, "Ignoring config line: %s\n", line); */
-			}
-		}
-	}
-
-	if (fclose(wc) != 0) {
-		perror(progname);
-		exit(1);
-	}
 }
 
 int main(int argc, char *const argv[])
@@ -132,8 +42,10 @@ int main(int argc, char *const argv[])
 		{"config-file", required_argument, NULL, 'c'},
 		{NULL, 0, NULL, 0}
 	};
+	int watchdog = -1;
+	char *progname = basename(argv[0]);
 
-	progname = basename(argv[0]);
+	open_logging(progname, MSG_TO_STDERR);
 
 	/* check for the one option we understand */
 	while ((c = getopt_long(argc, argv, opts, long_options, NULL)) != EOF) {
@@ -144,37 +56,40 @@ int main(int argc, char *const argv[])
 			configfile = optarg;
 			break;
 		default:
-			usage();
+			usage(progname);
 		}
 	}
 
-	read_config(configfile, progname);
+	read_config(configfile);
 
-	/* this program has no other function than iidentifying the hardware behind
+	/* this program has no other function than identifying the hardware behind
 	 * this device i.e. if there is no device given we better punt */
-	if (devname == NULL)
+	if (devname == NULL) {
+		printf("No watchdog hardware configured in \"%s\"\n", configfile);
 		exit(0);
+	}
 
 	/* open the device */
 	watchdog = open(devname, O_WRONLY);
 	if (watchdog == -1) {
-		perror(progname);
+		log_message(LOG_ERR, "cannot open %s (errno = %d = '%s')", devname, errno, strerror(errno));
 		exit(1);
 	}
 
 	/* Print watchdog identity */
 	if (ioctl(watchdog, WDIOC_GETSUPPORT, &ident) < 0) {
-		perror(progname);
+		log_message(LOG_ERR, "cannot get watchdog identity (errno = %d = '%s')", errno, strerror(errno));
 	} else {
 		ident.identity[sizeof(ident.identity) - 1] = '\0';	/* Be sure */
 		printf("%s\n", ident.identity);
 	}
 
 	if (write(watchdog, "V", 1) < 0)
-		perror(progname);
+		log_message(LOG_ERR, "write watchdog device gave error %d = '%s'!", errno, strerror(errno));
 
 	if (close(watchdog) == -1)
-		perror(progname);
+		log_message(LOG_ALERT, "cannot close watchdog (errno = %d = '%s')", errno, strerror(errno));
 
+	close_logging();
 	exit(0);
 }

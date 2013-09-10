@@ -8,7 +8,7 @@ watchdog_SOURCES = file_stat.c file_table.c fstab.c iface.c ifdown.c keep_alive.
 
 wd_keepalive_SOURCES = wd_keepalive.c logmessage.c lock_mem.c daemon-pid.c xmalloc.c configfile.c
 
-wd_identify_SOURCES = wd_identify.c
+wd_identify_SOURCES = wd_identify.c logmessage.c xmalloc.c configfile.c
 
 INCLUDES = -I@top_srcdir@/include
 
