@@ -114,7 +114,6 @@ static void panic(void)
 	/* if we are still alive, we just exit */
 	close_all();
 	open_logging(NULL, MSG_TO_STDERR | MSG_TO_SYSLOG);
-	remove_pid_file();
 	log_message(LOG_ALERT, "WATCHDOG PANIC: still alive after sleeping %d seconds", 4 * dev_timeout);
 	close_logging();
 	exit(1);
@@ -368,10 +367,14 @@ void do_shutdown(int errorcode)
 	(void)killall5(SIGKILL);
 	keep_alive();
 
+	/* Remove our PID file, as nothing should be capable of starting a 2nd daemon now. */
+	remove_pid_file();
+
 	/* Record the fact that we're going down */
 	if ((fd = open(_PATH_WTMP, O_WRONLY | O_APPEND)) >= 0) {
 		time_t t;
 		struct utmp wtmp;
+		memset(&wtmp, 0, sizeof(wtmp));
 
 		time(&t);
 		strcpy(wtmp.ut_user, "shutdown");
