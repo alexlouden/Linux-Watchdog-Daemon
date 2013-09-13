@@ -337,6 +337,13 @@ static void add_test_binaries(const char *path)
 			continue;
 		if (!S_ISREG(sb.st_mode))
 			continue;
+
+		/* Skip any hidden files - a bit suspicious. */
+		if(dentry.d_name[0] == '.') {
+			log_message(LOG_WARNING, "skipping hidden file %s", fname);
+			continue;
+		}
+
 		if (!(sb.st_mode & S_IXUSR))
 			continue;
 		if (!(sb.st_mode & S_IRUSR))
