@@ -255,7 +255,6 @@ static void killall5(int sig)
 	for (p = plist; p; p = p->next)
 		if (p->pid != daemon_pid &&	/* Skip our process */
 			p->sid != sid && 	/* Skip our session */
-			p->pid != 1 &&		/* Skip any kernel process. */
 			p->sid != 0) 		/* Skip any kernel process. */
 				kill(p->pid, sig);
 
