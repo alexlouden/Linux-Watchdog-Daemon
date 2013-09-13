@@ -433,6 +433,12 @@ void do_shutdown(int errorcode)
 
 	/* finally reboot */
 	if (errorcode != ETOOHOT) {
+		if (get_watchdog_fd() != -1) {
+			/* We have a hardware timer, try using that for a quick reboot first. */
+			set_watchdog_timeout(1);
+			sleep(dev_timeout * 4);
+		}
+		/* That failed, or was not possible, ask kernel to do it for us. */
 #ifdef __GLIBC__
 		reboot(RB_AUTOBOOT);
 #else				/* __GLIBC__ */
