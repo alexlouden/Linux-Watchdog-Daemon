@@ -25,7 +25,7 @@ static void add_test_binaries(const char *path);
 #define ADMIN			"admin"
 #define CHANGE			"change"
 #define DEVICE			"watchdog-device"
-#define DEVICE_TIMEOUT	"watchdog-timeout"
+#define DEVICE_TIMEOUT		"watchdog-timeout"
 #define	FILENAME		"file"
 #define INTERFACE		"interface"
 #define INTERVAL		"interval"
@@ -35,14 +35,16 @@ static void add_test_binaries(const char *path);
 #define MAXLOAD15		"max-load-15"
 #define MAXTEMP			"max-temperature"
 #define MINMEM			"min-memory"
-#define SERVERPIDFILE	"pidfile"
+#define SERVERPIDFILE		"pidfile"
 #define PING			"ping"
 #define PINGCOUNT		"ping-count"
 #define PRIORITY		"priority"
 #define REALTIME		"realtime"
 #define REPAIRBIN		"repair-binary"
-#define REPAIRTIMEOUT	"repair-timeout"
+#define REPAIRTIMEOUT		"repair-timeout"
+#define SOFTBOOT		"softboot-option"
 #define TEMP			"temperature-device"
+#define TEMPPOWEROFF   		"temp-power-off"
 #define TESTBIN			"test-binary"
 #define TESTTIMEOUT		"test-timeout"
 #define HEARTBEAT		"heartbeat-file"
@@ -66,6 +68,7 @@ int maxload15 = 0;
 int minpages = 0;
 int maxtemp = 120;
 int pingcount = 3;
+int temp_poweroff = TRUE;
 
 char *devname = NULL;
 char *admin = "root";
@@ -281,6 +284,12 @@ void read_config(char *configfile)
 			} else if (strncmp(line + i, TESTDIR, strlen(TESTDIR)) == 0) {
 				if (!spool(line, &i, strlen(TESTDIR)))
 					test_dir = xstrdup(line + i);
+			} else if (strncmp(line + i, SOFTBOOT, strlen(SOFTBOOT)) == 0) {
+				if (!spool(line, &i, strlen(SOFTBOOT)))
+					softboot = (strncmp(line + i, "yes", 3) == 0) ? TRUE : FALSE;
+			} else if (strncmp(line + i, TEMPPOWEROFF, strlen(TEMPPOWEROFF)) == 0) {
+				if (!spool(line, &i, strlen(TEMPPOWEROFF)))
+					temp_poweroff = (strncmp(line + i, "yes", 3) == 0) ? TRUE : FALSE;
 			} else {
 				fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 			}

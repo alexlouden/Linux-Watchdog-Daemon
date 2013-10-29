@@ -56,7 +56,7 @@ struct list {
 #define TS_SIZE	12
 
 /* === External variables === */
-#if 1
+/* From configfile.c */
 extern int tint;
 extern int logtick;
 extern int ticker;
@@ -67,13 +67,14 @@ extern int maxload15;
 extern int minpages;
 extern int maxtemp;
 extern int pingcount;
+extern int temp_poweroff;
 
 extern char *devname;
 extern char *admin;
 
 extern time_t	test_timeout;		/* test-binary time out value. */
 extern time_t	repair_timeout;		/* repair-binary time out value. */
-extern int		dev_timeout;		/* Watchdog hardware time-out. */
+extern int	dev_timeout;		/* Watchdog hardware time-out. */
 
 extern char *logdir;
 
@@ -96,10 +97,12 @@ extern char *rbinary;
 
 extern int softboot;
 extern int verbose;
-extern char *filename_buf;
-extern pid_t daemon_pid;
 
-#endif
+/* From watchdog.c */
+extern char *filename_buf;
+
+/* From daemon-pid.c */
+extern pid_t daemon_pid;
 
 /* === Function prototypes === */
 

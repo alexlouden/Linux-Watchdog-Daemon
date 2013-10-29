@@ -46,6 +46,7 @@
 #define RB_AUTOBOOT	0xfee1dead,672274793,0x01234567 /* Perform a hard reset now.  */
 #define RB_ENABLE_CAD	0xfee1dead,672274793,0x89abcdef /* Enable reboot using Ctrl-Alt-Delete keystroke.  */
 #define RB_HALT_SYSTEM	0xfee1dead,672274793,0xcdef0123 /* Halt the system.  */
+#define RB_POWER_OFF	0xfee1dead,672274793,0x4321fedc /* Stop system and switch power off if possible.  */
 #endif /*RB_AUTOBOOT*/
 #endif /* !__GLIBC__ */
 
@@ -461,11 +462,15 @@ void do_shutdown(int errorcode)
 		/* That failed, or was not possible, ask kernel to do it for us. */
 		reboot(RB_AUTOBOOT);
 	} else {
-		/* Rebooting makes no sense if it's too hot. */
-		/* Turn on hard reboot, CTRL-ALT-DEL will reboot now. */
-		reboot(RB_ENABLE_CAD);
-		/* And perform the `halt' system call. */
-		reboot(RB_HALT_SYSTEM);
+		if (temp_poweroff) {
+		        /* Tell system to power off if possible. */
+		        reboot(RB_POWER_OFF);
+		} else {
+		        /* Turn on hard reboot, CTRL-ALT-DEL will reboot now. */
+		        reboot(RB_ENABLE_CAD);
+		        /* And perform the `halt' system call. */
+		        reboot(RB_HALT_SYSTEM);
+		}
 	}
 
 	/* unbelievable: we're still alive */
