@@ -41,6 +41,14 @@
 #define NSIG _NSIG
 #endif
 
+#ifndef __GLIBC__
+#ifndef RB_AUTOBOOT
+#define RB_AUTOBOOT	0xfee1dead,672274793,0x01234567 /* Perform a hard reset now.  */
+#define RB_ENABLE_CAD	0xfee1dead,672274793,0x89abcdef /* Enable reboot using Ctrl-Alt-Delete keystroke.  */
+#define RB_HALT_SYSTEM	0xfee1dead,672274793,0xcdef0123 /* Halt the system.  */
+#endif /*RB_AUTOBOOT*/
+#endif /* !__GLIBC__ */
+
 extern void umount_all(void *);
 extern int ifdown(void);
 #if 0
@@ -93,6 +101,9 @@ static void close_all(void)
 	close_heartbeat();
 }
 
+/*
+ * Used to tell the main() code to exit gracefully.
+ */
 void sigterm_handler(int arg)
 {
 	_running = 0;
@@ -111,10 +122,17 @@ void terminate(void)
 /* panic: we're still alive but shouldn't */
 static void panic(void)
 {
-	/* if we are still alive, we just exit */
-	close_all();
+	/*
+	 * Okay we should never reach this point,
+	 * but if we do we will cause the hard reset
+	 */
 	open_logging(NULL, MSG_TO_STDERR | MSG_TO_SYSLOG);
+	log_message(LOG_ALERT, "WATCHDOG PANIC: failed to reboot, trying hard-reset");
+	sleep(dev_timeout * 4);
+
+	/* if we are still alive, we just exit */
 	log_message(LOG_ALERT, "WATCHDOG PANIC: still alive after sleeping %d seconds", 4 * dev_timeout);
+	close_all();
 	close_logging();
 	exit(1);
 }
@@ -441,32 +459,14 @@ void do_shutdown(int errorcode)
 			sleep(dev_timeout * 4);
 		}
 		/* That failed, or was not possible, ask kernel to do it for us. */
-#ifdef __GLIBC__
 		reboot(RB_AUTOBOOT);
-#else				/* __GLIBC__ */
-		reboot(0xfee1dead, 672274793, 0x01234567);
-#endif				/* __GLIBC__ */
 	} else {
-		/* rebooting makes no sense if it's too hot */
-		/* Turn on hard reboot, CTRL-ALT-DEL will reboot now */
-#ifdef __GLIBC__
+		/* Rebooting makes no sense if it's too hot. */
+		/* Turn on hard reboot, CTRL-ALT-DEL will reboot now. */
 		reboot(RB_ENABLE_CAD);
-#else				/* __GLIBC__ */
-		reboot(0xfee1dead, 672274793, 0x89abcdef);
-#endif				/* __GLIBC__ */
-
 		/* And perform the `halt' system call. */
-#ifdef __GLIBC__
 		reboot(RB_HALT_SYSTEM);
-#else				/* __GLIBC__ */
-		reboot(0xfee1dead, 672274793, 0xcdef0123);
-#endif
 	}
-
-	/* okay we should never reach this point, */
-	/* but if we do we will cause the hard reset */
-
-	sleep(dev_timeout * 4);
 
 	/* unbelievable: we're still alive */
 	panic();
