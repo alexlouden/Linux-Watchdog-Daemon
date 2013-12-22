@@ -27,6 +27,7 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <linux/oom.h>
 #include <linux/watchdog.h>
 #include <libgen.h>
 #include <string.h>
