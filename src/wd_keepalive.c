@@ -1,5 +1,6 @@
 /**********************************************************
  * Copyright:   Appliance Studio Ltd
+ *              Michael Meskes
  * License:	GPL
  *
  * Filename:    $Id: wd_keepalive.c,v 1.6 2007/08/17 09:24:54 meskes Exp $    
