@@ -218,9 +218,6 @@ int main(int argc, char *const argv[])
 	/* check the options */
 	/* there aren't that many any more */
 	while ((c = getopt_long(argc, argv, opts, long_options, NULL)) != EOF) {
-		if (c == -1)
-			break;
-
 		switch (c) {
 		case 'n':
 		case 'p':
@@ -380,7 +377,7 @@ int main(int argc, char *const argv[])
 		(rbinary == NULL) ? "none" : rbinary, repair_timeout,
 		(devname == NULL) ? "none" : devname,
 		(heartbeat == NULL) ? "none" : heartbeat,
-		(admin == NULL) ? "noone" : admin, 
+		(admin == NULL) ? "none" : admin, 
 		(no_act == TRUE) ? "yes" : "no",
 		(force == TRUE) ? "yes" : "no");
 

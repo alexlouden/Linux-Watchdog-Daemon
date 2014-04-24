@@ -110,8 +110,6 @@ int main(int argc, char *const argv[])
 
 	/* check for the one option we understand */
 	while ((c = getopt_long(argc, argv, opts, long_options, NULL)) != EOF) {
-		if (c == -1)
-			break;
 		switch (c) {
 		case 'c':
 			configfile = optarg;
