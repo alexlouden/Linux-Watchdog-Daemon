@@ -228,6 +228,7 @@ static int readproc()
                 */
 		if ((p = (PROC *) calloc(1, sizeof(PROC))) == NULL) {
 			log_message(LOG_ERR, "out of memory");
+			closedir(dir);
 			return (-1);
 		}
 		p->sid = getsid(act_pid);

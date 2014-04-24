@@ -361,4 +361,6 @@ static void add_test_binaries(const char *path)
 		log_message(LOG_DEBUG, "adding %s to list of auto-repair binaries", fname);
 		add_list(&tr_bin_list, fname);
 	} while (1);
+
+	closedir(d);
 }
