@@ -183,7 +183,7 @@ int open_netcheck(struct list *tlist)
 	if (tlist != NULL) {
 		for (act = tlist; act != NULL; act = act->next) {
 			struct protoent *proto;
-			struct pingmode *net = (struct pingmode *)xcalloc(1, sizeof(struct pingmode));
+			struct pingmode *net = &act->parameter.net; /* 'net' is alias of act->parameter.net */
 
 			/* setup the socket */
 			memset(&(net->to), 0, sizeof(struct sockaddr));
@@ -207,8 +207,6 @@ int open_netcheck(struct list *tlist)
 
 			hold = 48 * 1024;
 			(void)setsockopt(net->sock_fp, SOL_SOCKET, SO_RCVBUF, (char *)&hold, sizeof(hold));
-
-			act->parameter.net = *net;
 		}
 	}
 
