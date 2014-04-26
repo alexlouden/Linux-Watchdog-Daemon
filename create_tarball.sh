@@ -2,8 +2,8 @@
 
 # start this script inside the watchdog source tree to create a releasable tarball
 
-major=`grep MAJOR_VERSION= configure.in | cut -f2 -d"="`
-minor=`grep MINOR_VERSION= configure.in | cut -f2 -d"="`
+major=`grep MAJOR_VERSION= configure.ac | cut -f2 -d"="`
+minor=`grep MINOR_VERSION= configure.ac | cut -f2 -d"="`
 if [ -d ../watchdog-$major.$minor ]
 then
 	echo "target directory exists"

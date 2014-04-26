@@ -11,7 +11,7 @@ wd_keepalive_SOURCES = wd_keepalive.c logmessage.c lock_mem.c daemon-pid.c xmall
 
 wd_identify_SOURCES = wd_identify.c logmessage.c xmalloc.c configfile.c
 
-INCLUDES = -I@top_srcdir@/include
+AM_CPPFLAGS = -I@top_srcdir@/include
 
 distclean-depend:
 	rm -rf .deps
