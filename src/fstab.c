@@ -133,7 +133,10 @@ static void read_mounttable()
 	mfp = my_setmntent(fnam, "r");
 	if (mfp == NULL || mfp->mntent_fp == NULL) {
 		int errsv = errno;
+
 		fnam = PROC_MOUNTS;
+		if (mfp != NULL)
+			free(mfp);
 		mfp = my_setmntent(fnam, "r");
 		if (mfp == NULL || mfp->mntent_fp == NULL) {
 			error("warning: can't open %s: %s", MOUNTED, strerror(errsv));
@@ -334,7 +337,7 @@ void update_mtab(const char *dir, struct mntent *instead)
 	}
 
 	mftmp = my_setmntent(MOUNTED_TEMP, "w");
-	if (mftmp == NULL || mfp->mntent_fp == NULL) {
+	if (mftmp == NULL || mftmp->mntent_fp == NULL) {
 		error("can't open %s (%s) - mtab not updated", MOUNTED_TEMP, strerror(errno));
 		goto leave;
 	}
