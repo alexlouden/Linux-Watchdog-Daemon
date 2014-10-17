@@ -1,6 +1,6 @@
 watchdog (5.14-1) unstable; urgency=medium
 
-  * New upstream version.
+  * New upstream version. (Closes: #720501)
   * Bumped Standards-Version to 3.9.6, no changes needed.
   * Made init script cope with more than one module option. (Closes: #719331)
 

@@ -65,8 +65,8 @@ watchdog-device = <device>
 Set the watchdog device name. Default is to disable keep alive support.
 .TP
 watchdog-timeout = <timeout>
-Set the watchdog device timeout during startup.  If not set, the default is
-driver-dependent.
+Set the watchdog device timeout during startup.  If not set, a default is used
+that should be set to the kernel timer margin at compile time.
 .TP
 temperature-device = <temp-dev>
 Set the temperature device name. Default is to disable temperature checking.
