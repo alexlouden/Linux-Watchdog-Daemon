@@ -50,7 +50,7 @@ case "$1" in
     if [ $run_watchdog = 1 ]
     then
     	# do we have to load a module?
-	[ ${watchdog_module:-none} != "none" ] && /sbin/modprobe $watchdog_module
+	[ "${watchdog_module:-none}" != "none" ] && /sbin/modprobe $watchdog_module
 	# make sure that wd_keepalive is stopped
 	log_begin_msg "Stopping watchdog keepalive daemon..."
         start-stop-daemon --stop --quiet --oknodo --retry $STOP_RETRY_SCHEDULE \
@@ -74,7 +74,8 @@ case "$1" in
 	    --pidfile /var/run/$NAME.pid
 	log_end_msg $?
 	if [ $run_wd_keepalive = 1 ]
-	    # make sure that wd_keepalive is started if instructed to do sp
+	then
+	    # make sure that wd_keepalive is started if instructed to do so
 	    log_begin_msg "Starting watchdog keepalive daemon..."
 	    start-stop-daemon --start --quiet --pidfile /var/run/$KEEPALIVE_NAME.pid \
 		--exec $KEEPALIVE_DAEMON -- $watchdog_options

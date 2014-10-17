@@ -1,3 +1,11 @@
+watchdog (5.14-1) unstable; urgency=medium
+
+  * New upstream version.
+  * Bumped Standards-Version to 3.9.6, no changes needed.
+  * Made init script cope with more than one module option. (Closes: #719331)
+
+ -- Michael Meskes <meskes@debian.org>  Fri, 17 Oct 2014 22:14:53 +0200
+
 watchdog (5.13-1) unstable; urgency=low
 
   * New upstream version.
