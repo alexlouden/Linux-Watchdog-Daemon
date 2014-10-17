@@ -49,6 +49,12 @@ Set the minimal amount of virtual memory that has to stay free. Note that
 this is in pages. Default value is 0 pages which means this test is
 disabled. The page size is taken from the system include files.
 .TP
+allocatable-memory = <minpage>
+Set the minimum amount of allocatable memory available on the system.
+Note that this is in pages.  Default value is 0 pages which means the test
+is disabled.  As with min-memory, the page size is taken from the system
+include files.
+.TP
 max-temperature = <temp>
 Set the maximal allowed temperature. Once this temperature is reached the
 system is halted. Default value is 120. There is no unit conversion, so make

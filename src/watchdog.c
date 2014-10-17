@@ -415,6 +415,9 @@ int main(int argc, char *const argv[])
 		/* check free memory */
 		do_check(check_memory(), rbinary, NULL);
 
+		/* check allocatable memory */
+		do_check(check_allocatable(), rbinary, NULL);
+
 		/* check temperature */
 		for (act = temp_list; act != NULL; act = act->next)
 			do_check(check_temp(act), rbinary, NULL);

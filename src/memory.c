@@ -20,6 +20,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/param.h>
+#include <sys/mman.h>
 
 #include "extern.h"
 #include "watch_err.h"
@@ -127,4 +128,28 @@ int close_memcheck(void)
 
 	mem_fd = -1;
 	return rv;
+}
+
+int check_allocatable(void)
+{
+	int i;
+	char *mem;
+
+	if (minalloc <= 0)
+		return 0;
+
+	/*
+	 * Map and fault in the pages
+	 */
+	mem = mmap(NULL, EXEC_PAGESIZE * minalloc, PROT_READ | PROT_WRITE,
+			 MAP_PRIVATE | MAP_ANONYMOUS | MAP_POPULATE, 0, 0);
+	if (mem == MAP_FAILED) {
+		i = errno;
+		log_message(LOG_ALERT, "cannot allocate %d bytes (errno = %d)",
+			    EXEC_PAGESIZE * minalloc, i);
+		return i;
+	}
+
+	munmap(mem, EXEC_PAGESIZE * minalloc);
+	return 0;
 }

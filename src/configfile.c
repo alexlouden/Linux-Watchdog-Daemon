@@ -35,6 +35,7 @@ static void add_test_binaries(const char *path);
 #define MAXLOAD15		"max-load-15"
 #define MAXTEMP			"max-temperature"
 #define MINMEM			"min-memory"
+#define ALLOCMEM		"allocatable-memory"
 #define SERVERPIDFILE		"pidfile"
 #define PING			"ping"
 #define PINGCOUNT		"ping-count"
@@ -66,6 +67,7 @@ int maxload1 = 0;
 int maxload5 = 0;
 int maxload15 = 0;
 int minpages = 0;
+int minalloc = 0;
 int maxtemp = 120;
 int pingcount = 3;
 int temp_poweroff = TRUE;
@@ -278,6 +280,9 @@ void read_config(char *configfile)
 			} else if (strncmp(line + i, MINMEM, strlen(MINMEM)) == 0) {
 				if (!spool(line, &i, strlen(MINMEM)))
 					minpages = atol(line + i);
+			} else if (strncmp(line + i, ALLOCMEM, strlen(ALLOCMEM)) == 0) {
+				if (!spool(line, &i, strlen(ALLOCMEM)))
+					minalloc = atol(line + i);
 			} else if (strncmp(line + i, LOGDIR, strlen(LOGDIR)) == 0) {
 				if (!spool(line, &i, strlen(LOGDIR)))
 					logdir = xstrdup(line + i);

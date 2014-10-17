@@ -65,6 +65,7 @@ extern int maxload1;
 extern int maxload5;
 extern int maxload15;
 extern int minpages;
+extern int minalloc;
 extern int maxtemp;
 extern int pingcount;
 extern int temp_poweroff;
@@ -154,6 +155,7 @@ int check_iface(struct list *);
 int open_memcheck(void);
 int check_memory(void);
 int close_memcheck(void);
+int check_allocatable(void);
 
 /** shutdown.c **/
 void do_shutdown(int errorcode);
