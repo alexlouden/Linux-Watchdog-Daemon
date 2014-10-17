@@ -10,10 +10,12 @@ sign disables the feature as long as that makes sense.
 .SH OPTIONS
 .TP
 interval = <interval>
-Set the interval between two writes to the watchdog device. The kernel
-drivers expects a write command every minute. Otherwise the system will be
-rebooted. Default value is 1 second. An interval of more than a minute can
-only be used with the \-f command-line option.
+Set the highest possible interval between two writes to the watchdog device.
+The device is triggered after each check regardless of the time it took. After
+finishing all checks watchdog goes to sleep for a full cycle of <interval>
+seconds. Default value is 1 second. The kernel drivers expects a write command
+every minute. Otherwise the system will be rebooted.  Therefore an interval of
+more than a minute can only be used with the \-f command-line option.
 .TP
 logtick = <logtick>
 If you enable verbose logging, a message is written into the syslog or a

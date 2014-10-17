@@ -450,9 +450,9 @@ int main(int argc, char *const argv[])
 			do_check2(check_bin(act->name, test_timeout, 1), act->name, rbinary, NULL);
 #endif
 
-		/* finally sleep some seconds */
-		usleep(tint * 500000);	/* this should make watchdog sleep tint seconds alltogther */
-		/* sleep(tint); */
+		/* finally sleep for a full cycle */
+		/* we have just triggered the device with the last check */
+		usleep(tint * 1000000);
 
 		/* do verbose logging */
 		if (verbose && logtick && (--ticker == 0)) {

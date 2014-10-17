@@ -124,8 +124,8 @@ int check_bin(char *tbinary, time_t timeout, int version)
 		/* fork was okay, add child to process list */
 		add_process(tbinary, child_pid);
 
-		/* wait for child(s) to stop */
-		/* but only after a short sleep */
+		/* wait for child(s) to stop, but only after a short sleep */
+		/* only sleep for <tint>/2 seconds to make sure we finish on time */
 		usleep(tint * 500000);
 
 		do {
