@@ -311,7 +311,7 @@ void read_config(char *configfile)
 	add_test_binaries(test_dir);
 
 	if (tint <= 0) {
-		fatal_error(EX_SYSERR, "Paramters %s = %d in file \"%s\" must be > 0", INTERVAL, tint, configfile);
+		fatal_error(EX_SYSERR, "Parameters %s = %d in file \"%s\" must be > 0", INTERVAL, tint, configfile);
 	}
 
 }
