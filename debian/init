@@ -90,7 +90,7 @@ case "$1" in
 
   force-reload)
     if [ $run_watchdog = 0 ]; then exit 0; fi
-    log_daemon_msg "Restarting ${NAME}"
+    log_daemon_msg "Restarting $NAME"
     log_progress_msg "Stopping $NAME daemon..."
     start-stop-daemon --stop --pidfile /var/run/$NAME.pid --quiet \
 	--retry $STOP_RETRY_SCHEDULE || log_end_msg $?
