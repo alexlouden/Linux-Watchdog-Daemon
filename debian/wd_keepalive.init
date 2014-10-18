@@ -40,7 +40,7 @@ case "$1" in
   start)
     if [ $run_watchdog = 1 ]
     then
-        [ ${watchdog_module:-none} != "none" ] && /sbin/modprobe $watchdog_module
+        [ "${watchdog_module:-none}" != "none" ] && /sbin/modprobe $watchdog_module
 	echo -n "Starting watchdog keepalive daemon: "
 	if start-stop-daemon --start --quiet \
 	    --exec $DAEMON -- $watchdog_options
