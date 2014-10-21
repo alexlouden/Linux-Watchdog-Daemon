@@ -44,8 +44,12 @@ binary-arch:	checkroot build
 	$(MAKE) install prefix=$$(pwd)/debian/watchdog/usr \
 		CONFIG_FILENAME=$$(pwd)/debian/watchdog/etc/watchdog.conf
 	cp -p watchdog.conf debian/watchdog/etc/watchdog.conf
+	dh_systemd_enable watchdog.service
+	dh_systemd_enable --name=wd_keepalive wd_keepalive.service
 	dh_installinit --noscripts 
 	dh_installinit --noscripts --name=wd_keepalive
+	dh_systemd_start --no-start 
+	dh_systemd_start --no-start --name=wd_keepalive
 	dh_strip
 	dh_compress
 	dh_installdeb

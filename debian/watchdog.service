@@ -1,0 +1,15 @@
+[Unit]
+Description=watchdog daemon
+After=systemd-update-utmp.service
+After=runlevel1.target runlevel2.target runlevel3.target runlevel4.target runlevel5.target
+
+[Service]
+Type=forking
+EnvironmentFile=/etc/default/watchdog
+ExecStartPre=/bin/sh -c '[ -z "${watchdog_module}" ] || [ "${watchdog_module}" = "none" ] || echo /sbin/modprobe $watchdog_module'
+ExecStartPre=/bin/systemctl stop wd_keepalive
+ExecStart=/usr/sbin/watchdog $watchdog_options
+ExecStopPost=/bin/systemctl start wd_keepalive
+
+[Install]
+WantedBy=multi-user.target

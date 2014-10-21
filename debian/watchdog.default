@@ -1,4 +1,5 @@
 # Set run_watchdog to 1 to start watchdog or 0 to disable it.
+# Not used with systemd for the time being.
 run_watchdog=1
 
 # Specify additional watchdog options here (see manpage).
