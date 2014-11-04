@@ -45,6 +45,10 @@ case "$1" in
 	start-stop-daemon --start --quiet --pidfile /var/run/$KEEPALIVE_NAME.pid \
 		--exec $KEEPALIVE_DAEMON -- $watchdog_options
 	log_end_msg $?
+
+	# tell sendsigs to ignore it
+        ln -s /var/run/$KEEPALIVE_NAME.pid /run/sendsigs.omit.d/$KEEPALIVE_NAME.pid
+
     fi
     ;;
 
@@ -55,6 +59,9 @@ case "$1" in
 	start-stop-daemon --stop --quiet --oknodo --retry $STOP_RETRY_SCHEDULE \
 		--pidfile /var/run/$KEEPALIVE_NAME.pid
 	log_end_msg $?
+
+	# remove the sendsigs omit file
+        rm -f /run/sendsigs.omit.d/$KEEPALIVE_NAME.pid
     fi
     ;;
 

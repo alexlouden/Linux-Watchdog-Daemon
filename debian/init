@@ -57,6 +57,9 @@ case "$1" in
             --pidfile /var/run/$KEEPALIVE_NAME.pid
         log_end_msg $?
 
+	# also remove the sendsigs omit file
+	rm -f /run/sendsigs.omit.d/$KEEPALIVE_NAME.pid
+
 	# Unconditionally start watchdog daemon because we want to run it even
 	# if wd_keepalive wasn't running
 	log_begin_msg "Starting watchdog daemon..."
@@ -80,6 +83,9 @@ case "$1" in
 	    start-stop-daemon --start --quiet --pidfile /var/run/$KEEPALIVE_NAME.pid \
 		--exec $KEEPALIVE_DAEMON -- $watchdog_options
 	    log_end_msg $?
+
+	    # and tell sendsigs to ignore it
+	    ln -s /var/run/$KEEPALIVE_NAME.pid /run/sendsigs.omit.d/$KEEPALIVE_NAME.pid
 	fi
     fi
     ;;
