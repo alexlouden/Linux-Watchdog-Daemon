@@ -115,7 +115,7 @@ int check_memory(void)
 }
 
 /*
- * Close the special memor data file (if open).
+ * Close the special memory data file (if open).
  */
 
 int close_memcheck(void)
@@ -134,6 +134,7 @@ int check_allocatable(void)
 {
 	int i;
 	char *mem;
+	size_t len = EXEC_PAGESIZE * (size_t)minalloc;
 
 	if (minalloc <= 0)
 		return 0;
@@ -141,15 +142,15 @@ int check_allocatable(void)
 	/*
 	 * Map and fault in the pages
 	 */
-	mem = mmap(NULL, EXEC_PAGESIZE * minalloc, PROT_READ | PROT_WRITE,
+	mem = mmap(NULL, len, PROT_READ | PROT_WRITE,
 			 MAP_PRIVATE | MAP_ANONYMOUS | MAP_POPULATE, 0, 0);
 	if (mem == MAP_FAILED) {
 		i = errno;
-		log_message(LOG_ALERT, "cannot allocate %d bytes (errno = %d)",
-			    EXEC_PAGESIZE * minalloc, i);
+		log_message(LOG_ALERT, "cannot allocate %lu bytes (errno = %d = '%s')",
+			    (unsigned long)len, i, strerror(i));
 		return i;
 	}
 
-	munmap(mem, EXEC_PAGESIZE * minalloc);
+	munmap(mem, len);
 	return 0;
 }
