@@ -14,6 +14,14 @@ _Description: Start watchdog at boot time?
  Please specify whether watchdog should be started as part of the boot
  process. This can be changed later by editing /etc/default/watchdog.
 
+Template: watchdog/run_keepalive
+Type: boolean
+Default: true
+_Description: Start wd_keepalive after stopping watchdog?
+ Please specify whether stopping watchdog should start wd_keepalive to keep on
+ triggering the watchdog device. This can be changed later by editing
+ /etc/default/watchdog.
+
 Template: watchdog/restart
 Type: boolean
 Default: false

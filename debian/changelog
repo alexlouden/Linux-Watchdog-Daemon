@@ -3,6 +3,7 @@ watchdog (5.14-2) UNRELEASED; urgency=medium
   * Applied upstream change to fix an incorrectly calculated amount of memory
     being used in a test.
   * Make sure /etc/init.d/sendsigs does not kill wd_keepalive. (Closes: #767704)
+  * Auto-generated default file from debconf. (Closes: #767644)
 
  -- Michael Meskes <meskes@debian.org>  Tue, 04 Nov 2014 16:30:54 +0100
 

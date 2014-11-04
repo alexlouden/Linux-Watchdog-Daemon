@@ -29,6 +29,8 @@ then
     default_format="\
 # Start watchdog at boot time? 0 or 1
 run_watchdog=%s
+# Start wd_keepalive after stopping watchdog? 0 or 1
+run_wd_keepalive=%s
 # Load module before starting watchdog
 watchdog_module=%s
 # Specify additional watchdog options here (see manpage).
@@ -44,19 +46,26 @@ watchdog_module=%s
     db_get watchdog/module
     module=$RET
 
+    # Determine whether to start wd_keepalive after stopping watchdog.
+    db_get watchdog/run_keepalive
+    case $RET in
+    false)  run_wd_keepalive=0;;
+    *)      run_wd_keepalive=1;;
+    esac
+
     # Create an up-to-date copy of the default file.
     {
 	# If it already exists, preserve everything except our comment
 	# and $run_watchdog.
 	if [ -f /etc/default/watchdog ]
 	then
-	    printf "$default_format" '.*' '.*' \
+	    printf "$default_format" '.*' '.*' '.*' \
 		| grep -vxf - /etc/default/watchdog \
 		| grep -v watchdog_options || true
 	fi
 
 	# Append our comment and the current value.
-	printf "$default_format" "$run_watchdog" "\"$module\""
+	printf "$default_format" "$run_watchdog" "$run_wd_keepalive" "\"$module\""
 
 	# And finally preserve the watchdog_options setting.
 	if [ -f /etc/default/watchdog ]

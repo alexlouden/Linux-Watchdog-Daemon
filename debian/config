@@ -10,6 +10,11 @@ parse_default() {
     1)  db_set watchdog/run true;;
     *)  return 1;;
     esac
+    case `sed -n 's/^run_wd_keepalive=//p' "$@"` in
+    0)  db_set watchdog/run_keepalive false;;
+    1)  db_set watchdog/run_keepalive true;;
+    *)  return 1;;
+    esac
     db_set watchdog/module `sed -n 's/^watchdog_module="\(.*\)"/\1/p' "$@"`
 }
 
@@ -40,6 +45,10 @@ do
     2)
 	db_get watchdog/run
 	[ "$RET" = false ] || db_input medium watchdog/restart || true
+	;;
+    3)
+	db_get watchdog/restart
+	[ "$RET" = false ] || db_input medium watchdog/run_keepalive || true
 	;;
     *)
 	break
