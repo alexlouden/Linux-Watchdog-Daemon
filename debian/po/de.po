@@ -35,7 +35,6 @@ msgstr ""
 #. Type: boolean
 #. Description
 #: ../templates:3001
-#| msgid "Start wd_keepalive after stopping watchdog?"
 msgid "Start wd_keepalive after stopping watchdog?"
 msgstr "Wd_keepalive nach Beendigung von Watchdog starten?"
 

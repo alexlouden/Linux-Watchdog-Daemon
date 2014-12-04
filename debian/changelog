@@ -1,3 +1,13 @@
+watchdog (5.14-3) unstable; urgency=medium
+
+  * Updated Danish debconf translation.
+  * Updated French debconf translation. (Closes: #771273)
+  * Added Italian debconf translation. (Closes: #771839)
+  * Added Brazilian Portuguese debconf translation. (Closes: #771950)
+  * Changed rules file to make sure default file doesn't come back.
+
+ -- Michael Meskes <meskes@debian.org>  Thu, 04 Dec 2014 11:30:30 +0100
+
 watchdog (5.14-2) unstable; urgency=medium
 
   * Applied upstream change to fix an incorrectly calculated amount of memory

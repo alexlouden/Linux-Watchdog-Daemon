@@ -25,6 +25,7 @@ clean:	Makefile
 	dh_clean
 	rm -f $(find . -name "*.P")
 	rm -rf build-stamp *~ debian/*~ configure-stamp
+	-rm -f debian/watchdog.default
 
 binary-indep:	checkroot build
 	$(checkdir)
