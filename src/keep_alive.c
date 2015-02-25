@@ -41,7 +41,7 @@ int open_watchdog(char *name, int timeout)
 	close_watchdog();
 
 	if (name != NULL) {
-		watchdog_fd = open(name, O_WRONLY);
+		watchdog_fd = open(name, O_WRONLY | O_CLOEXEC);
 		if (watchdog_fd == -1) {
 			log_message(LOG_ERR, "cannot open %s (errno = %d = '%s')", name, errno, strerror(errno));
 			rv = -1;
