@@ -441,13 +441,13 @@ int main(int argc, char *const argv[])
 				  act->parameter.net.packet, tint, pingcount), rbinary, act->name);
 
 		/* in user mode execute the given binary or just test fork() call */
-		do_check(check_bin(tbinary, test_timeout, 0), rbinary, NULL);
+		do_check(check_bin(tbinary, test_timeout, 0), rbinary, tbinary);
 
 #ifdef TESTBIN_PATH
 		/* test/repair binaries in the watchdog.d directory */
 		for (act = tr_bin_list; act != NULL; act = act->next)
 			/* Use version 1 for testbin-path */
-			do_check2(check_bin(act->name, test_timeout, 1), act->name, rbinary, NULL);
+			do_check2(check_bin(act->name, test_timeout, 1), act->name, rbinary, act->name);
 #endif
 
 		/* finally sleep for a full cycle */
