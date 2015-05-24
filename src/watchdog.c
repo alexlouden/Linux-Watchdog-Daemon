@@ -377,7 +377,7 @@ int main(int argc, char *const argv[])
 		(rbinary == NULL) ? "none" : rbinary, repair_timeout,
 		(devname == NULL) ? "none" : devname,
 		(heartbeat == NULL) ? "none" : heartbeat,
-		(admin == NULL) ? "none" : admin, 
+		(admin == NULL) ? "none" : admin,
 		(no_act == TRUE) ? "yes" : "no",
 		(force == TRUE) ? "yes" : "no");
 

@@ -25,7 +25,7 @@
  *
  * 1999-02-22 Arkadiusz Mi¶kiewicz <misiek@misiek.eu.org>
  * - added Native Language Support
- * 
+ *
  * Modified by Olaf Kirch and Trond Myklebust for new NFS code,
  * plus NFSv3 stuff.
  */

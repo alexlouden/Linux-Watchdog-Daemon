@@ -135,7 +135,7 @@ static int spool(char *line, int *i, int offset)
 		fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 		return (1);
 	}
-	
+
 	return (0);
 }
 

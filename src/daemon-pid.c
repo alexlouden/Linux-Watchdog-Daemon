@@ -5,7 +5,7 @@
  * BUGS / TO DO: The checking then writing is not atomic, so there is a small
  * chance of two processes thinking they have got exclusive use of the PID file,
  * however, that is a small probability in practice.
- * 
+ *
  * (c) 2013 Paul S. Crawford (psc@sat.dundee.ac.uk) under GPL v2 license
  * based on existing code.
  *
@@ -111,4 +111,3 @@ int remove_pid_file(void)
 	saved_fname = NULL;
 	return rv;
 }
-

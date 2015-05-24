@@ -22,7 +22,7 @@ int check_pidfile(struct list *file)
 		int err = errno;
 		log_message(LOG_ERR, "cannot open %s (errno = %d = '%s')", file->name, err, strerror(err));
 
-		/* on error ENETDOWN|ENETUNREACH we react as if we're in ping mode 
+		/* on error ENETDOWN|ENETUNREACH we react as if we're in ping mode
 		 * on ENOENT we assume that the server to be monitored has exited */
 		if (softboot || err == ENETDOWN || err == ENETUNREACH || err == ENOENT)
 			return (err);

@@ -3,7 +3,7 @@
  *              Michael Meskes
  * License:	GPL
  *
- * Filename:    $Id: wd_keepalive.c,v 1.6 2007/08/17 09:24:54 meskes Exp $    
+ * Filename:    $Id: wd_keepalive.c,v 1.6 2007/08/17 09:24:54 meskes Exp $
  * Author:      Marcel Jansen, 22 February 2001
  * 		Michael Meskes, since then
  * Purpose:     This program can be run during critical periods
@@ -190,7 +190,7 @@ int main(int argc, char *const argv[])
 	else
 		log_message(LOG_INFO, " int=%d alive=%s realtime=%s", tint, devname, realtime ? "yes" : "no");
 
-	/* this daemon has no other function than writing to this device 
+	/* this daemon has no other function than writing to this device
 	 * i.e. if there is no device given we better punt */
 	if (devname == NULL)
 		terminate();
