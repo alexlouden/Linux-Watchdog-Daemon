@@ -13,6 +13,8 @@
 #include "config.h"
 #endif
 
+#define _GNU_SOURCE	/* For O_CLOEXEC on older systems. */
+
 #include <errno.h>
 #include <unistd.h>
 #include <time.h>
