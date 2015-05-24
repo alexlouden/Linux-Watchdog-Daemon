@@ -19,7 +19,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <stropts.h>			/* for ioctl() */
+#include <sys/ioctl.h>			/* for ioctl() */
 #include <linux/watchdog.h>		/* for 'struct watchdog_info' */
 
 #include "extern.h"
