@@ -61,6 +61,7 @@ int check_memory(void)
 {
 	char buf[1024], *ptr1, *ptr2;
 	unsigned int free;
+	int n;
 
 	/* is the memory file open? */
 	if (mem_fd == -1)
@@ -78,7 +79,7 @@ int check_memory(void)
 	}
 
 	/* read the file */
-	if (read(mem_fd, buf, sizeof(buf)) < 0) {
+	if ((n = read(mem_fd, buf, sizeof(buf)-1)) < 0) {
 		int err = errno;
 		log_message(LOG_ERR, "read %s gave errno = %d = '%s'", mem_name, err, strerror(err));
 
@@ -87,6 +88,8 @@ int check_memory(void)
 
 		return (ENOERR);
 	}
+	/* Force string to be nul-terminated. */
+	buf[n] = 0;
 
 	ptr1 = strstr(buf, FREEMEM);
 	ptr2 = strstr(buf, FREESWAP);

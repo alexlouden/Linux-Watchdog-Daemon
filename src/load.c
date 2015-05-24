@@ -50,6 +50,7 @@ int check_load(void)
 {
 	int avg1, avg5, avg15;
 	char buf[40], *ptr;
+	int n;
 
 	/* is the load average file open? */
 	if (load_fd == -1 || maxload1 == 0 || maxload5 == 0 || maxload15 == 0)
@@ -67,7 +68,7 @@ int check_load(void)
 	}
 
 	/* read the line (there is only one) */
-	if (read(load_fd, buf, sizeof(buf)) < 0) {
+	if ((n = read(load_fd, buf, sizeof(buf)-1)) < 0) {
 		int err = errno;
 		log_message(LOG_ERR, "read %s gave errno = %d = '%s'", load_name, err, strerror(err));
 
@@ -76,6 +77,8 @@ int check_load(void)
 
 		return (ENOERR);
 	}
+	/* Force string to be nul-terminated. */
+	buf[n] = 0;
 	/* we only care about integer values */
 	avg1 = atoi(buf);
 

@@ -15,7 +15,8 @@
 int check_pidfile(struct list *file)
 {
 	int fd = open(file->name, O_RDONLY), pid;
-	char buf[10];
+	char buf[20];
+	int n;
 
 	if (fd == -1) {
 		int err = errno;
@@ -41,11 +42,8 @@ int check_pidfile(struct list *file)
 		return (ENOERR);
 	}
 
-	/* just to play it safe */
-	memset(buf, 0, sizeof(buf));
-
 	/* read the line (there is only one) */
-	if (read(fd, buf, sizeof(buf)) < 0) {
+	if ((n = read(fd, buf, sizeof(buf)-1)) < 0) {
 		int err = errno;
 		log_message(LOG_ERR, "read %s gave errno = %d = '%s'", file->name, err, strerror(err));
 
@@ -55,6 +53,8 @@ int check_pidfile(struct list *file)
 
 		return (ENOERR);
 	}
+	/* Force string to be nul-terminated. */
+	buf[n] = 0;
 
 	/* we only care about integer values */
 	pid = atoi(buf);
