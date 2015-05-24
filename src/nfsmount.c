@@ -181,7 +181,7 @@ int nfsmount(const char *spec, const char *node, int *flags, char **extra_opts, 
 	char *hostname;
 	char *dirname;
 	char *old_opts;
-	char *mounthost = NULL;
+	char mounthost[1024] = "";
 	char new_opts[1024];
 	struct timeval total_timeout;
 	enum clnt_stat clnt_stat;
@@ -224,6 +224,7 @@ int nfsmount(const char *spec, const char *node, int *flags, char **extra_opts, 
 
 	find_kernel_nfs_mount_version();
 
+	memset(&server_addr, 0, sizeof(server_addr)); /* Stop Coverity complaining of uninitialised variable. */
 	retval = EX_FAIL;
 	msock = fsock = -1;
 	mclient = NULL;
@@ -344,9 +345,13 @@ int nfsmount(const char *spec, const char *node, int *flags, char **extra_opts, 
 				port = val;
 			else if (!strcmp(opt, "mountport"))
 				mountport = val;
-			else if (!strcmp(opt, "mounthost"))
-				mounthost = xstrndup(opteq + 1, strcspn(opteq + 1, " \t\n\r,"));
-			else if (!strcmp(opt, "mountprog"))
+			else if (!strcmp(opt, "mounthost")) {
+				/* Copy then force nul-terminated string. */
+				strncpy(mounthost, opteq + 1, sizeof(mounthost));
+				mounthost[sizeof(mounthost)-1] = 0;
+				/* Cut short at any of these characters. */
+				mounthost[strcspn(mounthost, " \t\n\r,")] = 0;
+			} else if (!strcmp(opt, "mountprog"))
 				mountprog = val;
 			else if (!strcmp(opt, "mountvers"))
 				mountvers = val;
@@ -487,7 +492,7 @@ int nfsmount(const char *spec, const char *node, int *flags, char **extra_opts, 
 
 	/* create mount deamon client */
 	/* See if the nfs host = mount host. */
-	if (mounthost) {
+	if (mounthost[0]) {
 		if (mounthost[0] >= '0' && mounthost[0] <= '9') {
 			mount_server_addr.sin_family = AF_INET;
 			mount_server_addr.sin_addr.s_addr = inet_addr(hostname);
@@ -607,6 +612,7 @@ int nfsmount(const char *spec, const char *node, int *flags, char **extra_opts, 
 				clnt_destroy(mclient);
 				mclient = 0;
 				close(msock);
+				msock = -1;
 			} else {
 				if (!running_bg && prevt == 0)
 					clnt_pcreateerror("mount");
@@ -706,6 +712,7 @@ int nfsmount(const char *spec, const char *node, int *flags, char **extra_opts, 
 	data.fd = fsock;
 	memcpy((char *)&data.addr, (char *)&server_addr, sizeof(data.addr));
 	strncpy(data.hostname, hostname, sizeof(data.hostname));
+	data.hostname[sizeof(data.hostname)-1] = 0; /* Force string to be nul-terminated. */
 
 	/* clean up */
 
