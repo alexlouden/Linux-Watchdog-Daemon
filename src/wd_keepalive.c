@@ -88,7 +88,6 @@ void terminate(void)
 int main(int argc, char *const argv[])
 {
 	char *configfile = CONFIG_FILENAME;
-	pid_t child_pid;
 	int count = 0;
 	int c;
 	char *progname;
@@ -136,46 +135,9 @@ int main(int argc, char *const argv[])
 
 	read_config(configfile);
 
-	/* make sure we're on the root partition */
-	if (chdir("/") < 0) {
-		perror(progname);
-		exit(1);
+	if (wd_daemon(0, 0)) {
+		fatal_error(EX_SYSERR, "failed to daemonize (%s)", strerror(errno));
 	}
-#if !defined(DEBUG)
-	/* fork to go into the background */
-	if ((child_pid = fork()) < 0) {
-		perror(progname);
-		exit(1);
-	} else if (child_pid > 0) {
-		/* fork was okay          */
-		/* wait for child to exit */
-		if (waitpid(child_pid, NULL, 0) != child_pid) {
-			perror(progname);
-			exit(1);
-		}
-		/* and exit myself */
-		exit(0);
-	}
-	/* and fork again to make sure we inherit all rights from init */
-	if ((child_pid = fork()) < 0) {
-		perror(progname);
-		exit(1);
-	} else if (child_pid > 0)
-		exit(0);
-#endif				/* !DEBUG */
-
-	/* now we're free */
-
-#if !defined(DEBUG)
-	/* Okay, we're a daemon     */
-	/* but we're still attached to the tty */
-	/* create our own session */
-	setsid();
-	/* with USE_SYSLOG we don't do any console IO */
-	close(0);
-	close(1);
-	close(2);
-#endif				/* !DEBUG */
 
 	/* tuck my process id away */
 	if (write_pid_file(KA_PIDFILE)) {

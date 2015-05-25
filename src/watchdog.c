@@ -197,7 +197,6 @@ int main(int argc, char *const argv[])
 	int c, foreground = FALSE, force = FALSE, sync_it = FALSE;
 	char *configfile = CONFIG_FILENAME;
 	struct list *act;
-	pid_t child_pid;
 	char *progname;
 	char *opts = "d:i:n:Ffsvbql:p:t:c:r:m:a:";
 	struct option long_options[] = {
@@ -285,50 +284,12 @@ int main(int argc, char *const argv[])
 	 * if the system runs out of memory */
 	filename_buf = (char *)xcalloc(strlen(logdir) + sizeof("/repair-bin.stdout") + 1, sizeof(char));
 
-#if !defined(DEBUG)
 	if (!foreground) {
-		/* Become a daemon process: */
-		/* make sure we're on the root partition */
-		if (chdir("/") < 0) {
-			perror(progname);
-			exit(1);
+		if (wd_daemon(0, 0)) {
+			fatal_error(EX_SYSERR, "failed to daemonize (%s)", strerror(errno));
 		}
-
-		/* fork to go into the background */
-		if ((child_pid = fork()) < 0) {
-			perror(progname);
-			exit(1);
-		} else if (child_pid > 0) {
-			/* fork was okay          */
-			/* wait for child to exit */
-			if (waitpid(child_pid, NULL, 0) != child_pid) {
-				perror(progname);
-				exit(1);
-			}
-			/* and exit myself */
-			exit(0);
-		}
-		/* and fork again to make sure we inherit all rights from init */
-		if ((child_pid = fork()) < 0) {
-			perror(progname);
-			exit(1);
-		} else if (child_pid > 0)
-			exit(0);
-		/* now we're free */
-
-		/* Okay, we're a daemon     */
-		/* but we're still attached to the tty */
-		/* create our own session */
-		setsid();
-
-		/* As daemon we don't do any console IO */
-		close(0);
-		close(1);
-		close(2);
-
 		open_logging(NULL, MSG_TO_SYSLOG); /* Close terminal output, keep syslog open. */
 	}
-#endif				/* !DEBUG */
 
 	/* tuck my process id away */
 	if (write_pid_file(PIDFILE)) {

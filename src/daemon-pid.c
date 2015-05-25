@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <signal.h>	/* For kill() */
 #include <sys/types.h>
+#include <sys/wait.h> /* For waitpid() */
 #include <unistd.h>
 
 #include "extern.h"
@@ -110,4 +111,64 @@ int remove_pid_file(void)
 
 	saved_fname = NULL;
 	return rv;
+}
+
+/*
+ * Function to perform the double-fork daemonization with the same sort of
+ * calling and behaviour as BSD' daemon() function.
+ */
+int wd_daemon(int nochdir, int noclose)
+{
+	pid_t child_pid;
+	/* Become a daemon process: */
+	/* make sure we're on the root partition */
+	if (!nochdir) {
+		if (chdir("/") < 0) {
+			return (-1);
+		}
+	}
+
+	/* fork to go into the background */
+	if ((child_pid = fork()) < 0) {
+		return (-1);
+	} else if (child_pid > 0) {
+		/* fork was okay          */
+		/* wait for child to exit */
+		if (waitpid(child_pid, NULL, 0) != child_pid) {
+			exit(1);
+		}
+		/* and exit myself */
+		exit(0);
+	}
+	/* and fork again to make sure we inherit all rights from init */
+	if ((child_pid = fork()) < 0) {
+		exit(1);
+	} else if (child_pid > 0)
+		exit(0);
+	/* now we're free */
+
+	/* Okay, we're a daemon     */
+	/* but we're still attached to the tty */
+	/* create our own session */
+	if (setsid() == -1)
+		return (-1);
+
+	/* As daemon we don't normally do any console IO */
+	if (!noclose) {
+		const char *null_name = "/dev/null";
+
+		if (freopen(null_name, "r", stdin) == NULL) {
+			return (-1);
+		}
+
+		if (freopen(null_name, "w", stdout) == NULL) {
+			return (-1);
+		}
+
+		if (freopen(null_name, "w", stderr) == NULL) {
+			return (-1);
+		}
+	}
+
+	return 0;
 }
