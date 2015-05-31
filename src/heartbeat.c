@@ -40,6 +40,8 @@ int open_heartbeat(void)
 {
 	int rv = 0;
 
+	close_heartbeat();
+
 	if (heartbeat != NULL) {
 		hb = ((hb = fopen(heartbeat, "r+")) == NULL) ? fopen(heartbeat, "w+") : hb;
 		if (hb == NULL) {
@@ -56,10 +58,7 @@ int open_heartbeat(void)
 			rewind(hb);
 			while (fgets(rbuf, TS_SIZE + 1, hb) != NULL) {
 				memcpy(timestamps + (TS_SIZE * lastts), rbuf, TS_SIZE);
-				if (nrts < hbstamps)
-					nrts++;
-				++lastts;
-				lastts = lastts % hbstamps;
+				next_value();
 			}
 			/* Write an indication that the watchdog has started to the heartbeat file */
 			/* copy it to the buffer */
@@ -105,18 +104,18 @@ int write_heartbeat(void)
 		rewind(hb);
 		if (nrts == hbstamps) {
 			/* write from the logical start of the buffer to the physical end */
-			if (fwrite(timestamps + (lastts * TS_SIZE), TS_SIZE, hbstamps - lastts, hb) == 0) {
+			if (fwrite(timestamps + (lastts * TS_SIZE), TS_SIZE, hbstamps - lastts, hb) != (hbstamps - lastts)) {
 				int err = errno;
 				log_message(LOG_ERR, "write heartbeat file gave error %d = '%s'!", err, strerror(err));
 			}
 			/* write from the physical start of the buffer to the logical end */
-			if (fwrite(timestamps, TS_SIZE, lastts, hb) == 0) {
+			if (fwrite(timestamps, TS_SIZE, lastts, hb) != lastts) {
 				int err = errno;
 				log_message(LOG_ERR, "write heartbeat file gave error %d = '%s'!", err, strerror(err));
 			}
 		} else {
 			/* write from the physical start of the buffer to the logical end */
-			if (fwrite(timestamps, TS_SIZE, nrts, hb) == 0) {
+			if (fwrite(timestamps, TS_SIZE, nrts, hb) != nrts) {
 				int err = errno;
 				log_message(LOG_ERR, "write heartbeat file gave error %d = '%s'!", err, strerror(err));
 			}
