@@ -54,7 +54,7 @@ void lock_our_memory(int do_lock, int priority, pid_t pid)
 			log_message(LOG_ERR, "cannot lock realtime memory (errno = %d = '%s')", errno, strerror(errno));
 		} else {
 			struct sched_param sp;
-
+			memset(&sp, 0, sizeof(sp));
 			/* now set the scheduler */
 			sp.sched_priority = priority;
 			if (sched_setscheduler(0, SCHED_RR, &sp) != 0) {
