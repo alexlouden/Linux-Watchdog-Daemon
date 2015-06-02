@@ -35,7 +35,7 @@ static void usage(char *progname)
 int main(int argc, char *const argv[])
 {
 	char *configfile = CONFIG_FILENAME;
-	int c;
+	int c, rv = 0;
 	struct watchdog_info ident;
 	char *opts = "c:";
 	struct option long_options[] = {
@@ -64,7 +64,7 @@ int main(int argc, char *const argv[])
 	 * this device i.e. if there is no device given we better punt */
 	if (devname == NULL) {
 		printf("No watchdog hardware configured in \"%s\"\n", configfile);
-		exit(0);
+		exit(1);
 	}
 
 	/* open the device */
@@ -77,17 +77,22 @@ int main(int argc, char *const argv[])
 	/* Print watchdog identity */
 	if (ioctl(watchdog, WDIOC_GETSUPPORT, &ident) < 0) {
 		log_message(LOG_ERR, "cannot get watchdog identity (errno = %d = '%s')", errno, strerror(errno));
+		rv = 1;
 	} else {
 		ident.identity[sizeof(ident.identity) - 1] = '\0';	/* Be sure */
 		printf("%s\n", ident.identity);
 	}
 
-	if (write(watchdog, "V", 1) < 0)
+	if (write(watchdog, "V", 1) < 0) {
 		log_message(LOG_ERR, "write watchdog device gave error %d = '%s'!", errno, strerror(errno));
+		rv = 1;
+	}
 
-	if (close(watchdog) == -1)
+	if (close(watchdog) == -1) {
 		log_message(LOG_ALERT, "cannot close watchdog (errno = %d = '%s')", errno, strerror(errno));
+		rv = 1;
+	}
 
 	close_logging();
-	exit(0);
+	exit(rv);
 }
