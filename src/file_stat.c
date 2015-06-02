@@ -28,7 +28,7 @@ int check_file_stat(struct list *file)
 			/* Remove the trailing '\n' of the ctime() formatted string. */
 			strncpy(text, ctime(&buf.st_mtime), sizeof(text)-1);
 			text[sizeof(text)-1] = 0;
-			log_message(LOG_INFO, "file %s was last changed at %s", file->name, text);
+			log_message(LOG_DEBUG, "file %s was last changed at %s", file->name, text);
 		}
 
 		if (time(NULL) - buf.st_mtime > file->parameter.file.mtime) {
