@@ -39,6 +39,8 @@ int open_memcheck(void)
 {
 	int rv = -1;
 
+	close_memcheck();
+
 	if (minpages > 0) {
 		/* open the memory info file */
 		mem_fd = open(mem_name, O_RDONLY);
@@ -60,7 +62,7 @@ int open_memcheck(void)
 int check_memory(void)
 {
 	char buf[1024], *ptr1, *ptr2;
-	unsigned int free;
+	unsigned int free, freemem, freeswap;
 	int n;
 
 	/* is the memory file open? */
@@ -104,10 +106,12 @@ int check_memory(void)
 	}
 
 	/* we only care about integer values */
-	free = atoi(ptr1 + strlen(FREEMEM)) + atoi(ptr2 + strlen(FREESWAP));
+	freemem  = atoi(ptr1 + strlen(FREEMEM));
+	freeswap = atoi(ptr2 + strlen(FREESWAP));
+	free = freemem + freeswap;
 
 	if (verbose && logtick && ticker == 1)
-		log_message(LOG_INFO, "currently there are %d kB of free memory available", free);
+		log_message(LOG_DEBUG, "currently there are %u + %u kB of free memory+swap available", freemem, freeswap);
 
 	if (free < minpages * (EXEC_PAGESIZE / 1024)) {
 		log_message(LOG_ERR, "memory %d kB is less than %d pages", free, minpages);
@@ -123,10 +127,11 @@ int check_memory(void)
 
 int close_memcheck(void)
 {
-	int rv = -1;
+	int rv = 0;
 
 	if (mem_fd != -1 && close(mem_fd) == -1) {
 		log_message(LOG_ALERT, "cannot close %s (errno = %d)", mem_name, errno);
+		rv = -1;
 	}
 
 	mem_fd = -1;
