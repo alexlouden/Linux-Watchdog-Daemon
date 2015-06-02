@@ -101,7 +101,7 @@ int check_load(void)
 	}
 
 	if (verbose && logtick && ticker == 1)
-		log_message(LOG_INFO, "current load is %d %d %d", avg1, avg5, avg15);
+		log_message(LOG_DEBUG, "current load is %d %d %d", avg1, avg5, avg15);
 
 	if (avg1 > maxload1 || avg5 > maxload5 || avg15 > maxload15) {
 

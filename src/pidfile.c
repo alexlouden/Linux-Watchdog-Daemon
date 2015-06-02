@@ -81,7 +81,7 @@ int check_pidfile(struct list *file)
 
 	/* do verbose logging */
 	if (verbose && logtick && ticker == 1)
-		log_message(LOG_INFO, "was able to ping process %d (%s).", pid, file->name);
+		log_message(LOG_DEBUG, "was able to ping process %d (%s)", pid, file->name);
 
 	return (ENOERR);
 }

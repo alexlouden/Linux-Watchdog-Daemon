@@ -110,7 +110,7 @@ static int read_temp_sensor(const char *name, int *val)
 	temp = 1.0e-3F * atof(buf);
 
 	if (verbose && logtick && ticker == 1)
-		log_message(LOG_INFO, "current temperature is %.3f for %s", temp, name);
+		log_message(LOG_DEBUG, "current temperature is %.3f for %s", temp, name);
 
 	/* convert to integer of whole deg C, small addition to make sure matches integer version. */
 	*val = (int)(1.0e-5F + temp);

@@ -297,7 +297,7 @@ int main(int argc, char *const argv[])
 	}
 
 	/* Log the starting message */
-	log_message(LOG_INFO, "starting daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
+	log_message(LOG_NOTICE, "starting daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
 	log_message(LOG_INFO, "int=%ds realtime=%s sync=%s soft=%s mla=%d mem=%d",
 	       tint, realtime ? "yes" : "no", sync_it ? "yes" : "no", softboot ? "yes" : "no", maxload1, minpages);
 
@@ -419,7 +419,7 @@ int main(int argc, char *const argv[])
 		if (verbose && logtick && (--ticker == 0)) {
 			ticker = logtick;
 			count += logtick;
-			log_message(LOG_INFO, "still alive after %ld interval(s)", count);
+			log_message(LOG_DEBUG, "still alive after %ld interval(s)", count);
 		}
 	}
 

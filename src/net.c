@@ -125,7 +125,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 					break;
 
 				if (verbose && logtick && ticker == 1)
-					log_message(LOG_ERR, "ping select timeout = %2ld.%06ld seconds",
+					log_message(LOG_DEBUG, "ping select timeout = %2ld.%06ld seconds",
 					       dtimeout.tv_sec, dtimeout.tv_usec);
 
 				if (select
@@ -156,7 +156,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 						    ((struct sockaddr_in *)&to)->sin_addr.s_addr) {
 
 							if (verbose && logtick && ticker == 1)
-								log_message(LOG_INFO, "got answer from target %s", target);
+								log_message(LOG_DEBUG, "got answer from target %s", target);
 
 							return (ENOERR);
 						}

@@ -52,7 +52,7 @@ static void usage(char *progname)
 static void log_end(void)
 {
 	/* Log the closing message */
-	log_message(LOG_INFO, "stopping watchdog keepalive daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
+	log_message(LOG_NOTICE, "stopping watchdog keepalive daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
 	close_logging();
 	usleep(100000);		/* 0.1s to make sure log is written */
 	return;
@@ -146,7 +146,7 @@ int main(int argc, char *const argv[])
 
 	/* Log the starting message */
 	open_logging(NULL, MSG_TO_SYSLOG);
-	log_message(LOG_INFO, "starting watchdog keepalive daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
+	log_message(LOG_NOTICE, "starting watchdog keepalive daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
 	if (devname == NULL)
 		log_message(LOG_INFO, " no watchdog device configured, aborting");
 	else

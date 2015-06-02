@@ -85,7 +85,7 @@ static void safe_sleep(int nsec)
 static void log_end(void)
 {
 	/* Log the closing message */
-	log_message(LOG_INFO, "stopping daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
+	log_message(LOG_NOTICE, "stopping daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
 	closelog();
 	safe_sleep(5);		/* make sure log is written */
 
