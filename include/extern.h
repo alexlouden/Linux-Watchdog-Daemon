@@ -23,7 +23,6 @@ struct ifmode {
 };
 
 struct tempmode {
-	int	in_use;
 	unsigned char have1, have2, have3;
 };
 

@@ -161,20 +161,13 @@ available as free. As soon as more virtual memory is used action is taken by
 Note, however, that watchdog does not distinguish between
 different types of memory usage. It just checks for free virtual memory.
 .PP
-If you have a machine with temperature sensor(s) you can specify the maximal
-allowed temperature. Once this temperature is reached the system is halted.
-The default value is 90 C. Typically the temperature information is provided
-by the
-.B sensors
-package as files in the virtual filesystem /sys/device and can be found
-using, for example, the command 
-
-    find /sys -name 'temp*input' -print
-
-These files hold the temperature in milli-Celsius. The
+If you have a watchdog card with temperature sensor you can specify 
+the maximal allowed temperature. Once this temperature is reached the
+system is halted. The default value is 120. There is no unit conversion so make
+sure you use the same unit as your hardware. 
 .B watchdog 
-will issue warnings once the temperature increases 90%, 95% and 98% of
-this temperature.
+will issue warnings
+once the temperature increases 90%, 95% and 98% of this temperature.
 .PP
 When using file mode 
 .B watchdog 

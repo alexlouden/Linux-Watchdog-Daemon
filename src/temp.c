@@ -17,8 +17,6 @@ static int templevel1;
 static int templevel2;
 static int templevel3;
 
-static int read_temp_sensor(const char *name, int *val);
-
 /* ================================================================= */
 
 int open_tempcheck(struct list *tlist)
@@ -26,29 +24,19 @@ int open_tempcheck(struct list *tlist)
 	int rv = -1;
 	struct list *act;
 
-	close_tempcheck();
-
 	if (tlist != NULL) {
 		/* Use temp_fd as in-use flag. */
 		temp_fd = 0;
 
 		/*
 		 * Clear flags and set/compute warning and max thresholds. Make
-		 * sure that each level is distinct and properly ordered so that
+		 * sure that each level is distinct and properly orderd so that
 		 * we have templevel1 < templevel2 < templevel3 < maxtemp
 		 */
 		for (act = tlist; act != NULL; act = act->next) {
-			int itmp = 0;
 			act->parameter.temp.have1 = FALSE;
 			act->parameter.temp.have2 = FALSE;
 			act->parameter.temp.have3 = FALSE;
-			/* Check the sensors is usable when initialising. */
-			if (read_temp_sensor(act->name, &itmp) == ENOERR) {
-				act->parameter.temp.in_use = TRUE;
-			} else {
-				act->parameter.temp.in_use = FALSE;
-				log_message(LOG_WARNING, "Disabling temperature check for %s", act->name);
-			}
 		}
 
 		templevel3 = (maxtemp * 98) / 100;
@@ -138,7 +126,7 @@ int check_temp(struct list *act)
 	int err;
 
 	/* is the temperature device open? */
-	if (temp_fd == -1 || act == NULL || act->parameter.temp.in_use == FALSE)
+	if (temp_fd == -1)
 		return (ENOERR);
 
 	err = read_temp_sensor(act->name, &temperature);
