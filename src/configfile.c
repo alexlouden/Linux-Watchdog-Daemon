@@ -44,7 +44,7 @@ static void add_test_binaries(const char *path);
 #define REPAIRBIN		"repair-binary"
 #define REPAIRTIMEOUT		"repair-timeout"
 #define SOFTBOOT		"softboot-option"
-#define TEMP			"temperature-device"
+#define TEMP			"temperature-sensor"
 #define TEMPPOWEROFF   		"temp-power-off"
 #define TESTBIN			"test-binary"
 #define TESTTIMEOUT		"test-timeout"
@@ -68,7 +68,7 @@ int maxload5 = 0;
 int maxload15 = 0;
 int minpages = 0;
 int minalloc = 0;
-int maxtemp = 120;
+int maxtemp = 90;
 int pingcount = 3;
 int temp_poweroff = TRUE;
 
