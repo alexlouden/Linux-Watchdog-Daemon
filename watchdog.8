@@ -115,6 +115,13 @@ are executed and the results are logged as usual, but no action is taken.
 Also your hardware card or the kernel software watchdog driver is not
 enabled. NOTE: This still allows 'repair' actions to run, but the daemon
 itself will not attempt a reboot.
+.TP
+.BR \-X " \fInum\fR, " \-\-loop\-exit " \fInum"
+Run for 'num' loops then exit as if SIG_TERM was received. Intended for test/debug (e.g. using
+.B valgrind
+for checking memory access). If the daemon exits on a loop counter and you have the
+.I CONFIG_WATCHDOG_NOWAYOUT
+option compiled for the kernel or device-driver then an unplanned reboot will follow - be warned!
 .SH FUNCTION
 After
 .B watchdog 

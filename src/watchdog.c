@@ -47,6 +47,7 @@ static void usage(char *progname)
 	fprintf(stderr, "  -c | --config-file <file>  specify location of config file\n");
 	fprintf(stderr, "  -f | --force               don't sanity-check config\n");
 	fprintf(stderr, "  -F | --foreground          run in foreground\n");
+	fprintf(stderr, "  -X | --loop-exit <number>  run a fixed number of loops then exit\n");
 	fprintf(stderr, "  -q | --no-action           do not reboot or halt\n");
 	fprintf(stderr, "  -b | --softboot            soft-boot on error\n");
 	fprintf(stderr, "  -s | --sync                sync filesystem\n");
@@ -204,7 +205,7 @@ int main(int argc, char *const argv[])
 	char *configfile = CONFIG_FILENAME;
 	struct list *act;
 	char *progname;
-	char *opts = "d:i:n:Ffsvbql:p:t:c:r:m:a:";
+	char *opts = "d:i:n:Ffsvbql:p:t:c:r:m:a:X:";
 	struct option long_options[] = {
 		{"config-file", required_argument, NULL, 'c'},
 		{"foreground", no_argument, NULL, 'F'},
@@ -213,9 +214,11 @@ int main(int argc, char *const argv[])
 		{"no-action", no_argument, NULL, 'q'},
 		{"verbose", no_argument, NULL, 'v'},
 		{"softboot", no_argument, NULL, 'b'},
+		{"loop-exit", required_argument, NULL, 'X'},
 		{NULL, 0, NULL, 0}
 	};
 	long count = 0L;
+	long count_max = 0L;
 
 	progname = basename(argv[0]);
 	open_logging(progname, MSG_TO_STDERR | MSG_TO_SYSLOG);
@@ -256,6 +259,10 @@ int main(int argc, char *const argv[])
 			break;
 		case 'v':
 			verbose = TRUE;
+			break;
+		case 'X':
+			count_max = atol(optarg);
+			log_message(LOG_WARNING, "loop exit on interval counter = %ld", count_max);
 			break;
 		default:
 			usage(progname);
@@ -421,15 +428,21 @@ int main(int argc, char *const argv[])
 		/* we have just triggered the device with the last check */
 		usleep(tint * 1000000);
 
+		count++;
+
 		/* do verbose logging */
 		if (verbose && logtick && (--ticker == 0)) {
 			ticker = logtick;
-			count += logtick;
 			log_message(LOG_DEBUG, "still alive after %ld interval(s)", count);
+		}
+
+		if (count_max > 0 && count >= count_max) {
+			log_message(LOG_WARNING, "loop exit on interval counter reached");
+			_running = 0;
 		}
 	}
 
 	terminate(EXIT_SUCCESS);
 	/* not reached */
-	exit(EXIT_SUCCESS);
+	return (EXIT_SUCCESS);
 }
