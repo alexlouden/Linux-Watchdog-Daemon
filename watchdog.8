@@ -1,4 +1,4 @@
-.TH WATCHDOG 8 "August 2013"
+.TH WATCHDOG 8 "June 2015"
 .UC 4
 .SH NAME
 watchdog \- a software watchdog daemon
@@ -75,7 +75,7 @@ feature. This
 mode will log each several infos in 
 .I LOG_DAEMON 
 with priority 
-.IR LOG_INFO.
+.IR LOG_DEBUG.
 This is useful if you want to see exactly what happened until the watchdog rebooted
 the system. Currently it logs the temperature (if available), the load
 average, the change date of the files it checks and how often it went to sleep.
@@ -113,8 +113,7 @@ as the configuration file instead of the default
 Do not reboot or halt the machine. This is for testing purposes. All checks
 are executed and the results are logged as usual, but no action is taken.
 Also your hardware card or the kernel software watchdog driver is not
-enabled. Temperature checking is also disabled since this triggers
-the hardware watchdog on some cards.
+enabled.
 .SH FUNCTION
 After
 .B watchdog 
@@ -162,19 +161,27 @@ Note, however, that watchdog does not distinguish between
 different types of memory usage. It just checks for free virtual memory.
 .PP
 If you have a machine with temperature sensor(s) you can specify the maximal
-allowed temperature. Once this temperature is reached the system is halted.
-The default value is 90 C. Typically the temperature information is provided
-by the
+allowed temperature. Once this temperature is reached on any sensor the system
+is powered off. The default value is 90 C. Typically the temperature information
+is provided by the
 .B sensors
 package as files in the virtual filesystem /sys/device and can be found
 using, for example, the command 
 
     find /sys -name 'temp*input' -print
 
-These files hold the temperature in milli-Celsius. The
+These files hold the temperature in milli-Celsius. You can have multiple sensors
+used in the config file. For example to change to 75C maximum and to check two
+virtual files for the system temperature you might have this:
+
+    max-temperature = 75
+    temperature-sensor = /sys/class/hwmon/hwmon0/device/temp1_input
+    temperature-sensor = /sys/class/hwmon/hwmon0/device/temp2_input
+
+The
 .B watchdog 
 will issue warnings once the temperature increases 90%, 95% and 98% of
-this temperature.
+the configured maximum temperature.
 .PP
 When using file mode 
 .B watchdog 
@@ -206,7 +213,7 @@ up again and catches it; this is harmless, don't worry about it.
 .PP
 In ping mode 
 .B watchdog 
-tries to ping the given IP addresses. These addresses do
+tries to ping the given IPv4 addresses. These addresses do
 not have to be a single machine. It is possible to ping to a broadcast
 address instead to see if at least one machine in a subnet is still living.
 .PP
@@ -297,8 +304,9 @@ script instead.
 Reset the system. This is not exactly an error message but a command to
 .BR watchdog . 
 If the return code is this the 
-.B watchdog will simply refuse to write the
-kernel device again.
+.B watchdog
+will attempt to hard-reset the machine without attempting any sort of orderly
+stopping of process, unmounting of file systems, etc.
 .TP
 253 
 Maximum load average exceeded.
