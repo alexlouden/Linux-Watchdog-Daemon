@@ -69,18 +69,6 @@ typedef struct _proc_ {
 	struct _proc_ *next;	/* Pointer to next struct.        */
 } PROC;
 
-/* A version of sleep() that keeps the watchdog timer alive. */
-static void safe_sleep(int nsec)
-{
-	int i;
-
-	keep_alive();
-	for (i=0; i<nsec; i++) {
-		sleep(1);
-		keep_alive();
-	}
-}
-
 /* write a log entry on exit */
 static void log_end(void)
 {

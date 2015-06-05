@@ -106,21 +106,23 @@ int set_watchdog_timeout(int timeout)
 /* write to the watchdog device */
 int keep_alive(void)
 {
+	int err = ENOERR;
+
 	if (watchdog_fd == -1)
 		return (ENOERR);
 
 	if (write(watchdog_fd, "\0", 1) < 0) {
-		int err = errno;
+		err = errno;
 		log_message(LOG_ERR, "write watchdog device gave error %d = '%s'!", err, strerror(err));
-
-		if (softboot)
-			return (err);
 	}
 
 	/* MJ 20/2/2001 write a heartbeat to a file outside the syslog, because:
 	   - there is no guarantee the system logger is up and running
 	   - easier and quicker to parse checkpoint information */
 	write_heartbeat();
+
+	if (softboot)
+		return (err);
 
 	return (ENOERR);
 }
@@ -161,4 +163,16 @@ int close_watchdog(void)
 	watchdog_fd = -1;
 
 	return rv;
+}
+
+/* A version of sleep() that keeps the watchdog timer alive. */
+void safe_sleep(int sec)
+{
+int ii;
+
+	keep_alive();
+	for (ii=0; ii<sec; ii++) {
+		sleep(1);
+		keep_alive();
+	}
 }

@@ -131,6 +131,7 @@ int set_watchdog_timeout(int timeout);
 int keep_alive(void);
 int get_watchdog_fd(void);
 int close_watchdog(void);
+void safe_sleep(int sec);
 
 /** load.c **/
 int open_loadcheck(void);
