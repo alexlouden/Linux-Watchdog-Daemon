@@ -15,9 +15,14 @@
 #include "config.h"
 #endif
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <assert.h>
+
 #include "logmessage.h"
 
-#define MAX_MESSAGE		1024
+#define MAX_MESSAGE		2048
 #define MAX_PROG_NAME	256
 
 static int output_message(int level, char *buf);
@@ -81,11 +86,10 @@ static int output_message(int level, char *buf)
 #endif	/* !USE_SYSLOG */
 		rv = fprintf(fp, "%s: %s\n", progname, buf);
 		if(rv < 0 || fflush(fp)) {
-		/* Error writing out to terminal - don't bother trying again. */
-		using_terminal = 0;
-
+			/* Error writing out to terminal - don't bother trying again. */
+			using_terminal = 0;
 #if USE_SYSLOG
-		syslog(level, "failed writing message terminal (rv=%d, errno='%s')", rv, strerror(errno));
+			syslog(LOG_WARNING, "failed writing message terminal (rv=%d, errno='%s')", rv, strerror(errno));
 #endif /* USE_SYSLOG */
 		}
 	}

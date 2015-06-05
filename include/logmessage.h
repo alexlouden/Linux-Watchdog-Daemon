@@ -1,9 +1,7 @@
 #ifndef _LOGMESSAGE_H
 #define _LOGMESSAGE_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
+/* These include files are for the strerror(errno) replacement for '%m' format option of syslog. */
 
 #include <errno.h>
 #include <string.h>
