@@ -154,17 +154,18 @@ static int repair(char *rbinary, int result, char *name, int version)
 
 static void wd_action(int result, char *rbinary, char *name, int version)
 {
-	/* if no-action flag set, do nothing */
+
 	/* no error, keep on working */
-	if (result == ENOERR || no_act == TRUE)
+	if (result == ENOERR)
 		return;
 
 	/* error that might be repairable */
 	if (result != EREBOOT)
 		result = repair(rbinary, result, name, version);
 
+	/* if no-action flag set, do nothing */
 	/* if still error, reboot */
-	if (result != ENOERR)
+	if (result != ENOERR && no_act == FALSE)
 		do_shutdown(result);
 
 }

@@ -113,7 +113,8 @@ as the configuration file instead of the default
 Do not reboot or halt the machine. This is for testing purposes. All checks
 are executed and the results are logged as usual, but no action is taken.
 Also your hardware card or the kernel software watchdog driver is not
-enabled.
+enabled. NOTE: This still allows 'repair' actions to run, but the daemon
+itself will not attempt a reboot.
 .SH FUNCTION
 After
 .B watchdog 
