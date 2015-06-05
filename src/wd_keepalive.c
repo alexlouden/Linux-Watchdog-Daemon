@@ -44,7 +44,10 @@ volatile sig_atomic_t _running = 1;
 static void usage(char *progname)
 {
 	fprintf(stderr, "%s version %d.%d, usage:\n", progname, MAJOR_VERSION, MINOR_VERSION);
-	fprintf(stderr, "%s [-c | --config-file <config_file>]\n", progname);
+	fprintf(stderr, "%s [options]\n", progname);
+	fprintf(stderr, "options:\n");
+	fprintf(stderr, "  -c | --config-file <file>  specify location of config file\n");
+	fprintf(stderr, "  -X | --loop-exit <number>  run a fixed number of loops then exit\n");
 	exit(1);
 }
 
@@ -88,12 +91,13 @@ void terminate(void)
 int main(int argc, char *const argv[])
 {
 	char *configfile = CONFIG_FILENAME;
-	int count = 0;
+	long count = 0L;
+	long count_max = 0L;
 	int c;
 	char *progname;
 
 	/* allow all options watchdog understands too */
-	char *opts = "d:i:n:fsvbql:p:t:c:r:m:a:";
+	char *opts = "d:i:n:fsvbql:p:t:c:r:m:a:X:";
 	struct option long_options[] = {
 		{"config-file", required_argument, NULL, 'c'},
 		{"force", no_argument, NULL, 'f'},
@@ -101,6 +105,7 @@ int main(int argc, char *const argv[])
 		{"no-action", no_argument, NULL, 'q'},
 		{"verbose", no_argument, NULL, 'v'},
 		{"softboot", no_argument, NULL, 'b'},
+		{"loop-exit", required_argument, NULL, 'X'},
 		{NULL, 0, NULL, 0}
 	};
 
@@ -127,6 +132,10 @@ int main(int argc, char *const argv[])
 		case 'b':
 		case 'q':
 		case 'v':
+			break;
+		case 'X':
+			count_max = atol(optarg);
+			log_message(LOG_WARNING, "loop exit on interval counter = %ld", count_max);
 			break;
 		default:
 			usage(progname);
@@ -177,6 +186,11 @@ int main(int argc, char *const argv[])
 		sleep(tint);
 
 		count++;
+
+		if (count_max > 0 && count >= count_max) {
+			log_message(LOG_WARNING, "loop exit on interval counter reached");
+			_running = 0;
+		}
 	}
 
 	terminate();

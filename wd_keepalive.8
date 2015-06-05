@@ -54,6 +54,13 @@ Use
 .I config-file
 as the configuration file instead of the default
 .IR /etc/watchdog.conf .
+.TP
+.BR \-X " \fInum\fR, " \-\-loop\-exit " \fInum"
+Run for 'num' loops then exit as if SIG_TERM was received. Intended for test/debug (e.g. using
+.B valgrind
+for checking memory access). If the daemon exits on a loop counter and you have the
+.I CONFIG_WATCHDOG_NOWAYOUT
+option compiled for the kernel or device-driver then an unplanned reboot will follow - be warned!
 .SH FILES
 .TP
 .I /dev/watchdog
