@@ -356,7 +356,7 @@ static void try_clean_shutdown(int errorcode)
 	safe_sleep(1);
 	/* Do this twice in case we have out-of-memory problems. */
 	(void)killall5(SIGTERM);
-        safe_sleep(4);
+	safe_sleep(sigterm_delay-1);
 	(void)killall5(SIGKILL);
 	keep_alive();
 	/* Out-of-memory safeguard again. */

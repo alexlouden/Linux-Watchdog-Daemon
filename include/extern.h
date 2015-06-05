@@ -73,6 +73,7 @@ extern int minalloc;
 extern int maxtemp;
 extern int pingcount;
 extern int temp_poweroff;
+extern int sigterm_delay;
 
 extern char *devname;
 extern char *admin;

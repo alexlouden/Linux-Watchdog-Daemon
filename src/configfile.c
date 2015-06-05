@@ -53,6 +53,7 @@ static void add_test_binaries(const char *path);
 #define HBSTAMPS		"heartbeat-stamps"
 #define LOGDIR			"log-dir"
 #define TESTDIR			"test-directory"
+#define SIGTERM_DELAY	"sigterm-delay"
 
 #ifndef TESTBIN_PATH
 #define TESTBIN_PATH 		NULL
@@ -72,6 +73,7 @@ int minalloc = 0;
 int maxtemp = 90;
 int pingcount = 3;
 int temp_poweroff = TRUE;
+int sigterm_delay = 5;	/* Seconds from first SIGTERM to sending SIGKILL during shutdown. */
 
 char *devname = NULL;
 char *admin = "root";
@@ -296,6 +298,9 @@ void read_config(char *configfile)
 			} else if (strncmp(line + i, TEMPPOWEROFF, strlen(TEMPPOWEROFF)) == 0) {
 				if (!spool(line, &i, strlen(TEMPPOWEROFF)))
 					temp_poweroff = (strncmp(line + i, "yes", 3) == 0) ? TRUE : FALSE;
+			} else if (strncmp(line + i, SIGTERM_DELAY, strlen(SIGTERM_DELAY)) == 0) {
+				if (!spool(line, &i, strlen(SIGTERM_DELAY)))
+					sigterm_delay = atol(line + i);
 			} else {
 				fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
 			}
