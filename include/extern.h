@@ -56,6 +56,9 @@ struct list {
 
 #define TS_SIZE	12
 
+#define MIN_WD_TIMEOUT 3	/* Watchdog hardware timeout, must be 2 at least with interval=1, but testing shows 3 minimum. */
+#define MAX_WD_TIMEOUT 600	/* Watchdog hardware timeout. */
+
 /* === External variables === */
 /* From configfile.c */
 extern int tint;

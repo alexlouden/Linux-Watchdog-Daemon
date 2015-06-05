@@ -27,8 +27,6 @@
 #include "extern.h"
 #include "watch_err.h"
 
-static const int MAX_TIMEOUT = 254;	/* Reasonable limit? Not -1 as char, and probably long enough. */
-
 static int watchdog_fd = -1;
 
 /*
@@ -39,13 +37,15 @@ int open_watchdog(char *name, int timeout)
 {
 	struct watchdog_info ident;
 	int rv = 0;
+	memset(&ident, 0, sizeof(ident));
 
 	close_watchdog();
 
 	if (name != NULL) {
 		watchdog_fd = open(name, O_WRONLY | O_CLOEXEC);
 		if (watchdog_fd == -1) {
-			log_message(LOG_ERR, "cannot open %s (errno = %d = '%s')", name, errno, strerror(errno));
+			int err = errno;
+			log_message(LOG_ERR, "cannot open %s (errno = %d = '%s')", name, err, strerror(err));
 			rv = -1;
 			/* do not exit here per default */
 			/* we can use watchdog even if there is no watchdog device */
@@ -54,7 +54,8 @@ int open_watchdog(char *name, int timeout)
 
 			/* Also log watchdog identity */
 			if (ioctl(watchdog_fd, WDIOC_GETSUPPORT, &ident) < 0) {
-				log_message(LOG_ERR, "cannot get watchdog identity (errno = %d = '%s')", errno, strerror(errno));
+				int err = errno;
+				log_message(LOG_ERR, "cannot get watchdog identity (errno = %d = '%s')", err, strerror(err));
 			} else {
 				ident.identity[sizeof(ident.identity) - 1] = '\0';	/* Be sure */
 				log_message(LOG_INFO, "hardware watchdog identity: %s", ident.identity);
@@ -75,12 +76,13 @@ int set_watchdog_timeout(int timeout)
 
 	if (watchdog_fd != -1) {
 		if (timeout > 0) {
-			if (timeout > MAX_TIMEOUT)
-				timeout = MAX_TIMEOUT;
+			if (timeout > MAX_WD_TIMEOUT)
+				timeout = MAX_WD_TIMEOUT;
 
 			/* Set the watchdog hard-stop timeout; default = unset (use driver default) */
 			if (ioctl(watchdog_fd, WDIOC_SETTIMEOUT, &timeout) < 0) {
-				log_message(LOG_ERR, "cannot set timeout %d (errno = %d = '%s')", timeout, errno, strerror(errno));
+				int err = errno;
+				log_message(LOG_ERR, "cannot set timeout %d (errno = %d = '%s')", timeout, err, strerror(err));
 			} else {
 				log_message(LOG_INFO, "watchdog now set to %d seconds", timeout);
 				rv = 0;
@@ -89,7 +91,8 @@ int set_watchdog_timeout(int timeout)
 			timeout = 0;
 			/* If called with timeout <= 0 then query device. */
 			if (ioctl(watchdog_fd, WDIOC_GETTIMEOUT, &timeout) < 0) {
-				log_message(LOG_ERR, "cannot get timeout (errno = %d = '%s')", errno, strerror(errno));
+				int err = errno;
+				log_message(LOG_ERR, "cannot get timeout (errno = %d = '%s')", err, strerror(err));
 			} else {
 				log_message(LOG_INFO, "watchdog was set to %d seconds", timeout);
 				rv = 0;
