@@ -168,10 +168,10 @@ int close_watchdog(void)
 /* A version of sleep() that keeps the watchdog timer alive. */
 void safe_sleep(int sec)
 {
-int ii;
+	int i;
 
 	keep_alive();
-	for (ii=0; ii<sec; ii++) {
+	for (i=0; i<sec; i++) {
 		sleep(1);
 		keep_alive();
 	}
