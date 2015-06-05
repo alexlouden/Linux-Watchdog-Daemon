@@ -96,7 +96,7 @@ extern struct list *iface_list;
 extern struct list *temp_list;
 
 extern char *tbinary;
-extern char *rbinary;
+extern char *repair_bin;
 
 /* = Not (yet) from config file. = */
 

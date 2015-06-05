@@ -98,7 +98,7 @@ struct list *iface_list = NULL;
 struct list *temp_list = NULL;
 
 char *tbinary = NULL;
-char *rbinary = NULL;
+char *repair_bin = NULL;
 
 /* Command line options also used globally. */
 int softboot = FALSE;
@@ -223,7 +223,7 @@ void read_config(char *configfile)
 					schedprio = atol(line + i);
 			} else if (strncmp(line + i, REPAIRBIN, strlen(REPAIRBIN)) == 0) {
 				if (!spool(line, &i, strlen(REPAIRBIN)))
-					rbinary = xstrdup(line + i);
+					repair_bin = xstrdup(line + i);
 			} else if (strncmp(line + i, REPAIRTIMEOUT, strlen(REPAIRTIMEOUT)) == 0) {
 				if (!spool(line, &i, strlen(REPAIRTIMEOUT)))
 					repair_timeout = atol(line + i);

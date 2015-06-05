@@ -348,7 +348,7 @@ int main(int argc, char *const argv[])
 
 	log_message(LOG_INFO, "test=%s(%ld) repair=%s(%ld) alive=%s heartbeat=%s to=%s no_act=%s force=%s",
 		(tbinary == NULL) ? "none" : tbinary, test_timeout,
-		(rbinary == NULL) ? "none" : rbinary, repair_timeout,
+		(repair_bin == NULL) ? "none" : repair_bin, repair_timeout,
 		(devname == NULL) ? "none" : devname,
 		(heartbeat == NULL) ? "none" : heartbeat,
 		(admin == NULL) ? "none" : admin,
@@ -375,53 +375,53 @@ int main(int argc, char *const argv[])
 
 	/* main loop: update after <tint> seconds */
 	while (_running) {
-		wd_action(keep_alive(), rbinary, NULL, 0);
+		wd_action(keep_alive(), repair_bin, NULL, 0);
 
 		/* sync system if we have to */
-		do_check(sync_system(sync_it), rbinary, NULL);
+		do_check(sync_system(sync_it), repair_bin, NULL);
 
 		/* check file table */
-		do_check(check_file_table(), rbinary, NULL);
+		do_check(check_file_table(), repair_bin, NULL);
 
 		/* check load average */
-		do_check(check_load(), rbinary, NULL);
+		do_check(check_load(), repair_bin, NULL);
 
 		/* check free memory */
-		do_check(check_memory(), rbinary, NULL);
+		do_check(check_memory(), repair_bin, NULL);
 
 		/* check allocatable memory */
-		do_check(check_allocatable(), rbinary, NULL);
+		do_check(check_allocatable(), repair_bin, NULL);
 
 		/* check temperature */
 		for (act = temp_list; act != NULL; act = act->next)
-			do_check(check_temp(act), rbinary, NULL);
+			do_check(check_temp(act), repair_bin, NULL);
 
 		/* in filemode stat file */
 		for (act = file_list; act != NULL; act = act->next)
-			do_check(check_file_stat(act), rbinary, act->name);
+			do_check(check_file_stat(act), repair_bin, act->name);
 
 		/* in pidmode kill -0 processes */
 		for (act = pidfile_list; act != NULL; act = act->next)
-			do_check(check_pidfile(act), rbinary, act->name);
+			do_check(check_pidfile(act), repair_bin, act->name);
 
 		/* in network mode check the given devices for input */
 		for (act = iface_list; act != NULL; act = act->next)
-			do_check(check_iface(act), rbinary, act->name);
+			do_check(check_iface(act), repair_bin, act->name);
 
 		/* in ping mode ping the ip address */
 		for (act = target_list; act != NULL; act = act->next)
 			do_check(check_net
 				 (act->name, act->parameter.net.sock_fp, act->parameter.net.to,
-				  act->parameter.net.packet, tint, pingcount), rbinary, act->name);
+				  act->parameter.net.packet, tint, pingcount), repair_bin, act->name);
 
 		/* in user mode execute the given binary or just test fork() call */
-		do_check(check_bin(tbinary, test_timeout, 0), rbinary, tbinary);
+		do_check(check_bin(tbinary, test_timeout, 0), repair_bin, tbinary);
 
 #ifdef TESTBIN_PATH
 		/* test/repair binaries in the watchdog.d directory */
 		for (act = tr_bin_list; act != NULL; act = act->next)
 			/* Use version 1 for testbin-path */
-			do_check2(check_bin(act->name, test_timeout, 1), act->name, rbinary, act->name);
+			do_check2(check_bin(act->name, test_timeout, 1), act->name, repair_bin, act->name);
 #endif
 
 		/* finally sleep for a full cycle */
