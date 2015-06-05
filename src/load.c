@@ -31,7 +31,9 @@ int open_loadcheck(void)
 {
 	int rv = -1;
 
-	if (maxload1 > 0) {
+	close_loadcheck();
+
+	if (maxload1 || maxload5 || maxload15) {
 		/* open the load average file */
 		load_fd = open(load_name, O_RDONLY);
 		if (load_fd == -1) {
@@ -53,7 +55,7 @@ int check_load(void)
 	int n;
 
 	/* is the load average file open? */
-	if (load_fd == -1 || maxload1 == 0 || maxload5 == 0 || maxload15 == 0)
+	if (load_fd == -1)
 		return (ENOERR);
 
 	/* position pointer at start of file */
@@ -89,9 +91,10 @@ int check_load(void)
 		avg5 = atoi(ptr);
 		ptr = strchr(ptr + 1, ' ');
 	}
-	if (ptr != NULL)
+
+	if (ptr != NULL) {
 		avg15 = atoi(ptr);
-	else {
+	} else {
 		log_message(LOG_ERR, "%s does not contain any data (read = %s)", load_name, buf);
 
 		if (softboot)
@@ -103,7 +106,9 @@ int check_load(void)
 	if (verbose && logtick && ticker == 1)
 		log_message(LOG_DEBUG, "current load is %d %d %d", avg1, avg5, avg15);
 
-	if (avg1 > maxload1 || avg5 > maxload5 || avg15 > maxload15) {
+	if ((maxload1  > 0 && avg1  > maxload1) ||
+		(maxload5  > 0 && avg5  > maxload5) ||
+		(maxload15 > 0 && avg15 > maxload15)) {
 
 		log_message(LOG_ERR, "loadavg %d %d %d is higher than the given threshold %d %d %d!",
 							avg1, avg5, avg15,
