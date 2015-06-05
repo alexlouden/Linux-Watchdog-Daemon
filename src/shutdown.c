@@ -99,13 +99,13 @@ void sigterm_handler(int arg)
 }
 
 /* on exit we close the device and log that we stop */
-void terminate(void)
+void terminate(int ecode)
 {
 	unlock_our_memory();
 	close_all();
 	remove_pid_file();
 	log_end();
-	exit(0);
+	exit(ecode);
 }
 
 /* panic: we're still alive but shouldn't */

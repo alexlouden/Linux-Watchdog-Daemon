@@ -165,7 +165,7 @@ int check_allocatable(void);
 /** shutdown.c **/
 void do_shutdown(int errorcode);
 void sigterm_handler(int arg);
-void terminate(void) GCC_NORETURN;
+void terminate(int ecode) GCC_NORETURN;
 
 /** heartbeat.c **/
 int open_heartbeat(void);

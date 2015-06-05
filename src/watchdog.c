@@ -429,7 +429,7 @@ int main(int argc, char *const argv[])
 		}
 	}
 
-	terminate();
+	terminate(EXIT_SUCCESS);
 	/* not reached */
 	exit(EXIT_SUCCESS);
 }

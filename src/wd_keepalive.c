@@ -51,16 +51,6 @@ static void usage(char *progname)
 	exit(1);
 }
 
-/* write a log entry on exit */
-static void log_end(void)
-{
-	/* Log the closing message */
-	log_message(LOG_NOTICE, "stopping watchdog keepalive daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
-	close_logging();
-	usleep(100000);		/* 0.1s to make sure log is written */
-	return;
-}
-
 /* Dummy function for keep_alive.c use */
 int write_heartbeat(void)
 {
@@ -79,13 +69,15 @@ void sigterm_handler(int arg)
 }
 
 /* on exit we close the device and log that we stop */
-void terminate(void)
+void terminate(int ecode)
 {
+	log_message(LOG_NOTICE, "stopping watchdog keepalive daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
 	unlock_our_memory();
 	close_all();
 	remove_pid_file();
-	log_end();
-	exit(0);
+	close_logging();
+	usleep(100000);		/* 0.1s to make sure log is written */
+	exit(ecode);
 }
 
 int main(int argc, char *const argv[])
@@ -144,6 +136,13 @@ int main(int argc, char *const argv[])
 
 	read_config(configfile);
 
+	/* this daemon has no other function than writing to this device
+	 * i.e. if there is no device given we better punt */
+	if (devname == NULL) {
+		log_message(LOG_INFO, " no watchdog device configured, aborting");
+		exit(0);
+	}
+
 	if (wd_daemon(0, 0)) {
 		fatal_error(EX_SYSERR, "failed to daemonize (%s)", strerror(errno));
 	}
@@ -156,21 +155,11 @@ int main(int argc, char *const argv[])
 	/* Log the starting message */
 	open_logging(NULL, MSG_TO_SYSLOG);
 	log_message(LOG_NOTICE, "starting watchdog keepalive daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
-	if (devname == NULL)
-		log_message(LOG_INFO, " no watchdog device configured, aborting");
-	else
-		log_message(LOG_INFO, " int=%d alive=%s realtime=%s", tint, devname, realtime ? "yes" : "no");
-
-	/* this daemon has no other function than writing to this device
-	 * i.e. if there is no device given we better punt */
-	if (devname == NULL)
-		terminate();
+	log_message(LOG_INFO, " int=%d alive=%s realtime=%s", tint, devname, realtime ? "yes" : "no");
 
 	/* open the device */
 	if (open_watchdog(devname, dev_timeout) < 0) {
-		remove_pid_file();
-		log_end();
-		exit(1);
+		terminate(1);
 	}
 
 	/* set signal term to call sigterm_handler() */
@@ -193,7 +182,7 @@ int main(int argc, char *const argv[])
 		}
 	}
 
-	terminate();
+	terminate(0);
 	/* not reached */
 return 0;
 }
