@@ -69,17 +69,6 @@ typedef struct _proc_ {
 	struct _proc_ *next;	/* Pointer to next struct.        */
 } PROC;
 
-/* write a log entry on exit */
-static void log_end(void)
-{
-	/* Log the closing message */
-	log_message(LOG_NOTICE, "stopping daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
-	closelog();
-	safe_sleep(5);		/* make sure log is written */
-
-	return;
-}
-
 /* close the device and check for error */
 static void close_all(void)
 {
@@ -101,10 +90,12 @@ void sigterm_handler(int arg)
 /* on exit we close the device and log that we stop */
 void terminate(int ecode)
 {
+	log_message(LOG_NOTICE, "stopping daemon (%d.%d)", MAJOR_VERSION, MINOR_VERSION);
 	unlock_our_memory();
 	close_all();
 	remove_pid_file();
-	log_end();
+	close_logging();
+	usleep(100000);		/* 0.1s to make sure log is written */
 	exit(ecode);
 }
 
