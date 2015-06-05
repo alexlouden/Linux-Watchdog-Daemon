@@ -347,8 +347,8 @@ void do_shutdown(int errorcode)
 		}
 	}
 
-	/* now tell syslog what's happening */
-	log_message(LOG_ALERT, "shutting down the system because of error %d", errorcode);
+	/* tell syslog what's happening */
+	log_message(LOG_ALERT, "shutting down the system because of error %d = '%s'", errorcode, wd_strerror(errorcode));
 	close_logging();
 
 	safe_sleep(10);		/* make sure log is written and mail is send */

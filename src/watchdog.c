@@ -146,7 +146,7 @@ static int repair(char *rbinary, int result, char *name, int version)
 	/* check result */
 	ret = WEXITSTATUS(result);
 	if (ret != 0) {
-		log_message(LOG_ERR, "repair binary %s returned %d", rbinary, ret);
+		log_message(LOG_ERR, "repair binary %s returned %d = '%s'", rbinary, ret, wd_strerror(ret));
 
 		if (ret == ERESET)	/* repair script says force hard reset, we give it a try */
 			sleep(dev_timeout * 4);

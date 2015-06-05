@@ -143,8 +143,9 @@ int check_bin(char *tbinary, time_t timeout, int version)
 		if (ret > 0) {
 			if (WIFEXITED(result) != 0) {
 				/* if one of the scripts returns an error code just return that code */
-				log_message(LOG_ERR, "test binary %s returned %d", tbinary, WEXITSTATUS(result));
-				return (WEXITSTATUS(result));
+				ret = WEXITSTATUS(result);
+				log_message(LOG_ERR, "test binary %s returned %d = '%s'", tbinary, ret, wd_strerror(ret));
+				return (ret);
 			} else if (WIFSIGNALED(result) != 0) {
 				/* if one of the scripts was killed return ECHKILL */
 				log_message(LOG_ERR, "test binary %s was killed by uncaught signal %d", tbinary, WTERMSIG(result));
@@ -154,7 +155,7 @@ int check_bin(char *tbinary, time_t timeout, int version)
 			/* in case there are still old childs running due to an error */
 			/* log that error */
 			if (ret != 0 && err != 0 && err != ECHILD) {
-				errno = err;
+				err = errno;
 				log_message(LOG_ERR, "child %d did not exit immediately (error = %d = '%s')", child_pid, err, strerror(err));
 				if (softboot)
 					return (err);

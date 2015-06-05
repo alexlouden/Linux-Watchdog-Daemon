@@ -180,4 +180,7 @@ int wd_daemon(int nochdir, int noclose);
 /** configfile.c **/
 void read_config(char *configfile);
 
+/** errorcodes.c **/
+const char *wd_strerror(int err);
+
 #endif /*_EXTERN_H_*/
