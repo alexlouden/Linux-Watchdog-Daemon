@@ -147,15 +147,9 @@ static int repair(char *rbinary, int result, char *name, int version)
 	ret = WEXITSTATUS(result);
 	if (ret != 0) {
 		log_message(LOG_ERR, "repair binary %s returned %d = '%s'", rbinary, ret, wd_strerror(ret));
-
-		if (ret == ERESET)	/* repair script says force hard reset, we give it a try */
-			sleep(dev_timeout * 4);
-
-		/* for all other errors or if we still live, we let shutdown handle it */
-		return (ret);
 	}
 
-	return (ENOERR);
+	return (ret);
 }
 
 static void wd_action(int result, char *rbinary, char *name, int version)

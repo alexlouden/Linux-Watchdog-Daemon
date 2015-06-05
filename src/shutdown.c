@@ -280,8 +280,8 @@ static void killall5(int sig)
 	resume_logging();
 }
 
-/* shut down the system */
-void do_shutdown(int errorcode)
+/* part that tries to shut down the system cleanly */
+static void try_clean_shutdown(int errorcode)
 {
 	int i = 0, fd;
 	char *seedbck = RANDOM_SEED;
@@ -347,8 +347,6 @@ void do_shutdown(int errorcode)
 		}
 	}
 
-	/* tell syslog what's happening */
-	log_message(LOG_ALERT, "shutting down the system because of error %d = '%s'", errorcode, wd_strerror(errorcode));
 	close_logging();
 
 	safe_sleep(10);		/* make sure log is written and mail is send */
@@ -451,6 +449,24 @@ void do_shutdown(int errorcode)
 
 	/* shut down interfaces (also taken from sysvinit source */
 	ifdown();
+}
+
+/* shut down the system */
+void do_shutdown(int errorcode)
+{
+	/* tell syslog what's happening */
+	log_message(LOG_ALERT, "shutting down the system because of error %d = '%s'", errorcode, wd_strerror(errorcode));
+
+	if(errorcode != ERESET)	{
+		try_clean_shutdown(errorcode);
+	} else {
+		/* We have been asked to hard-reset, make basic attempt at clean filesystem
+		 * but don't try stopping anything, etc, then used device (below) to do reset
+		 * action.
+		 */
+		sync();
+		sleep(1);
+	}
 
 	/* finally reboot */
 	if (errorcode != ETOOHOT) {
