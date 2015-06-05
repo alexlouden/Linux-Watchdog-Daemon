@@ -28,6 +28,8 @@
 #include "watch_err.h"
 
 static int watchdog_fd = -1;
+static int timeout_used = TIMER_MARGIN;
+static int Refresh_using_ioctl = FALSE;
 
 /*
  * Open the watchdog timer (if name non-NULL) and set the time-out value (if non-zero).
@@ -63,6 +65,21 @@ int open_watchdog(char *name, int timeout)
 		}
 	}
 
+	/* The IT8728 on Gigabyte motherboard (and similar) would trip due to the normal
+	 * refresh in the device driver failing to reset the timer for no obvious reason
+	 * (though the normal operation used the Consumer IR sender to refresh via an
+	 * interrupt - also a non-obvious method!) so this work-around simply sets the
+	 * time-out every refresh operation.
+	 *
+	 * See https://bugs.launchpad.net/ubuntu/+source/linux/+bug/932381
+	 *
+	 */
+	Refresh_using_ioctl = FALSE;
+	if (strcmp("IT87 WDT", (char *)ident.identity) == 0) {
+		Refresh_using_ioctl = TRUE;
+		log_message(LOG_INFO, "Running IT87 module fix-up");
+	}
+
 	return rv;
 }
 
@@ -79,6 +96,7 @@ int set_watchdog_timeout(int timeout)
 			if (timeout > MAX_WD_TIMEOUT)
 				timeout = MAX_WD_TIMEOUT;
 
+			timeout_used = timeout;
 			/* Set the watchdog hard-stop timeout; default = unset (use driver default) */
 			if (ioctl(watchdog_fd, WDIOC_SETTIMEOUT, &timeout) < 0) {
 				int err = errno;
@@ -111,9 +129,18 @@ int keep_alive(void)
 	if (watchdog_fd == -1)
 		return (ENOERR);
 
-	if (write(watchdog_fd, "\0", 1) < 0) {
-		err = errno;
-		log_message(LOG_ERR, "write watchdog device gave error %d = '%s'!", err, strerror(err));
+	if (Refresh_using_ioctl) {
+		int timeout = timeout_used;
+		if (ioctl(watchdog_fd, WDIOC_SETTIMEOUT, &timeout) < 0) {
+			err = errno;
+			log_message(LOG_ERR, "set watchdog timeout gave error %d = '%s'!", err, strerror(err));
+		}
+	} else {
+		if (write(watchdog_fd, "\0", 1) < 0) {
+			/* Normal use of the watchdog driver - any write refreshes it */
+			err = errno;
+			log_message(LOG_ERR, "write watchdog device gave error %d = '%s'!", err, strerror(err));
+		}
 	}
 
 	/* MJ 20/2/2001 write a heartbeat to a file outside the syslog, because:
