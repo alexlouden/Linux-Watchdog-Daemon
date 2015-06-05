@@ -31,6 +31,10 @@ static int using_syslog = 0;
 static int using_terminal = 0;
 static char progname[MAX_PROG_NAME];
 
+static int  err_count = 0;
+static int  err_level = LOG_DEBUG;
+static char err_buf[MAX_MESSAGE];
+
 /*
  * Prepare for message printing.
  *
@@ -48,6 +52,7 @@ int open_logging(const char *name, int flags)
 	if (name != NULL)
 		strncpy(progname, name, sizeof(progname) - 1);
 
+	err_count = 0;
 	using_terminal = (flags & MSG_TO_STDERR);
 
 	if (flags & MSG_TO_SYSLOG) {
@@ -76,8 +81,13 @@ static int output_message(int level, char *buf)
 	int rv = 0;
 
 #if USE_SYSLOG
-	if (using_syslog) {
+	if (using_syslog && err_count == 0) {
 		syslog(level, "%s", buf);
+	} else {
+		/* In 'suspend' mode, copy message so can output on 'resume'. */
+		err_count++;
+		err_level = level;
+		strncpy(err_buf, buf, sizeof(err_buf)-1);
 	}
 
 	if (using_terminal) {
@@ -88,7 +98,7 @@ static int output_message(int level, char *buf)
 		if(rv < 0 || fflush(fp)) {
 			/* Error writing out to terminal - don't bother trying again. */
 			using_terminal = 0;
-#if USE_SYSLOG
+#if USE_SYSLOG && 1
 			syslog(LOG_WARNING, "failed writing message terminal (rv=%d, errno='%s')", rv, strerror(errno));
 #endif /* USE_SYSLOG */
 		}
@@ -179,5 +189,44 @@ int close_logging(void)
 		rv = 0;
 	}
 
+	return rv;
+}
+
+/*
+ * Calling this function will stop any syslog output, and resume_logging() will start
+ * it again. Unlike the usual options, this is not closing the syslog connection and it
+ * will output of the last (if any) message generated during the suspended period on
+ * resumption (again, only if syslog is already in use).
+ */
+
+int suspend_logging(void)
+{
+	if (err_count == 0) {
+		err_count++; /* Start at 1 */
+	}
+	return 0;
+}
+
+/*
+ * Allow syslog output again (if it was in use) and send the last message during the
+ * suspended period (if any).
+ */
+
+int resume_logging(void)
+{
+	int rv = 0;
+	if (err_count && using_syslog) {
+		/* We start at 1 so remove that. */
+		err_count--;
+		if (err_count == 1) {
+			/* Exactly one message sent, output as if nothing happened. */
+			syslog(err_level, "%s", err_buf);
+		} else if (err_count > 1) {
+			/* More than one needed, but we only buffer one, so report loss. */
+			syslog(LOG_WARNING, "had %d messages in log suspend, last: %s", err_count, err_buf);
+			rv = -1;
+		}
+	}
+	err_count = 0;
 	return rv;
 }

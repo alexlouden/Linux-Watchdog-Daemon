@@ -258,27 +258,26 @@ static void killall5(int sig)
 
 	/* Since we ignore all signals, we don't have to worry here. MM */
 	/* Now stop all processes. */
+	suspend_logging();
 	kill(-1, SIGSTOP);
 
 	/* Find out our own 'sid'. */
-	if (readproc() < 0) {
-		kill(-1, SIGCONT);
-		return;
+	if (readproc() == 0) {
+		for (p = plist; p; p = p->next)
+			if (p->pid == daemon_pid) {
+				sid = p->sid;
+				break;
+			}
+		/* Now kill all processes except our session. */
+		for (p = plist; p; p = p->next)
+			if (p->pid != daemon_pid &&	/* Skip our process */
+				p->sid != sid && 	/* Skip our session */
+				p->sid != 0) 		/* Skip any kernel process. */
+					kill(p->pid, sig);
 	}
-	for (p = plist; p; p = p->next)
-		if (p->pid == daemon_pid) {
-			sid = p->sid;
-			break;
-		}
-	/* Now kill all processes except our session. */
-	for (p = plist; p; p = p->next)
-		if (p->pid != daemon_pid &&	/* Skip our process */
-			p->sid != sid && 	/* Skip our session */
-			p->sid != 0) 		/* Skip any kernel process. */
-				kill(p->pid, sig);
-
 	/* And let them continue. */
 	kill(-1, SIGCONT);
+	resume_logging();
 }
 
 /* shut down the system */

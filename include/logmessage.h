@@ -64,4 +64,7 @@ int  log_message(int level,		const char *fmt, ...) PRINTF_STYLE(2, 3);
 void fatal_error(int exitcode,	const char *fmt, ...) PRINTF_STYLE(2, 3);
 int  close_logging(void);
 
+int suspend_logging(void);
+int resume_logging(void);
+
 #endif /*_LOGMESSAGE_H */
