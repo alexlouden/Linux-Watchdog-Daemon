@@ -201,10 +201,10 @@ static void old_option(int c, char *configfile)
 
 static void check_parameters(void)
 {
-int err = 0;
+	int err = 0;
 
-	if (tint >= dev_timeout) {
-		log_message(LOG_ERR, "This interval length (%d) might reboot the system while the process sleeps!", tint);
+	if (tint >= dev_timeout - 1) {
+		log_message(LOG_ERR, "This interval length (%d) might reboot the system while the process sleeps! Try %d or less", tint, dev_timeout - 1);
 		err = 1;
 	}
 
@@ -289,7 +289,7 @@ int main(int argc, char *const argv[])
 	}
 
 	read_config(configfile);
-
+	
 	if (!force) {
 		check_parameters();
 	}
