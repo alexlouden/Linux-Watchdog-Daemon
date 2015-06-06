@@ -312,7 +312,7 @@ static void try_clean_shutdown(int errorcode)
 								"Message from watchdog:\nIt is too hot to keep on working. The system will be halted!\n");
 						else
 							fprintf(ph,
-								"Message from watchdog:\nThe system will be rebooted because of error %d!\n", errorcode);
+								"Message from watchdog:\nThe system will be rebooted because of error %d = '%s'\n", errorcode, wd_strerror(errorcode));
 						if (ferror(ph) != 0) {
 							log_message(LOG_ERR, "cannot send mail (errno = %d)", errno);
 						}
