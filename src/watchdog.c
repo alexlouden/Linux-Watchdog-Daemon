@@ -199,6 +199,21 @@ static void old_option(int c, char *configfile)
 	fprintf(stderr, "Option -%c is no longer valid, please specify it in %s.\n", c, configfile);
 }
 
+static void check_parameters(void)
+{
+	if (tint >= dev_timeout) {
+		fatal_error(EX_USAGE, "Error:\n"
+			"This interval length might reboot the system while the process sleeps!\n"
+			"To force this interval length use the -f option.");
+	}
+
+	if (maxload1 > 0 && maxload1 < MINLOAD) {
+		fatal_error(EX_USAGE, "Error:\n"
+			"Using this maximal load average might reboot the system too often!\n"
+			"To force this load average use the -f option.");
+	}
+}
+
 int main(int argc, char *const argv[])
 {
 	int c, foreground = FALSE, force = FALSE, sync_it = FALSE;
@@ -270,17 +285,9 @@ int main(int argc, char *const argv[])
 	}
 
 	read_config(configfile);
-
-	if (tint >= dev_timeout && !force) {
-		fatal_error(EX_USAGE, "Error:\n"
-			"This interval length might reboot the system while the process sleeps!\n"
-			"To force this interval length use the -f option.");
-	}
-
-	if (maxload1 > 0 && maxload1 < MINLOAD && !force) {
-		fatal_error(EX_USAGE, "Error:\n"
-			"Using this maximal load average might reboot the system too often!\n"
-			"To force this load average use the -f option.");
+	
+	if (!force) {
+		check_parameters();
 	}
 
 	/* make sure we get our own log directory */
