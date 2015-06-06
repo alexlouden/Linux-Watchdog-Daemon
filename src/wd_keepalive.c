@@ -127,7 +127,7 @@ int main(int argc, char *const argv[])
 			break;
 		case 'X':
 			count_max = atol(optarg);
-			log_message(LOG_WARNING, "loop exit on interval counter = %ld", count_max);
+			log_message(LOG_WARNING, "NOTE: Using --loop-exit so daemon will exit after %ld time intervals", count_max);
 			break;
 		default:
 			usage(progname);
