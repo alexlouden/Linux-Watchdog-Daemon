@@ -156,24 +156,23 @@ static int repair(char *rbinary, int result, char *name, int version)
 static void wd_action(int result, char *rbinary, char *name, int version)
 {
 
-	switch(result)
-		{
-		case ENOERR:
-		case EDONTKNOW:
-			/* no error, keep on working */
-			return;
+	switch (result) {
+	case ENOERR:
+	case EDONTKNOW:
+		/* no error, keep on working */
+		return;
 
-		case EREBOOT:
-		case ERESET:
-		case ETOOHOT:
-			/* These are not repairable. */
-			break;
+	case EREBOOT:
+	case ERESET:
+	case ETOOHOT:
+		/* These are not repairable. */
+		break;
 
-		default:
-			/* error that might be repairable */
-			result = repair(rbinary, result, name, version);
-			break;
-		}
+	default:
+		/* error that might be repairable */
+		result = repair(rbinary, result, name, version);
+		break;
+	}
 
 	/* if no-action flag set, do nothing */
 	/* if still error, reboot */
@@ -204,12 +203,15 @@ static void check_parameters(void)
 	int err = 0;
 
 	if (tint >= dev_timeout - 1) {
-		log_message(LOG_ERR, "This interval length (%d) might reboot the system while the process sleeps! Try %d or less", tint, dev_timeout - 1);
+		log_message(LOG_ERR,
+			    "This interval length (%d) might reboot the system while the process sleeps! Try %d or less",
+			    tint, dev_timeout - 1);
 		err = 1;
 	}
 
 	if (maxload1 > 0 && maxload1 < MINLOAD) {
-		log_message(LOG_ERR, "Using this maximal load average (%d) might reboot the system too often!", maxload1);
+		log_message(LOG_ERR, "Using this maximal load average (%d) might reboot the system too often!",
+			    maxload1);
 		err = 1;
 	}
 
@@ -281,7 +283,8 @@ int main(int argc, char *const argv[])
 			break;
 		case 'X':
 			count_max = atol(optarg);
-			log_message(LOG_WARNING, "NOTE: Using --loop-exit so daemon will exit after %ld time intervals", count_max);
+			log_message(LOG_WARNING, "NOTE: Using --loop-exit so daemon will exit after %ld time intervals",
+				    count_max);
 			break;
 		default:
 			usage(progname);
@@ -289,7 +292,7 @@ int main(int argc, char *const argv[])
 	}
 
 	read_config(configfile);
-	
+
 	if (!force) {
 		check_parameters();
 	}
@@ -312,7 +315,7 @@ int main(int argc, char *const argv[])
 		if (wd_daemon(0, 0)) {
 			fatal_error(EX_SYSERR, "failed to daemonize (%s)", strerror(errno));
 		}
-		open_logging(NULL, MSG_TO_SYSLOG); /* Close terminal output, keep syslog open. */
+		open_logging(NULL, MSG_TO_SYSLOG);	/* Close terminal output, keep syslog open. */
 	}
 
 	/* tuck my process id away */
@@ -323,7 +326,10 @@ int main(int argc, char *const argv[])
 	/* Log the starting message */
 	log_message(LOG_NOTICE, "starting daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
 	log_message(LOG_INFO, "int=%ds realtime=%s sync=%s soft=%s mla=%d mem=%d",
-	       tint, realtime ? "yes" : "no", sync_it ? "yes" : "no", softboot ? "yes" : "no", maxload1, minpages);
+		    tint, realtime ? "yes" : "no",
+		    sync_it ? "yes" : "no", 
+		    softboot ? "yes" : "no", 
+		    maxload1, minpages);
 
 	if (target_list == NULL)
 		log_message(LOG_INFO, "ping: no machine to check");
@@ -358,13 +364,13 @@ int main(int argc, char *const argv[])
 	}
 
 	log_message(LOG_INFO, "test=%s(%ld) repair=%s(%ld) alive=%s heartbeat=%s to=%s no_act=%s force=%s",
-		(tbinary == NULL) ? "none" : tbinary, test_timeout,
-		(repair_bin == NULL) ? "none" : repair_bin, repair_timeout,
-		(devname == NULL) ? "none" : devname,
-		(heartbeat == NULL) ? "none" : heartbeat,
-		(admin == NULL) ? "none" : admin,
-		(no_act == TRUE) ? "yes" : "no",
-		(force == TRUE) ? "yes" : "no");
+		    (tbinary == NULL) ? "none" : tbinary, test_timeout,
+		    (repair_bin == NULL) ? "none" : repair_bin, repair_timeout,
+		    (devname == NULL) ? "none" : devname,
+		    (heartbeat == NULL) ? "none" : heartbeat,
+		    (admin == NULL) ? "none" : admin, 
+		    (no_act == TRUE) ? "yes" : "no", 
+		    (force == TRUE) ? "yes" : "no");
 
 	/* open the device */
 	if (no_act == FALSE) {

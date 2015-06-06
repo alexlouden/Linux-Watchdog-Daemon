@@ -54,7 +54,7 @@ static void usage(char *progname)
 /* Dummy function for keep_alive.c use */
 int write_heartbeat(void)
 {
-return 0;
+	return 0;
 }
 
 /* close the device and check for error */
@@ -127,7 +127,8 @@ int main(int argc, char *const argv[])
 			break;
 		case 'X':
 			count_max = atol(optarg);
-			log_message(LOG_WARNING, "NOTE: Using --loop-exit so daemon will exit after %ld time intervals", count_max);
+			log_message(LOG_WARNING, "NOTE: Using --loop-exit so daemon will exit after %ld time intervals",
+				    count_max);
 			break;
 		default:
 			usage(progname);
@@ -184,5 +185,5 @@ int main(int argc, char *const argv[])
 
 	terminate(0);
 	/* not reached */
-return 0;
+	return 0;
 }
