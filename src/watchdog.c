@@ -205,10 +205,12 @@ int err = 0;
 
 	if (tint >= dev_timeout) {
 		log_message(LOG_ERR, "This interval length (%d) might reboot the system while the process sleeps!", tint);
+		err = 1;
 	}
 
 	if (maxload1 > 0 && maxload1 < MINLOAD) {
 		log_message(LOG_ERR, "Using this maximal load average (%d) might reboot the system too often!", maxload1);
+		err = 1;
 	}
 
 	if (err) {
