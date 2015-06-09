@@ -327,8 +327,8 @@ int main(int argc, char *const argv[])
 	log_message(LOG_NOTICE, "starting daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
 	log_message(LOG_INFO, "int=%ds realtime=%s sync=%s soft=%s mla=%d mem=%d",
 		    tint, realtime ? "yes" : "no",
-		    sync_it ? "yes" : "no", 
-		    softboot ? "yes" : "no", 
+		    sync_it ? "yes" : "no",
+		    softboot ? "yes" : "no",
 		    maxload1, minpages);
 
 	if (target_list == NULL)
@@ -368,15 +368,16 @@ int main(int argc, char *const argv[])
 		    (repair_bin == NULL) ? "none" : repair_bin, repair_timeout,
 		    (devname == NULL) ? "none" : devname,
 		    (heartbeat == NULL) ? "none" : heartbeat,
-		    (admin == NULL) ? "none" : admin, 
-		    (no_act == TRUE) ? "yes" : "no", 
+		    (admin == NULL) ? "none" : admin,
+		    (no_act == TRUE) ? "yes" : "no",
 		    (force == TRUE) ? "yes" : "no");
 
 	/* open the device */
 	if (no_act == FALSE) {
 		open_watchdog(devname, dev_timeout);
-		open_tempcheck(temp_list);
 	}
+
+	open_tempcheck(temp_list);
 
 	open_heartbeat();
 
