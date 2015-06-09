@@ -110,14 +110,8 @@ int check_bin(char *tbinary, time_t timeout, int version)
 		exit(errno);
 	} else if (child_pid < 0) {	/* fork failed */
 		int err = errno;
-
-		if (errno == EAGAIN) {	/* process table full */
-			log_message(LOG_ERR, "process table is full!");
-			return (EREBOOT);
-		} else if (softboot)
-			return (err);
-		else
-			return (ENOERR);
+		log_message(LOG_ERR, "process fork failed with error = %d = '%s'", err, strerror(err));
+		return (EREBOOT);
 	} else {
 		int ret, err;
 
