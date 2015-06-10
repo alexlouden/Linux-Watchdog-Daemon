@@ -117,7 +117,7 @@ static void update_process(pid_t pid, int result)
 				 */
 				int ecode = WEXITSTATUS(result);
 				if (ecode || verbose) {
-					log_message(LOG_DEBUG, "test binary %s returned %d", current->proc_name, ecode);
+					log_message(LOG_DEBUG, "test binary %s returned %d = '%s'", current->proc_name, ecode, wd_strerror(ecode));
 				}
 				current->ecode = ecode;
 				current->is_done = TRUE;
