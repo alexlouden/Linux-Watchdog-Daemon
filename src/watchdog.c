@@ -192,6 +192,67 @@ static void old_option(int c, char *configfile)
 	fprintf(stderr, "Option -%c is no longer valid, please specify it in %s.\n", c, configfile);
 }
 
+static void print_info(int sync_it, int force)
+{
+	struct list *act;
+
+	log_message(LOG_INFO, "int=%ds realtime=%s sync=%s soft=%s mla=%d mem=%d",
+		    tint, realtime ? "yes" : "no",
+		    sync_it ? "yes" : "no",
+		    softboot ? "yes" : "no",
+		    maxload1, minpages);
+
+	if (target_list == NULL)
+		log_message(LOG_INFO, "ping: no machine to check");
+	else
+		for (act = target_list; act != NULL; act = act->next)
+			log_message(LOG_INFO, "ping: %s", act->name);
+
+	if (file_list == NULL)
+		log_message(LOG_INFO, "file: no file to check");
+	else
+		for (act = file_list; act != NULL; act = act->next)
+			log_message(LOG_INFO, "file: %s:%d", act->name, act->parameter.file.mtime);
+
+	if (pidfile_list == NULL)
+		log_message(LOG_INFO, "pidfile: no server process to check");
+	else
+		for (act = pidfile_list; act != NULL; act = act->next)
+			log_message(LOG_INFO, "pidfile: %s", act->name);
+
+	if (iface_list == NULL)
+		log_message(LOG_INFO, "interface: no interface to check");
+	else
+		for (act = iface_list; act != NULL; act = act->next)
+			log_message(LOG_INFO, "interface: %s", act->name);
+
+	if (temp_list == NULL)
+		log_message(LOG_INFO, "temperature: no sensors to check");
+	else {
+		log_message(LOG_INFO, "temperature: maximum = %d", maxtemp);
+		for (act = temp_list; act != NULL; act = act->next)
+			log_message(LOG_INFO, "temperature: %s", act->name);
+	}
+
+	if (tr_bin_list == NULL)
+		log_message(LOG_INFO, "no test binary files");
+	else {
+		log_message(LOG_INFO, "test binary time-out = %ld", test_timeout);
+		for (act = tr_bin_list; act != NULL; act = act->next)
+			log_message(LOG_INFO, "%s: %s",
+				act->version == 0 ? "test binary V0" : "test/repair V1",
+				act->name);
+	}
+
+	log_message(LOG_INFO, "repair=%s(%ld) alive=%s heartbeat=%s to=%s no_act=%s force=%s",
+		    (repair_bin == NULL) ? "none" : repair_bin, repair_timeout,
+		    (devname == NULL) ? "none" : devname,
+		    (heartbeat == NULL) ? "none" : heartbeat,
+		    (admin == NULL) ? "none" : admin,
+		    (no_act == TRUE) ? "yes" : "no",
+		    (force == TRUE) ? "yes" : "no");
+}
+
 static void check_parameters(void)
 {
 	int err = 0;
@@ -319,61 +380,7 @@ int main(int argc, char *const argv[])
 
 	/* Log the starting message */
 	log_message(LOG_NOTICE, "starting daemon (%d.%d):", MAJOR_VERSION, MINOR_VERSION);
-	log_message(LOG_INFO, "int=%ds realtime=%s sync=%s soft=%s mla=%d mem=%d",
-		    tint, realtime ? "yes" : "no",
-		    sync_it ? "yes" : "no",
-		    softboot ? "yes" : "no",
-		    maxload1, minpages);
-
-	if (target_list == NULL)
-		log_message(LOG_INFO, "ping: no machine to check");
-	else
-		for (act = target_list; act != NULL; act = act->next)
-			log_message(LOG_INFO, "ping: %s", act->name);
-
-	if (file_list == NULL)
-		log_message(LOG_INFO, "file: no file to check");
-	else
-		for (act = file_list; act != NULL; act = act->next)
-			log_message(LOG_INFO, "file: %s:%d", act->name, act->parameter.file.mtime);
-
-	if (pidfile_list == NULL)
-		log_message(LOG_INFO, "pidfile: no server process to check");
-	else
-		for (act = pidfile_list; act != NULL; act = act->next)
-			log_message(LOG_INFO, "pidfile: %s", act->name);
-
-	if (iface_list == NULL)
-		log_message(LOG_INFO, "interface: no interface to check");
-	else
-		for (act = iface_list; act != NULL; act = act->next)
-			log_message(LOG_INFO, "interface: %s", act->name);
-
-	if (temp_list == NULL)
-		log_message(LOG_INFO, "temperature: no sensors to check");
-	else {
-		log_message(LOG_INFO, "temperature: maximum = %d", maxtemp);
-		for (act = temp_list; act != NULL; act = act->next)
-			log_message(LOG_INFO, "temperature: %s", act->name);
-	}
-
-	if (tr_bin_list == NULL)
-		log_message(LOG_INFO, "no test binary files");
-	else {
-		log_message(LOG_INFO, "test binary time-out = %ld", test_timeout);
-		for (act = tr_bin_list; act != NULL; act = act->next)
-			log_message(LOG_INFO, "%s: %s",
-				act->version == 0 ? "test binary V0" : "test/repair V1",
-				act->name);
-	}
-
-	log_message(LOG_INFO, "repair=%s(%ld) alive=%s heartbeat=%s to=%s no_act=%s force=%s",
-		    (repair_bin == NULL) ? "none" : repair_bin, repair_timeout,
-		    (devname == NULL) ? "none" : devname,
-		    (heartbeat == NULL) ? "none" : heartbeat,
-		    (admin == NULL) ? "none" : admin,
-		    (no_act == TRUE) ? "yes" : "no",
-		    (force == TRUE) ? "yes" : "no");
+	print_info(sync_it, force);
 
 	/* open the device */
 	if (no_act == FALSE) {
