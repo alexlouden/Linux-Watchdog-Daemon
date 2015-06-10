@@ -147,9 +147,25 @@ static int repair(char *rbinary, int result, char *name, int version)
 	return (ret);
 }
 
-static void wd_action(int result, char *rbinary, char *name, int version)
+static void wd_action(int result, char *rbinary, struct list *act)
 {
+	int version = 0;
+	char *name = NULL;
 
+	/* If we have info about the version, use this to decide what to call
+	 * in order to repar the problem. Defalut is we use the global repair
+	 * call, but for V1 we use the same program with a different argument.
+	 */
+	if(act != NULL) {
+		name = act->name;
+		version = act->version;
+	}
+
+	if(version == 1) {
+		rbinary = name;
+	}
+
+	/* Decide on repair or return based on error code. */
 	switch (result) {
 	case ENOERR:
 	case EDONTKNOW:
@@ -175,16 +191,10 @@ static void wd_action(int result, char *rbinary, char *name, int version)
 
 }
 
-static void do_check(int res, char *rbinary, char *name)
+static void do_check(int res, char *rbinary, struct list *act)
 {
-	wd_action(res, rbinary, name, 0);
-	wd_action(keep_alive(), rbinary, NULL, 0);
-}
-
-static void do_check2(int res, char *r_specific, char *r_global, char *name)
-{
-	wd_action(res, r_specific, name, 1);
-	wd_action(keep_alive(), r_global, NULL, 0);
+	wd_action(res, rbinary, act);
+	wd_action(keep_alive(), rbinary, NULL);
 }
 
 static void old_option(int c, char *configfile)
@@ -403,7 +413,7 @@ int main(int argc, char *const argv[])
 
 	/* main loop: update after <tint> seconds */
 	while (_running) {
-		wd_action(keep_alive(), repair_bin, NULL, 0);
+		wd_action(keep_alive(), repair_bin, NULL);
 
 		/* sync system if we have to */
 		do_check(sync_system(sync_it), repair_bin, NULL);
@@ -422,33 +432,29 @@ int main(int argc, char *const argv[])
 
 		/* check temperature */
 		for (act = temp_list; act != NULL; act = act->next)
-			do_check(check_temp(act), repair_bin, NULL);
+			do_check(check_temp(act), repair_bin, act);
 
 		/* in filemode stat file */
 		for (act = file_list; act != NULL; act = act->next)
-			do_check(check_file_stat(act), repair_bin, act->name);
+			do_check(check_file_stat(act), repair_bin, act);
 
 		/* in pidmode kill -0 processes */
 		for (act = pidfile_list; act != NULL; act = act->next)
-			do_check(check_pidfile(act), repair_bin, act->name);
+			do_check(check_pidfile(act), repair_bin, act);
 
 		/* in network mode check the given devices for input */
 		for (act = iface_list; act != NULL; act = act->next)
-			do_check(check_iface(act), repair_bin, act->name);
+			do_check(check_iface(act), repair_bin, act);
 
 		/* in ping mode ping the ip address */
 		for (act = target_list; act != NULL; act = act->next)
 			do_check(check_net
 				 (act->name, act->parameter.net.sock_fp, act->parameter.net.to,
-				  act->parameter.net.packet, tint, pingcount), repair_bin, act->name);
+				  act->parameter.net.packet, tint, pingcount), repair_bin, act);
 
-		/* test/repair binaries in the watchdog.d directory */
+		/* test, or test/repair binaries in the watchdog.d directory */
 		for (act = tr_bin_list; act != NULL; act = act->next)
-			/* Use version 1 for testbin-path */
-			if(act->version == 0)
-			do_check(check_bin(act->name, test_timeout, 0), repair_bin, act->name);
-			else
-			do_check2(check_bin(act->name, test_timeout, 1), act->name, repair_bin, act->name);
+			do_check(check_bin(act->name, test_timeout, act->version), repair_bin, act);
 
 		/* finally sleep for a full cycle */
 		/* we have just triggered the device with the last check */
