@@ -150,6 +150,7 @@ int close_tempcheck(void);
 
 /** test_binary.c **/
 int check_bin(char *, time_t, int);
+void free_process(void);
 
 /** pidfile.c **/
 int check_pidfile(struct list *);

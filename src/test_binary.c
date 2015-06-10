@@ -22,16 +22,52 @@ struct process {
 
 static struct process *process_head = NULL;
 
-static void add_process(const char *name, pid_t pid)
+/*
+ * Add a process to the list. We index by PID primarily to act on child exit
+ * values, but check the process name when attempting to start a new child.
+ */
+
+static int add_process(const char *name, pid_t pid)
 {
-	struct process *node = (struct process *)xmalloc(sizeof(struct process));
+	struct process *node = (struct process *)malloc(sizeof(struct process));
+
+	if (node == NULL) {
+		log_message(LOG_ALERT, "out of memory adding test binary");
+		free_process();
+		return (ENOMEM);
+	}
 
 	snprintf(node->proc_name, sizeof(node->proc_name), "%s", name);
 	node->pid = pid;
 	node->time = time(NULL);
 	node->next = process_head;
 	process_head = node;
+
+	return (ENOERR);
 }
+
+/*
+ * Free the whole chain. Used on out-of-memory case to hopefully to have enough
+ * heap left to create the process kill-list for an orderly shut-down.
+ */
+
+void free_process(void)
+{
+	struct process *last, *current;
+	current = process_head;
+
+	while (current != NULL) {
+		last = current;
+		current = current->next;
+		free(last);
+	}
+
+	process_head = NULL;
+}
+
+/*
+ * Remove a finished process from the list, indexed by PID.
+ */
 
 static void remove_process(pid_t pid)
 {

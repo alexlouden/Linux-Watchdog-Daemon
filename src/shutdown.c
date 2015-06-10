@@ -77,6 +77,7 @@ static void close_all(void)
 	close_memcheck();
 	close_tempcheck();
 	close_heartbeat();
+	free_process();		/* What check_bin() was waiting to report. */
 }
 
 /*
