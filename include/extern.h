@@ -36,6 +36,7 @@ union wdog_options {
 
 struct list {
 	char *name;
+	int version;
 	union wdog_options parameter;
 	struct list *next;
 };
@@ -96,7 +97,6 @@ extern struct list *pidfile_list;
 extern struct list *iface_list;
 extern struct list *temp_list;
 
-extern char *tbinary;
 extern char *repair_bin;
 
 /* = Not (yet) from config file. = */

@@ -357,8 +357,17 @@ int main(int argc, char *const argv[])
 			log_message(LOG_INFO, "temperature: %s", act->name);
 	}
 
-	log_message(LOG_INFO, "test=%s(%ld) repair=%s(%ld) alive=%s heartbeat=%s to=%s no_act=%s force=%s",
-		    (tbinary == NULL) ? "none" : tbinary, test_timeout,
+	if (tr_bin_list == NULL)
+		log_message(LOG_INFO, "no test binary files");
+	else {
+		log_message(LOG_INFO, "test binary time-out = %ld", test_timeout);
+		for (act = tr_bin_list; act != NULL; act = act->next)
+			log_message(LOG_INFO, "%s: %s",
+				act->version == 0 ? "test binary V0" : "test/repair V1",
+				act->name);
+	}
+
+	log_message(LOG_INFO, "repair=%s(%ld) alive=%s heartbeat=%s to=%s no_act=%s force=%s",
 		    (repair_bin == NULL) ? "none" : repair_bin, repair_timeout,
 		    (devname == NULL) ? "none" : devname,
 		    (heartbeat == NULL) ? "none" : heartbeat,
@@ -426,15 +435,13 @@ int main(int argc, char *const argv[])
 				 (act->name, act->parameter.net.sock_fp, act->parameter.net.to,
 				  act->parameter.net.packet, tint, pingcount), repair_bin, act->name);
 
-		/* in user mode execute the given binary or just test fork() call */
-		do_check(check_bin(tbinary, test_timeout, 0), repair_bin, tbinary);
-
-#ifdef TESTBIN_PATH
 		/* test/repair binaries in the watchdog.d directory */
 		for (act = tr_bin_list; act != NULL; act = act->next)
 			/* Use version 1 for testbin-path */
+			if(act->version == 0)
+			do_check(check_bin(act->name, test_timeout, 0), repair_bin, act->name);
+			else
 			do_check2(check_bin(act->name, test_timeout, 1), act->name, repair_bin, act->name);
-#endif
 
 		/* finally sleep for a full cycle */
 		/* we have just triggered the device with the last check */

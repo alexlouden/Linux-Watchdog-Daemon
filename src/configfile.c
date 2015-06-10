@@ -99,19 +99,19 @@ struct list *pidfile_list = NULL;
 struct list *iface_list = NULL;
 struct list *temp_list = NULL;
 
-char *tbinary = NULL;
 char *repair_bin = NULL;
 
 /* Command line options also used globally. */
 int softboot = FALSE;
 int verbose = FALSE;
 
-static void add_list(struct list **list, const char *name)
+static void add_list(struct list **list, const char *name, int ver)
 {
 	struct list *new, *act;
 
 	new = (struct list *)xcalloc(1, sizeof(struct list));
 	new->name = xstrdup(name);
+	new->version = ver;
 
 	if (*list == NULL)
 		*list = new;
@@ -188,7 +188,7 @@ void read_config(char *configfile)
 			/* order of the comparisons is important to prevent partial matches */
 			if (strncmp(line + i, FILENAME, strlen(FILENAME)) == 0) {
 				if (!spool(line, &i, strlen(FILENAME)))
-					add_list(&file_list, line + i);
+					add_list(&file_list, line + i, 0);
 			} else if (strncmp(line + i, CHANGE, strlen(CHANGE)) == 0) {
 				struct list *ptr;
 
@@ -207,16 +207,16 @@ void read_config(char *configfile)
 				ptr->parameter.file.mtime = atoi(line + i);
 			} else if (strncmp(line + i, SERVERPIDFILE, strlen(SERVERPIDFILE)) == 0) {
 				if (!spool(line, &i, strlen(SERVERPIDFILE)))
-					add_list(&pidfile_list, line + i);
+					add_list(&pidfile_list, line + i, 0);
 			} else if (strncmp(line + i, PINGCOUNT, strlen(PINGCOUNT)) == 0) {
 				if (!spool(line, &i, strlen(PINGCOUNT)))
 					pingcount = atol(line + i);
 			} else if (strncmp(line + i, PING, strlen(PING)) == 0) {
 				if (!spool(line, &i, strlen(PING)))
-					add_list(&target_list, line + i);
+					add_list(&target_list, line + i, 0);
 			} else if (strncmp(line + i, INTERFACE, strlen(INTERFACE)) == 0) {
 				if (!spool(line, &i, strlen(INTERFACE)))
-					add_list(&iface_list, line + i);
+					add_list(&iface_list, line + i, 0);
 			} else if (strncmp(line + i, REALTIME, strlen(REALTIME)) == 0) {
 				if (!spool(line, &i, strlen(REALTIME)))
 					realtime = (strncmp(line + i, "yes", 3) == 0) ? TRUE : FALSE;
@@ -231,7 +231,7 @@ void read_config(char *configfile)
 					repair_timeout = atol(line + i);
 			} else if (strncmp(line + i, TESTBIN, strlen(TESTBIN)) == 0) {
 				if (!spool(line, &i, strlen(TESTBIN)))
-					tbinary = xstrdup(line + i);
+					add_list(&tr_bin_list, line + i, 0);
 			} else if (strncmp(line + i, TESTTIMEOUT, strlen(TESTTIMEOUT)) == 0) {
 				if (!spool(line, &i, strlen(TESTTIMEOUT)))
 					test_timeout = atol(line + i);
@@ -258,7 +258,7 @@ void read_config(char *configfile)
 					dev_timeout = atol(line + i);
 			} else if (strncmp(line + i, TEMP, strlen(TEMP)) == 0) {
 				if (!spool(line, &i, strlen(TEMP)))
-					add_list(&temp_list, line + i);
+					add_list(&temp_list, line + i, 0);
 			} else if (strncmp(line + i, MAXTEMP, strlen(MAXTEMP)) == 0) {
 				if (!spool(line, &i, strlen(MAXTEMP)))
 					maxtemp = atol(line + i);
@@ -370,7 +370,7 @@ static void add_test_binaries(const char *path)
 			continue;
 
 		log_message(LOG_DEBUG, "adding %s to list of auto-repair binaries", fname);
-		add_list(&tr_bin_list, fname);
+		add_list(&tr_bin_list, fname, 1);
 	} while (1);
 
 	closedir(d);
