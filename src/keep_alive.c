@@ -99,9 +99,9 @@ int set_watchdog_timeout(int timeout)
 				int err = errno;
 				log_message(LOG_ERR, "cannot set timeout %d (errno = %d = '%s')", timeout, err, strerror(err));
 			} else {
-				if(timeout <= tint/2) {
+				if(timeout <= tint * 2) {
 					log_message(LOG_WARNING,
-						"Warning: watchdog now set to %d seconds, should be more than half of interval = %d",
+						"Warning: watchdog now set to %d seconds, should be more than double interval = %d",
 						timeout, tint);
 				} else {
 					log_message(LOG_INFO, "watchdog now set to %d seconds", timeout);
