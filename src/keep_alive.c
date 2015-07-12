@@ -93,9 +93,6 @@ int set_watchdog_timeout(int timeout)
 
 	if (watchdog_fd != -1) {
 		if (timeout > 0) {
-			if (timeout > MAX_WD_TIMEOUT)
-				timeout = MAX_WD_TIMEOUT;
-
 			timeout_used = timeout;
 			/* Set the watchdog hard-stop timeout; default = unset (use driver default) */
 			if (ioctl(watchdog_fd, WDIOC_SETTIMEOUT, &timeout) < 0) {
