@@ -16,7 +16,7 @@ install-etc-local: watchdog.conf
 	else \
 	        echo "installing $(CONFIG_FILENAME)"; \
 		$(mkinstalldirs) `dirname $(DESTDIR)$(CONFIG_FILENAME)`; \
-	        $(INSTALL_DATA) watchdog.conf $(DESTDIR)$(CONFIG_FILENAME); \
+	        $(INSTALL_DATA) $(srcdir)/watchdog.conf $(DESTDIR)$(CONFIG_FILENAME); \
 	fi
 
 install-data-local: install-etc-local
