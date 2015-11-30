@@ -11,7 +11,7 @@
 #include <errno.h>
 #include <sys/time.h>
 #include <netinet/ip.h>
-#include <netinet/ip_icmp.h>
+#include <linux/icmp.h>
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>		/* for gethostname() etc */
@@ -178,7 +178,10 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 int open_netcheck(struct list *tlist)
 {
 	struct list *act;
-	int hold = 0;
+	int hold;
+	struct icmp_filter filt;
+	memset(&filt, 0, sizeof(filt));
+	filt.data = ~(1<<ICMP_ECHOREPLY);
 
 	if (tlist != NULL) {
 		for (act = tlist; act != NULL; act = act->next) {
@@ -202,11 +205,24 @@ int open_netcheck(struct list *tlist)
 			    fatal_error(EX_SYSERR, "error opening socket (%s)", strerror(errno));
 			}
 
+			/* set filter for only ECOREPLY packet (configured in the filt.dat value above) */
+			if (setsockopt(net->sock_fp, SOL_RAW, ICMP_FILTER, (char*)&filt, sizeof(filt)) < 0) {
+				int err = errno;
+				log_message(LOG_ERR, "set ICMP filter error for target %s err = %d = '%s'", act->name, err, strerror(err));
+			}
+			
 			/* this is necessary for broadcast pings to work */
-			(void)setsockopt(net->sock_fp, SOL_SOCKET, SO_BROADCAST, (char *)&hold, sizeof(hold));
+			hold = 0; /* value should not matter, but zero to be safe. */
+			if (setsockopt(net->sock_fp, SOL_SOCKET, SO_BROADCAST, (char *)&hold, sizeof(hold)) < 0) {
+				int err = errno;
+				log_message(LOG_ERR, "set broadcast error for target %s err = %d = '%s'", act->name, err, strerror(err));
+			}
 
 			hold = 48 * 1024;
-			(void)setsockopt(net->sock_fp, SOL_SOCKET, SO_RCVBUF, (char *)&hold, sizeof(hold));
+			if (setsockopt(net->sock_fp, SOL_SOCKET, SO_RCVBUF, (char *)&hold, sizeof(hold)) < 0) {
+				int err = errno;
+				log_message(LOG_ERR, "set revbuf error for target %s err = %d = '%s'", act->name, err, strerror(err));
+			}
 		}
 	}
 
