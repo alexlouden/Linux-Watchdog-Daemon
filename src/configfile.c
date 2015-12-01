@@ -79,8 +79,8 @@ int sigterm_delay = 5;	/* Seconds from first SIGTERM to sending SIGKILL during s
 char *devname = NULL;
 char *admin = "root";
 
-time_t	test_timeout = 0;				/* test-binary time out value. */
-time_t	repair_timeout = 0;				/* repair-binary time out value. */
+int	test_timeout = 0;				/* test-binary time out value. */
+int	repair_timeout = 0;				/* repair-binary time out value. */
 int	dev_timeout = TIMER_MARGIN;			/* Watchdog hardware time-out. */
 
 char *logdir = "/var/log/watchdog";
@@ -106,32 +106,34 @@ char *repair_bin = NULL;
 int softboot = FALSE;
 int verbose = FALSE;
 
-/* skip from argument to value */
-static int spool(char *line, int *i, int offset)
-{
-	for ((*i) += offset; line[*i] == ' ' || line[*i] == '\t'; (*i)++) ;
-	if (line[*i] != '=') {
-		/* = sign is missing */
-		fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-		return (1);
-	}
+/* Simple table for yes/no enumerated options. */
+static const read_list_t Yes_No_list[] = {
+READ_LIST_ADD("no", 0)
+READ_LIST_ADD("yes", 1)
+READ_LIST_END()
+};
 
-	(*i)++;
-	for (; line[*i] == ' ' || line[*i] == '\t'; (*i)++) ;
-	if (line[*i] == '\0') {
-		/* no value given */
-		fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-		return (1);
-	}
+/* Use the macros below to simplify the parsing function. For now we don't use the
+ * integer range checking (0=0 so not checked), and assume all strings can be blank and
+ * enumerated choices are Yes/No, but in future we could add such settings to the #define'd
+ * list of names above.
+ */
 
-	return (0);
-}
+#define READ_INT(name, iv)		read_int_func(		 arg, val, name, 0, 0, iv)
+#define READ_STRING(name, str)	read_string_func(	 arg, val, name, Read_allow_blank, str)
+#define READ_ENUM(name, iv)		read_enumerated_func(arg, val, name, Yes_No_list, iv)
+#define READ_LIST(name, list)	read_list_func(		 arg, val, name, 0, list)
+
+/*
+ * Open the configuration file, read & parse it, and set the global configuration variables to those values.
+ */
 
 void read_config(char *configfile)
 {
 	FILE *wc;
-	char *line = NULL;
+	char *line = NULL, *arg=NULL, *val=NULL;
 	size_t n = 0;
+	int linecount = 0;
 
 	maxload5 = maxload15 = 0;
 
@@ -139,148 +141,81 @@ void read_config(char *configfile)
 		fatal_error(EX_SYSERR, "Can't open config file \"%s\" (%s)", configfile, strerror(errno));
 	}
 
-	while (!feof(wc)) {
+	while (getline(&line, &n, wc) != -1) {
+		int itmp = 0;
+		linecount++;
 
-		if (getline(&line, &n, wc) == -1) {
-			if (!ferror(wc))
-				break;
-			else {
-				fatal_error(EX_SYSERR, "Error reading config file (%s)", strerror(errno));
-			}
-		} else {
-			int i, j;
+		/* find first non-white space character and check for blank/commented lines. */
+		arg = str_start(line);
+		if (arg[0] == 0 || arg[0] == '#') {
+			continue;
+		}
 
-			/* scan the actual line for an option */
-			/* first remove the leading blanks */
-			for (i = 0; line[i] == ' ' || line[i] == '\t'; i++) ;
+		/* find the '=' for the "arg = val" parsing. */
+		val = strchr(arg, '=');
+		if (val == NULL) {
+			log_message(LOG_WARNING, "Warning: no '=' assignment at line %d of config file", linecount);
+			continue;
+		}
 
-			/* check for empty line */
-			if (line[i] == '\0' || line[i] == '\n')
-				continue;
+		/* split at found '=' and move to next non-white-space character. */
+		*val = '\0';
+		val = str_start(val+1);
 
-			/* if the next sign is a '#' we have a comment */
-			if (line[i] == '#')
-				continue;
+		/* remove trailing white-space characters for easier parsing. */
+		trim_white(val);
+		trim_white(arg);
 
-			/* also remove the trailing blanks and the \n */
-			for (j = strlen(line) - 1; line[j] == ' ' || line[j] == '\t' || line[j] == '\n'; j--) ;
-			line[j + 1] = '\0';
-
-			/* if the line is empty now, we don't have to parse it */
-			if (strlen(line + i) == 0)
-				continue;
-
-			/* now check for an option */
-			/* order of the comparisons is important to prevent partial matches */
-			if (strncmp(line + i, FILENAME, strlen(FILENAME)) == 0) {
-				if (!spool(line, &i, strlen(FILENAME)))
-					add_list(&file_list, line + i, 0);
-			} else if (strncmp(line + i, CHANGE, strlen(CHANGE)) == 0) {
-				struct list *ptr;
-
-				if (spool(line, &i, strlen(CHANGE)))
-					continue;
-
-				if (!file_list) {	/* no file entered yet */
-					fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
-					continue;
-				}
-				for (ptr = file_list; ptr->next != NULL; ptr = ptr->next) ;
-				if (ptr->parameter.file.mtime != 0)
-					fprintf(stderr,
-						"Duplicate change interval option in config file. Ignoring first entry.\n");
-
-				ptr->parameter.file.mtime = atoi(line + i);
-			} else if (strncmp(line + i, SERVERPIDFILE, strlen(SERVERPIDFILE)) == 0) {
-				if (!spool(line, &i, strlen(SERVERPIDFILE)))
-					add_list(&pidfile_list, line + i, 0);
-			} else if (strncmp(line + i, PINGCOUNT, strlen(PINGCOUNT)) == 0) {
-				if (!spool(line, &i, strlen(PINGCOUNT)))
-					pingcount = atol(line + i);
-			} else if (strncmp(line + i, PING, strlen(PING)) == 0) {
-				if (!spool(line, &i, strlen(PING)))
-					add_list(&target_list, line + i, 0);
-			} else if (strncmp(line + i, INTERFACE, strlen(INTERFACE)) == 0) {
-				if (!spool(line, &i, strlen(INTERFACE)))
-					add_list(&iface_list, line + i, 0);
-			} else if (strncmp(line + i, REALTIME, strlen(REALTIME)) == 0) {
-				if (!spool(line, &i, strlen(REALTIME)))
-					realtime = (strncmp(line + i, "yes", 3) == 0) ? TRUE : FALSE;
-			} else if (strncmp(line + i, PRIORITY, strlen(PRIORITY)) == 0) {
-				if (!spool(line, &i, strlen(PRIORITY)))
-					schedprio = atol(line + i);
-			} else if (strncmp(line + i, REPAIRBIN, strlen(REPAIRBIN)) == 0) {
-				if (!spool(line, &i, strlen(REPAIRBIN)))
-					repair_bin = xstrdup(line + i);
-			} else if (strncmp(line + i, REPAIRTIMEOUT, strlen(REPAIRTIMEOUT)) == 0) {
-				if (!spool(line, &i, strlen(REPAIRTIMEOUT)))
-					repair_timeout = atol(line + i);
-			} else if (strncmp(line + i, TESTBIN, strlen(TESTBIN)) == 0) {
-				if (!spool(line, &i, strlen(TESTBIN)))
-					add_list(&tr_bin_list, line + i, 0);
-			} else if (strncmp(line + i, TESTTIMEOUT, strlen(TESTTIMEOUT)) == 0) {
-				if (!spool(line, &i, strlen(TESTTIMEOUT)))
-					test_timeout = atol(line + i);
-			} else if (strncmp(line + i, HEARTBEAT, strlen(HEARTBEAT)) == 0) {
-				if (!spool(line, &i, strlen(HEARTBEAT)))
-					heartbeat = xstrdup(line + i);
-			} else if (strncmp(line + i, HBSTAMPS, strlen(HBSTAMPS)) == 0) {
-				if (!spool(line, &i, strlen(HBSTAMPS)))
-					hbstamps = atol(line + i);
-			} else if (strncmp(line + i, ADMIN, strlen(ADMIN)) == 0) {
-				if (!spool(line, &i, strlen(ADMIN)))
-					admin = xstrdup(line + i);
-			} else if (strncmp(line + i, INTERVAL, strlen(INTERVAL)) == 0) {
-				if (!spool(line, &i, strlen(INTERVAL)))
-					tint = atol(line + i);
-			} else if (strncmp(line + i, LOGTICK, strlen(LOGTICK)) == 0) {
-				if (!spool(line, &i, strlen(LOGTICK)))
-					logtick = ticker = atol(line + i);
-			} else if (strncmp(line + i, DEVICE, strlen(DEVICE)) == 0) {
-				if (!spool(line, &i, strlen(DEVICE)))
-					devname = xstrdup(line + i);
-			} else if (strncmp(line + i, DEVICE_TIMEOUT, strlen(DEVICE_TIMEOUT)) == 0) {
-				if (!spool(line, &i, strlen(DEVICE_TIMEOUT)))
-					dev_timeout = atol(line + i);
-			} else if (strncmp(line + i, TEMP, strlen(TEMP)) == 0) {
-				if (!spool(line, &i, strlen(TEMP)))
-					add_list(&temp_list, line + i, 0);
-			} else if (strncmp(line + i, MAXTEMP, strlen(MAXTEMP)) == 0) {
-				if (!spool(line, &i, strlen(MAXTEMP)))
-					maxtemp = atol(line + i);
-			} else if (strncmp(line + i, MAXLOAD15, strlen(MAXLOAD15)) == 0) {
-				if (!spool(line, &i, strlen(MAXLOAD15)))
-					maxload15 = atol(line + i);
-			} else if (strncmp(line + i, MAXLOAD1, strlen(MAXLOAD1)) == 0) {
-				if (!spool(line, &i, strlen(MAXLOAD1)))
-					maxload1 = atol(line + i);
-			} else if (strncmp(line + i, MAXLOAD5, strlen(MAXLOAD5)) == 0) {
-				if (!spool(line, &i, strlen(MAXLOAD5)))
-					maxload5 = atol(line + i);
-			} else if (strncmp(line + i, MINMEM, strlen(MINMEM)) == 0) {
-				if (!spool(line, &i, strlen(MINMEM)))
-					minpages = atol(line + i);
-			} else if (strncmp(line + i, ALLOCMEM, strlen(ALLOCMEM)) == 0) {
-				if (!spool(line, &i, strlen(ALLOCMEM)))
-					minalloc = atol(line + i);
-			} else if (strncmp(line + i, LOGDIR, strlen(LOGDIR)) == 0) {
-				if (!spool(line, &i, strlen(LOGDIR)))
-					logdir = xstrdup(line + i);
-			} else if (strncmp(line + i, TESTDIR, strlen(TESTDIR)) == 0) {
-				if (!spool(line, &i, strlen(TESTDIR)))
-					test_dir = xstrdup(line + i);
-			} else if (strncmp(line + i, SOFTBOOT, strlen(SOFTBOOT)) == 0) {
-				if (!spool(line, &i, strlen(SOFTBOOT)))
-					softboot = (strncmp(line + i, "yes", 3) == 0) ? TRUE : FALSE;
-			} else if (strncmp(line + i, TEMPPOWEROFF, strlen(TEMPPOWEROFF)) == 0) {
-				if (!spool(line, &i, strlen(TEMPPOWEROFF)))
-					temp_poweroff = (strncmp(line + i, "yes", 3) == 0) ? TRUE : FALSE;
-			} else if (strncmp(line + i, SIGTERM_DELAY, strlen(SIGTERM_DELAY)) == 0) {
-				if (!spool(line, &i, strlen(SIGTERM_DELAY)))
-					sigterm_delay = atol(line + i);
+		/* Search for a match. Note that the read_*_func() calls deal with a zero-length 'val' as needed. */
+		if (READ_LIST(FILENAME, &file_list) == 0) {
+		} else if (READ_INT(CHANGE, &itmp) == 0) {
+			struct list *ptr;
+			if (!file_list) {	/* no file entered yet */
+				log_message(LOG_WARNING,
+					"Warning: file change interval, but no file (yet) at line %d of config file", linecount);
 			} else {
-				fprintf(stderr, "Ignoring invalid line in config file:\n%s\n", line);
+				for (ptr = file_list; ptr->next != NULL; ptr = ptr->next) {
+					/* loop to find end of list. */
+				}
+
+				if (ptr->parameter.file.mtime != 0)
+					log_message(LOG_WARNING,
+						"Warning: duplicate change interval at line %d of config file (ignoring previous)", linecount);
+
+				ptr->parameter.file.mtime = itmp;
 			}
+		} else if (READ_LIST(SERVERPIDFILE, &pidfile_list) == 0) {
+		} else if (READ_INT(PINGCOUNT, &pingcount) == 0) {
+		} else if (READ_LIST(PING, &target_list) == 0) {
+		} else if (READ_LIST(INTERFACE, &iface_list) == 0) {
+		} else if (READ_ENUM(REALTIME, &realtime) == 0) {
+		} else if (READ_INT(PRIORITY, &schedprio) == 0) {
+		} else if (READ_STRING(REPAIRBIN, &repair_bin) == 0) {
+		} else if (READ_INT(REPAIRTIMEOUT, &repair_timeout) == 0) {
+		} else if (READ_LIST(TESTBIN, &tr_bin_list) == 0) {
+		} else if (READ_INT(TESTTIMEOUT, &test_timeout) == 0) {
+		} else if (READ_STRING(HEARTBEAT, &heartbeat) == 0) {
+		} else if (READ_INT(HBSTAMPS, &hbstamps) == 0) {
+		} else if (READ_STRING(ADMIN, &admin) == 0) {
+		} else if (READ_INT(INTERVAL, &tint) == 0) {
+		} else if (READ_INT(LOGTICK, &logtick) == 0) {
+			ticker = logtick;
+		} else if (READ_STRING(DEVICE, &devname) == 0) {
+		} else if (READ_INT(DEVICE_TIMEOUT, &dev_timeout) == 0) {
+		} else if (READ_LIST(TEMP, &temp_list) == 0) {
+		} else if (READ_INT(MAXTEMP, &maxtemp) == 0) {
+		} else if (READ_INT(MAXLOAD1, &maxload1) == 0) {
+		} else if (READ_INT(MAXLOAD5, &maxload5) == 0) {
+		} else if (READ_INT(MAXLOAD15, &maxload15) == 0) {
+		} else if (READ_INT(MINMEM, &minpages) == 0) {
+		} else if (READ_INT(ALLOCMEM, &minalloc) == 0) {
+		} else if (READ_STRING(LOGDIR, &logdir) == 0) {
+		} else if (READ_STRING(TESTDIR, &test_dir) == 0) {
+		} else if (READ_ENUM(SOFTBOOT, &softboot) == 0) {
+		} else if (READ_ENUM(TEMPPOWEROFF, &temp_poweroff) == 0) {
+		} else if (READ_INT(SIGTERM_DELAY, &sigterm_delay) == 0) {
+		} else {
+			log_message(LOG_WARNING, "Ignoring invalid option at line %d of config file: %s=%s", linecount, arg, val);
 		}
 	}
 

@@ -247,14 +247,14 @@ static void print_info(int sync_it, int force)
 	if (tr_bin_list == NULL)
 		log_message(LOG_INFO, "no test binary files");
 	else {
-		log_message(LOG_INFO, "test binary time-out = %ld", test_timeout);
+		log_message(LOG_INFO, "test binary time-out = %d", test_timeout);
 		for (act = tr_bin_list; act != NULL; act = act->next)
 			log_message(LOG_INFO, "%s: %s",
 				act->version == 0 ? "test binary V0" : "test/repair V1",
 				act->name);
 	}
 
-	log_message(LOG_INFO, "repair=%s(%ld) alive=%s heartbeat=%s to=%s no_act=%s force=%s",
+	log_message(LOG_INFO, "repair=%s(%d) alive=%s heartbeat=%s to=%s no_act=%s force=%s",
 		    (repair_bin == NULL) ? "none" : repair_bin, repair_timeout,
 		    (devname == NULL) ? "none" : devname,
 		    (heartbeat == NULL) ? "none" : heartbeat,

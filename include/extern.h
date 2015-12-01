@@ -79,8 +79,8 @@ extern int sigterm_delay;
 extern char *devname;
 extern char *admin;
 
-extern time_t	test_timeout;		/* test-binary time out value. */
-extern time_t	repair_timeout;		/* repair-binary time out value. */
+extern int	test_timeout;		/* test-binary time out value. */
+extern int	repair_timeout;		/* repair-binary time out value. */
 extern int	dev_timeout;		/* Watchdog hardware time-out. */
 
 extern char *logdir;
