@@ -95,6 +95,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 		socklen_t fromlen;
 		struct timeval tstart, timeout, dtimeout;
 		struct icmphdr *icp = (struct icmphdr *)outpack;
+		struct sockaddr_in *to_in = (struct sockaddr_in *)&to;
 
 		/* setup a ping message */
 		icp->type = ICMP_ECHO;
@@ -137,9 +138,11 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 				if ((long)dtimeout.tv_sec < 0)
 					break;
 
+#if 0
 				if (verbose && logtick && ticker == 1)
 					log_message(LOG_DEBUG, "ping select timeout = %2ld.%06ld seconds",
 					       dtimeout.tv_sec, dtimeout.tv_usec);
+#endif
 
 				if (select(sock_fp + 1, &fdmask, NULL, NULL, &dtimeout) >= 1) {
 					/* read reply */
@@ -156,12 +159,23 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 						/* check if packet is our ECHO */
 						icp = (struct icmphdr *)(packet + (((struct ip *)packet)->ip_hl << 2));
 
-						if (icp->type == ICMP_ECHOREPLY && ntohs(icp->un.echo.id) == daemon_pid) {
-							if (from.sin_addr.s_addr ==
-								((struct sockaddr_in *)&to)->sin_addr.s_addr) {
+						if (icp->type == ICMP_ECHOREPLY) {
+							int rcv_id  = ntohs(icp->un.echo.id);
+							int rcv_seq = ntohs(icp->un.echo.sequence);
 
-								if (verbose && logtick && ticker == 1)
-									log_message(LOG_DEBUG, "got answer from target %s", target);
+							/* Have ping reply, but is it the one we just sent? */
+							if (rcv_id  == daemon_pid &&
+								rcv_seq == (i + 1) &&
+								from.sin_addr.s_addr == to_in->sin_addr.s_addr) {
+
+								if (verbose && logtick && ticker == 1) {
+									/* Report time since tstart in milliseconds (like 'ping' program). */
+									double msec;
+									gettimeofday(&dtimeout, NULL);
+									timersub(&dtimeout, &tstart, &dtimeout);
+									msec = 1.0e3 * (dtimeout.tv_sec + 1.0e-6 * dtimeout.tv_usec);
+									log_message(LOG_DEBUG, "got answer on ping=%d from target %-15s time=%.3fms", i+1, target, msec);
+								}
 
 								return (ENOERR);
 							}
