@@ -20,6 +20,7 @@
 
 #include "extern.h"
 #include "watch_err.h"
+#include "read-conf.h"
 
 static void add_test_binaries(const char *path);
 
@@ -104,22 +105,6 @@ char *repair_bin = NULL;
 /* Command line options also used globally. */
 int softboot = FALSE;
 int verbose = FALSE;
-
-static void add_list(struct list **list, const char *name, int ver)
-{
-	struct list *new, *act;
-
-	new = (struct list *)xcalloc(1, sizeof(struct list));
-	new->name = xstrdup(name);
-	new->version = ver;
-
-	if (*list == NULL)
-		*list = new;
-	else {
-		for (act = *list; act->next != NULL; act = act->next) ;
-		act->next = new;
-	}
-}
 
 /* skip from argument to value */
 static int spool(char *line, int *i, int offset)
