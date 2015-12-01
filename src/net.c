@@ -144,9 +144,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 				if (select(sock_fp + 1, &fdmask, NULL, NULL, &dtimeout) >= 1) {
 					/* read reply */
 					fromlen = sizeof(from);
-					if (recvfrom
-					    (sock_fp, (char *)packet, DATALEN + MAXIPLEN + MAXICMPLEN, 0,
-					     (struct sockaddr *)&from, &fromlen) < 0) {
+					if (recvfrom(sock_fp, packet, PKBUF_SIZE, 0, (struct sockaddr *)&from, &fromlen) < 0) {
 						int err = errno;
 
 						if (err != EINTR)
@@ -154,21 +152,19 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 
 						if (softboot)
 							return (err);
+					} else {
+						/* check if packet is our ECHO */
+						icp = (struct icmphdr *)(packet + (((struct ip *)packet)->ip_hl << 2));
 
-						continue;
-					}
+						if (icp->type == ICMP_ECHOREPLY && ntohs(icp->un.echo.id) == daemon_pid) {
+							if (from.sin_addr.s_addr ==
+								((struct sockaddr_in *)&to)->sin_addr.s_addr) {
 
-					/* check if packet is our ECHO */
-					icp = (struct icmphdr *)(packet + (((struct ip *)packet)->ip_hl << 2));
+								if (verbose && logtick && ticker == 1)
+									log_message(LOG_DEBUG, "got answer from target %s", target);
 
-					if (icp->type == ICMP_ECHOREPLY && ntohs(icp->un.echo.id) == daemon_pid) {
-						if (from.sin_addr.s_addr ==
-						    ((struct sockaddr_in *)&to)->sin_addr.s_addr) {
-
-							if (verbose && logtick && ticker == 1)
-								log_message(LOG_DEBUG, "got answer from target %s", target);
-
-							return (ENOERR);
+								return (ENOERR);
+							}
 						}
 					}
 				}
