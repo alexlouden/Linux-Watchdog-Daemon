@@ -128,18 +128,9 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 			fdmask = 1 << sock_fp;
 			while (1) {
 				gettimeofday(&dtimeout, NULL);
-				dtimeout.tv_sec = timeout.tv_sec - dtimeout.tv_sec;
-				dtimeout.tv_usec = timeout.tv_usec - dtimeout.tv_usec;
-				if (dtimeout.tv_usec < 0) {
-					dtimeout.tv_usec += 1000000;
-					dtimeout.tv_sec--;
-				}
-				/* Is this loop really needed? I have yet to see a usec value >= 1000000. */
-				while (dtimeout.tv_usec >= 1000000) {
-					dtimeout.tv_usec -= 1000000;
-					dtimeout.tv_sec++;
-				}
-				if (dtimeout.tv_sec < 0)
+				timersub(&timeout, &dtimeout, &dtimeout);
+				/* Check if we have timed out waiting for a reply. */
+				if ((long)dtimeout.tv_sec < 0)
 					break;
 
 				if (verbose && logtick && ticker == 1)
