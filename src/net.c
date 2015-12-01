@@ -91,7 +91,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 	for (i = 0; i < count; i++) {
 
 		struct sockaddr_in from;
-		int fdmask;
+		fd_set fdmask;
 		socklen_t fromlen;
 		struct timeval tstart, timeout, dtimeout;
 		struct icmphdr *icp = (struct icmphdr *)outpack;
@@ -128,7 +128,8 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 			timeradd(&tstart, &tmax, &timeout);
 
 			/* wait for reply */
-			fdmask = 1 << sock_fp;
+			FD_ZERO(&fdmask);
+			FD_SET(sock_fp, &fdmask);
 			while (1) {
 				gettimeofday(&dtimeout, NULL);
 				timersub(&timeout, &dtimeout, &dtimeout);
