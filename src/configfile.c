@@ -79,9 +79,9 @@ int sigterm_delay = 5;	/* Seconds from first SIGTERM to sending SIGKILL during s
 char *devname = NULL;
 char *admin = "root";
 
-int	test_timeout = 0;				/* test-binary time out value. */
-int	repair_timeout = 0;				/* repair-binary time out value. */
-int	dev_timeout = TIMER_MARGIN;			/* Watchdog hardware time-out. */
+int test_timeout = TIMER_MARGIN;   /* test-binary time out value. */
+int repair_timeout = TIMER_MARGIN; /* repair-binary time out value. */
+int dev_timeout = TIMER_MARGIN;    /* Watchdog hardware time-out. */
 
 char *logdir = "/var/log/watchdog";
 
