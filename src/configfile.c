@@ -311,7 +311,7 @@ void read_config(char *configfile)
 		free(line);
 
 	if (fclose(wc) != 0) {
-		fatal_error(EX_SYSERR, "Error closing file (%s)", strerror(errno));
+		fatal_error(EX_SYSERR, "Error closing file \"%s\" (%s)", configfile, strerror(errno));
 	}
 
 	add_test_binaries(test_dir);
