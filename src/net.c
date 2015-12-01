@@ -100,7 +100,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 		icp->type = ICMP_ECHO;
 		icp->code = icp->checksum = 0;
 		icp->un.echo.sequence = htons(i + 1);
-		icp->un.echo.id = daemon_pid;	/* ID */
+		icp->un.echo.id = htons(daemon_pid);	/* ID */
 
 		/* compute ICMP checksum here */
 		icp->checksum = in_cksum((unsigned short *)icp, DATALEN + 8);
@@ -163,7 +163,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 					/* check if packet is our ECHO */
 					icp = (struct icmphdr *)(packet + (((struct ip *)packet)->ip_hl << 2));
 
-					if (icp->type == ICMP_ECHOREPLY && icp->un.echo.id == daemon_pid) {
+					if (icp->type == ICMP_ECHOREPLY && ntohs(icp->un.echo.id) == daemon_pid) {
 						if (from.sin_addr.s_addr ==
 						    ((struct sockaddr_in *)&to)->sin_addr.s_addr) {
 
