@@ -1,6 +1,6 @@
 /* > net.c
  *
- * Code for checking network access. The open_netcheck() funcion is from set-up
+ * Code for checking network access. The open_netcheck() function is from set-up
  * code originally in watchdog.c
  */
 
@@ -20,6 +20,12 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+
+#ifndef FD_CLOEXEC
+#define FD_CLOEXEC 1
+#endif /*FD_CLOEXEC*/
+
+#define PKBUF_SIZE (DATALEN + MAXIPLEN + MAXICMPLEN)
 
 #include "extern.h"
 #include "watch_err.h"
@@ -184,25 +190,42 @@ int open_netcheck(struct list *tlist)
 	filt.data = ~(1<<ICMP_ECHOREPLY);
 
 	if (tlist != NULL) {
+		/* Have at least on ping target to configure, get ICMP settings. */
+		struct protoent *proto;
+		const char pname[] = "icmp";
+
+		if (!(proto = getprotobyname(pname))) {
+			fatal_error(EX_SYSERR, "unknown protocol %s", pname);
+			return -1;
+		}
+
 		for (act = tlist; act != NULL; act = act->next) {
-			struct protoent *proto;
 			struct pingmode *net = &act->parameter.net; /* 'net' is alias of act->parameter.net */
+			struct sockaddr_in *to_in;
 
 			/* setup the socket */
 			memset(&(net->to), 0, sizeof(struct sockaddr));
+			/*
+			 * This pointer is an alias to same memory, an ugly but common
+			 * method, for example http://www.retran.com/beej/sockaddr_inman.html
+			 * Also we don't (yet) support IPv6 which needs a bigger structure
+			 * anyway (e.g. the 'struct sockaddr_storage' type for all) and other
+			 * changes around here.
+			 */
+			to_in = (struct sockaddr_in *)&(net->to);
 
-			((struct sockaddr_in *)&(net->to))->sin_family = AF_INET;
-			if ((((struct sockaddr_in *)&(net->to))->sin_addr.s_addr =
-			     inet_addr(act->name)) == (unsigned int)-1) {
-			     fatal_error(EX_USAGE, "unknown host %s", act->name);
+			to_in->sin_family = AF_INET;
+			to_in->sin_addr.s_addr = inet_addr(act->name);
+
+			if (to_in->sin_addr.s_addr == INADDR_NONE) {
+				fatal_error(EX_USAGE, "unknown host %s", act->name);
 			}
-			net->packet = (unsigned char *)xcalloc((unsigned int)(DATALEN + MAXIPLEN + MAXICMPLEN), sizeof(char));
-			if (!(proto = getprotobyname("icmp"))) {
-				fatal_error(EX_SYSERR, "unknown protocol icmp.");
-			}
-			if ((net->sock_fp = socket(AF_INET, SOCK_RAW, proto->p_proto)) < 0
-			    || fcntl(net->sock_fp, F_SETFD, 1)) {
-			    fatal_error(EX_SYSERR, "error opening socket (%s)", strerror(errno));
+
+			net->packet = (unsigned char *)xcalloc(PKBUF_SIZE, sizeof(char));
+
+			if ((net->sock_fp = socket(AF_INET, SOCK_RAW, proto->p_proto)) < 0 ||
+				fcntl(net->sock_fp, F_SETFD, FD_CLOEXEC)) {
+				fatal_error(EX_SYSERR, "error opening socket (%s)", strerror(errno));
 			}
 
 			/* set filter for only ECOREPLY packet (configured in the filt.dat value above) */
@@ -210,7 +233,7 @@ int open_netcheck(struct list *tlist)
 				int err = errno;
 				log_message(LOG_ERR, "set ICMP filter error for target %s err = %d = '%s'", act->name, err, strerror(err));
 			}
-			
+
 			/* this is necessary for broadcast pings to work */
 			hold = 0; /* value should not matter, but zero to be safe. */
 			if (setsockopt(net->sock_fp, SOL_SOCKET, SO_BROADCAST, (char *)&hold, sizeof(hold)) < 0) {
