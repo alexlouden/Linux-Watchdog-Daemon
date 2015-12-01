@@ -91,7 +91,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 	for (i = 0; i < count; i++) {
 
 		struct sockaddr_in from;
-		int fdmask, j;
+		int fdmask;
 		socklen_t fromlen;
 		struct timeval tstart, timeout, dtimeout;
 		struct icmphdr *icp = (struct icmphdr *)outpack;
@@ -106,9 +106,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 		icp->checksum = in_cksum((unsigned short *)icp, DATALEN + 8);
 
 		/* and send it out */
-		j = sendto(sock_fp, (char *)outpack, DATALEN + 8, 0, &to, sizeof(struct sockaddr));
-
-		if (j < 0) {
+		if (sendto(sock_fp, (char *)outpack, DATALEN + 8, 0, &to, sizeof(struct sockaddr)) < 0) {
 			int err = errno;
 
 			/* if our kernel tells us the network is unreachable we are done */
