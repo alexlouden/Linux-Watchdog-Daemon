@@ -2,6 +2,7 @@
  *
  * Code for checking network access. The open_netcheck() function is from set-up
  * code originally in watchdog.c
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -60,6 +61,10 @@ static int in_cksum(unsigned short *addr, int len)
 	answer = ~sum;		/* truncate to 16 bits */
 	return (answer);
 }
+
+/*
+ * Check network / machine is accessible via 'ping' packet.
+ */
 
 int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *packet, int time, int count)
 {
