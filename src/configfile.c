@@ -146,8 +146,9 @@ void read_config(char *configfile)
 {
 	FILE *wc;
 	char *line = NULL;
-	int gotload5 = FALSE, gotload15 = FALSE;
 	size_t n = 0;
+
+	maxload5 = maxload15 = 0;
 
 	if ((wc = fopen(configfile, "r")) == NULL) {
 		fatal_error(EX_SYSERR, "Can't open config file \"%s\" (%s)", configfile, strerror(errno));
@@ -263,23 +264,14 @@ void read_config(char *configfile)
 				if (!spool(line, &i, strlen(MAXTEMP)))
 					maxtemp = atol(line + i);
 			} else if (strncmp(line + i, MAXLOAD15, strlen(MAXLOAD15)) == 0) {
-				if (!spool(line, &i, strlen(MAXLOAD15))) {
+				if (!spool(line, &i, strlen(MAXLOAD15)))
 					maxload15 = atol(line + i);
-					gotload15 = TRUE;
-				}
 			} else if (strncmp(line + i, MAXLOAD1, strlen(MAXLOAD1)) == 0) {
-				if (!spool(line, &i, strlen(MAXLOAD1))) {
+				if (!spool(line, &i, strlen(MAXLOAD1)))
 					maxload1 = atol(line + i);
-					if (!gotload5)
-						maxload5 = maxload1 * 3 / 4;
-					if (!gotload15)
-						maxload15 = maxload1 / 2;
-				}
 			} else if (strncmp(line + i, MAXLOAD5, strlen(MAXLOAD5)) == 0) {
-				if (!spool(line, &i, strlen(MAXLOAD5))) {
+				if (!spool(line, &i, strlen(MAXLOAD5)))
 					maxload5 = atol(line + i);
-					gotload5 = TRUE;
-				}
 			} else if (strncmp(line + i, MINMEM, strlen(MINMEM)) == 0) {
 				if (!spool(line, &i, strlen(MINMEM)))
 					minpages = atol(line + i);
@@ -319,6 +311,13 @@ void read_config(char *configfile)
 	if (tint <= 0) {
 		fatal_error(EX_SYSERR, "Parameters %s = %d in file \"%s\" must be > 0", INTERVAL, tint, configfile);
 	}
+
+	/* compute 5 & 15 minute averages if not given. */
+	if (maxload1 && !maxload5)
+		maxload5 = maxload1 * 3 / 4;
+
+	if (maxload1 && !maxload15)
+		maxload15 = maxload1 / 2;
 
 }
 
