@@ -116,7 +116,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 				return (ENETUNREACH);
 
 			} else {
-				log_message(LOG_ERR, "sendto gave errno = %d = '%s'", err, strerror(err));
+				log_message(LOG_ERR, "sendto gave error for target %s = %d = '%s'", target, err, strerror(err));
 
 				if (softboot)
 					return (err);
