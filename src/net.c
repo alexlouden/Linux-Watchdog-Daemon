@@ -141,10 +141,7 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 					log_message(LOG_DEBUG, "ping select timeout = %2ld.%06ld seconds",
 					       dtimeout.tv_sec, dtimeout.tv_usec);
 
-				if (select
-				    (sock_fp + 1, (fd_set *) & fdmask, (fd_set *) NULL, (fd_set *) NULL,
-				     &dtimeout) >= 1) {
-
+				if (select(sock_fp + 1, &fdmask, NULL, NULL, &dtimeout) >= 1) {
 					/* read reply */
 					fromlen = sizeof(from);
 					if (recvfrom
