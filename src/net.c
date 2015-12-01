@@ -20,6 +20,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <stdlib.h>		/* for ldiv() */
 
 #ifndef FD_CLOEXEC
 #define FD_CLOEXEC 1
@@ -29,6 +30,8 @@
 
 #include "extern.h"
 #include "watch_err.h"
+
+static const long USEC = 1000000L;
 
 /*
  * in_cksum --
@@ -62,6 +65,8 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 {
 	int i;
 	unsigned char outpack[MAXPACKET];
+	struct timeval tmax;
+	ldiv_t d;
 
 	if (target == NULL)
 		return (ENOERR);
@@ -71,13 +76,19 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 
 	memset(outpack, 0, sizeof(outpack));
 
+	/* set the timeout value */
+	d = ldiv(time, count);
+	tmax.tv_sec = d.quot;
+	/* Compute microseconds, including the above remainder. */
+	tmax.tv_usec = (d.rem * USEC) / count;
+
 	/* try "ping-count" times */
 	for (i = 0; i < count; i++) {
 
 		struct sockaddr_in from;
 		int fdmask, j;
 		socklen_t fromlen;
-		struct timeval timeout, dtimeout;
+		struct timeval tstart, timeout, dtimeout;
 		struct icmphdr *icp = (struct icmphdr *)outpack;
 
 		/* setup a ping message */
@@ -109,13 +120,9 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 			}
 
 		} else {
-			gettimeofday(&timeout, NULL);
+			gettimeofday(&tstart, NULL);
 			/* set the timeout value */
-			j = time / count;
-			/* we have to wait at least one second */
-			if (j == 0)
-				j = 1;
-			timeout.tv_sec += j;
+			timeradd(&tstart, &tmax, &timeout);
 
 			/* wait for reply */
 			fdmask = 1 << sock_fp;
