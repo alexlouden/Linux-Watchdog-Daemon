@@ -66,6 +66,11 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 	if (target == NULL)
 		return (ENOERR);
 
+	if (count < 1)
+		return (EINVAL);
+
+	memset(outpack, 0, sizeof(outpack));
+
 	/* try "ping-count" times */
 	for (i = 0; i < count; i++) {
 
