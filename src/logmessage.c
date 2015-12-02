@@ -98,7 +98,7 @@ static int output_message(int level, char *buf)
 		if(rv < 0 || fflush(fp)) {
 			/* Error writing out to terminal - don't bother trying again. */
 			using_terminal = 0;
-#if USE_SYSLOG && 1
+#if USE_SYSLOG && 0
 			syslog(LOG_WARNING, "failed writing message terminal (rv=%d, errno='%s')", rv, strerror(errno));
 #endif /* USE_SYSLOG */
 		}
