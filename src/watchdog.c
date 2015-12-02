@@ -319,6 +319,7 @@ int main(int argc, char *const argv[])
 	};
 	long count = 0L;
 	long count_max = 0L;
+	unsigned long swait, twait;
 
 	progname = basename(argv[0]);
 	open_logging(progname, MSG_TO_STDERR | MSG_TO_SYSLOG);
@@ -425,6 +426,12 @@ int main(int argc, char *const argv[])
 
 	lock_our_memory(realtime, schedprio, daemon_pid);
 
+	/* Short wait (50ms OK?) in case test binaries return quickly, then
+	 * remaining 'twait' should make watchdog sleep 'tint' seconds total.
+	 */
+	swait = 50000;
+	twait = (tint * 1000000) - swait;
+
 	/* main loop: update after <tint> seconds */
 	while (_running) {
 		wd_action(keep_alive(), repair_bin, NULL);
@@ -470,9 +477,13 @@ int main(int argc, char *const argv[])
 		for (act = tr_bin_list; act != NULL; act = act->next)
 			do_check(check_bin(act->name, test_timeout, act->version), repair_bin, act);
 
+		/* in case test binaries return quickly */
+		usleep(swait);
+		check_bin(NULL, test_timeout, 0);
+
 		/* finally sleep for a full cycle */
 		/* we have just triggered the device with the last check */
-		usleep(tint * 1000000);
+		usleep(twait);
 
 		count++;
 
