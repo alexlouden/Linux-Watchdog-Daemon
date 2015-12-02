@@ -118,7 +118,7 @@ static int repair(char *rbinary, int result, char *name, int version)
 	}
 
 	if (repair_timeout > 0) {
-		time_t left = repair_timeout;
+		int left = repair_timeout;
 		do {
 			sleep(1);
 			r_pid = waitpid(child_pid, &result, WNOHANG);
