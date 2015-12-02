@@ -235,7 +235,7 @@ static int check_processes(const char *name, int *ecode)
  * A time-out of zero will disable the time-out checking, but in that case a blocked child
  * will simply persist indefinitely and no error will be found.
  */
-int check_bin(char *tbinary, time_t timeout, int version)
+int check_bin(char *tbinary, int timeout, int version)
 {
 	pid_t child_pid;
 	int ecode = EDONTKNOW;

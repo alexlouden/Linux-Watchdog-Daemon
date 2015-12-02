@@ -149,7 +149,7 @@ int check_temp(struct list *act);
 int close_tempcheck(void);
 
 /** test_binary.c **/
-int check_bin(char *, time_t, int);
+int check_bin(char *, int, int);
 void free_process(void);
 
 /** pidfile.c **/
