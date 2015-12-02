@@ -262,11 +262,17 @@ static void print_info(int sync_it, int force)
 				act->name);
 	}
 
-	log_message(LOG_INFO, "repair=%s(%d) alive=%s heartbeat=%s to=%s no_act=%s force=%s",
-		    (repair_bin == NULL) ? "none" : repair_bin, repair_timeout,
-		    (devname == NULL) ? "none" : devname,
-		    (heartbeat == NULL) ? "none" : heartbeat,
-		    (admin == NULL) ? "none" : admin,
+	if (repair_bin == NULL)
+		log_message(LOG_INFO, "no repair binary files");
+	else {
+		log_message(LOG_INFO, "repair binary: time-out = %d", repair_timeout);
+		log_message(LOG_INFO, "repair binary: program = %s", repair_bin);
+	}
+
+	log_message(LOG_INFO, "alive=%s heartbeat=%s to=%s no_act=%s force=%s",
+		    (devname == NULL) ? "[none]" : devname,
+		    (heartbeat == NULL) ? "[none]" : heartbeat,
+		    (admin == NULL) ? "[none]" : admin,
 		    (no_act == TRUE) ? "yes" : "no",
 		    (force == TRUE) ? "yes" : "no");
 }
