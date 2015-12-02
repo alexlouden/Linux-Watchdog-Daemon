@@ -384,7 +384,7 @@ int main(int argc, char *const argv[])
 	}
 
 	/* tuck my process id away */
-	if (write_pid_file(PIDFILE)) {
+	if (write_pid_file(PIDFILE) && !force) {
 		fatal_error(EX_USAGE, "unable to gain lock via PID file");
 	}
 
