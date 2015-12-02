@@ -23,6 +23,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
+#include <sys/param.h>		/* For EXEC_PAGESIZE */
 #include <linux/oom.h>
 #include <linux/watchdog.h>
 #include <string.h>
@@ -206,11 +207,18 @@ static void print_info(int sync_it, int force)
 {
 	struct list *act;
 
-	log_message(LOG_INFO, "int=%ds realtime=%s sync=%s soft=%s mla=%d mem=%d",
-		    tint, realtime ? "yes" : "no",
+	log_message(LOG_INFO, "int=%ds realtime=%s sync=%s load=%d,%d,%d soft=%s",
+		    tint,
+		    realtime ? "yes" : "no",
 		    sync_it ? "yes" : "no",
-		    softboot ? "yes" : "no",
-		    maxload1, minpages);
+		    maxload1, maxload5, maxload15,
+		    softboot ? "yes" : "no");
+
+	if (minpages == 0 && minalloc == 0)
+		log_message(LOG_INFO, "memory not checked");
+	else
+		log_message(LOG_INFO, "memory: minimum pages = %d free, %d allocatable (%d byte pages)",
+			minpages, minalloc, EXEC_PAGESIZE);
 
 	if (target_list == NULL)
 		log_message(LOG_INFO, "ping: no machine to check");
