@@ -84,6 +84,32 @@ int open_watchdog(char *name, int timeout)
 }
 
 /*
+ * In particular the iTCO_wdt driver has a lower limit of about 3 or 5 seconds
+ * (and depending on version, upper of 31, 76 or 614). Since we also use this
+ * to speed the reboot process in fault case, we might want to do something
+ * about the lower limit failure.
+ */
+
+static int try_other_times(const int timeout)
+{
+	static const int try_values[] = {3, 5, 10};
+	static const int num_try = sizeof(try_values) / sizeof(int);
+	int ii;
+
+	for (ii = 0; ii < num_try; ii++) {
+		int tmp = try_values[ii];
+		if (tmp > timeout) {
+			if (ioctl(watchdog_fd, WDIOC_SETTIMEOUT, &tmp) >= 0) {
+				log_message(LOG_ERR, "trying watchdog time-out success for %d", tmp);
+				return 0;
+			}
+		}
+	}
+
+	return -1;
+}
+
+/*
  * Once opened, call this to query or change the watchdog timer value.
  */
 
@@ -98,6 +124,11 @@ int set_watchdog_timeout(int timeout)
 			if (ioctl(watchdog_fd, WDIOC_SETTIMEOUT, &timeout) < 0) {
 				int err = errno;
 				log_message(LOG_ERR, "cannot set timeout %d (errno = %d = '%s')", timeout, err, strerror(err));
+				/*
+				 * We can get here for several reasons: driver in error, time-out too big
+				 * or time-out too small. Try other values just in case.
+				 */
+				 try_other_times(timeout);
 			} else {
 				if(timeout <= tint * 2) {
 					log_message(LOG_WARNING,
