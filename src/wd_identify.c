@@ -28,7 +28,10 @@
 static void usage(char *progname)
 {
 	fprintf(stderr, "%s version %d.%d, usage:\n", progname, MAJOR_VERSION, MINOR_VERSION);
-	fprintf(stderr, "%s [-c | --config-file <config_file>]\n", progname);
+	fprintf(stderr, "%s [options]\n", progname);
+	fprintf(stderr, "options:\n");
+	fprintf(stderr, "  -c | --config-file <file>  specify location of config file\n");
+	fprintf(stderr, "  -v | --verbose             verbose messages\n");
 	exit(1);
 }
 
@@ -37,9 +40,10 @@ int main(int argc, char *const argv[])
 	char *configfile = CONFIG_FILENAME;
 	int c, rv = 0;
 	struct watchdog_info ident;
-	char *opts = "c:";
+	char *opts = "c:v";
 	struct option long_options[] = {
 		{"config-file", required_argument, NULL, 'c'},
+		{"verbose", no_argument, NULL, 'v'},
 		{NULL, 0, NULL, 0}
 	};
 	int watchdog = -1;
@@ -52,6 +56,9 @@ int main(int argc, char *const argv[])
 		switch (c) {
 		case 'c':
 			configfile = optarg;
+			break;
+		case 'v':
+			verbose++;
 			break;
 		default:
 			usage(progname);
@@ -81,6 +88,17 @@ int main(int argc, char *const argv[])
 	} else {
 		ident.identity[sizeof(ident.identity) - 1] = '\0';	/* Be sure */
 		printf("%s\n", ident.identity);
+	}
+
+	if (verbose) {
+		/* If called with timeout <= 0 then query device. */
+		int timeout = 0;
+		if (ioctl(watchdog, WDIOC_GETTIMEOUT, &timeout) < 0) {
+			int err = errno;
+			log_message(LOG_ERR, "cannot get timeout (errno = %d = '%s')", err, strerror(err));
+		} else {
+			printf("watchdog was set to %d seconds\n", timeout);
+		}
 	}
 
 	if (write(watchdog, "V", 1) < 0) {
