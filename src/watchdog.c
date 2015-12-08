@@ -46,7 +46,7 @@ static void usage(char *progname)
 	fprintf(stderr, "%s [options]\n", progname);
 	fprintf(stderr, "options:\n");
 	fprintf(stderr, "  -c | --config-file <file>  specify location of config file\n");
-	fprintf(stderr, "  -f | --force               don't sanity-check config\n");
+	fprintf(stderr, "  -f | --force               don't sanity-check config or use PID file\n");
 	fprintf(stderr, "  -F | --foreground          run in foreground\n");
 	fprintf(stderr, "  -X | --loop-exit <number>  run a fixed number of loops then exit\n");
 	fprintf(stderr, "  -q | --no-action           do not reboot or halt\n");
@@ -399,7 +399,7 @@ int main(int argc, char *const argv[])
 	}
 
 	/* tuck my process id away */
-	if (write_pid_file(PIDFILE) && !force) {
+	if (!force && write_pid_file(PIDFILE)) {
 		fatal_error(EX_USAGE, "unable to gain lock via PID file");
 	}
 
