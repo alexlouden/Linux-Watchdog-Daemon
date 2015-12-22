@@ -16,7 +16,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>		/* for gethostname() etc */
-#include <netdb.h>		/* for gethostbyname() */
+#include <netdb.h>		/* for getprotobyname() */
 #include <sys/param.h>	/* for MAXHOSTNAMELEN */
 #include <sys/socket.h>
 #include <netinet/in.h>
