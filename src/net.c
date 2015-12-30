@@ -16,7 +16,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>		/* for gethostname() etc */
-#include <netdb.h>		/* for gethostbyname() */
+#include <netdb.h>		/* for getprotobyname() */
 #include <sys/param.h>	/* for MAXHOSTNAMELEN */
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -53,7 +53,7 @@ static int in_cksum(unsigned short *addr, int len)
 		nleft -= 2;
 	}			/* mop up an odd byte, if necessary */
 	if (nleft == 1) {
-		sum += htons(*(u_char *) w << 8);
+		sum += htons(*(unsigned char *) w << 8);
 	}
 	/* add back carry outs from top 16 bits to low 16 bits */
 	sum = (sum >> 16) + (sum & 0xffff);	/* add hi 16 to low 16 */
