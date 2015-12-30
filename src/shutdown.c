@@ -25,9 +25,9 @@
 
 #include "watch_err.h"
 #include "extern.h"
+#include "ext2_mnt.h"
 
 #if defined __GLIBC__
-#include "ext2_mnt.h"
 #include <sys/quota.h>
 #include <sys/swap.h>
 #include <sys/reboot.h>
@@ -123,7 +123,7 @@ static void mnt_off()
 	FILE *fp;
 	struct mntent *mnt;
 
-	fp = setmntent(MNTTAB, "r");
+	fp = setmntent(_PATH_MNTTAB, "r");
 	/* in some rare cases fp might be NULL so be careful */
 	while (fp != NULL && ((mnt = getmntent(fp)) != (struct mntent *)0)) {
 		/* First check if swap */
