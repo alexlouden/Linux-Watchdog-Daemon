@@ -21,6 +21,9 @@
 #include <sys/stat.h>
 #include <sys/param.h>
 #include <sys/mman.h>
+#ifdef __linux__
+#include <linux/param.h>
+#endif
 
 #include "extern.h"
 #include "watch_err.h"
