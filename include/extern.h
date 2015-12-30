@@ -1,8 +1,9 @@
 #ifndef _EXTERN_H_
 #define _EXTERN_H_
 
-#include <netinet/in.h>
 #include <stdio.h>
+#include <time.h>
+#include <netinet/in.h>
 
 #include "logmessage.h"
 #include "xmalloc.h"
