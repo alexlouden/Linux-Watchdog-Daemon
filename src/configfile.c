@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <string.h>
 #include <dirent.h>
+#include <limits.h>
 #include <sys/stat.h>
 
 #include "extern.h"

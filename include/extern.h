@@ -1,8 +1,9 @@
 #ifndef _EXTERN_H_
 #define _EXTERN_H_
 
-#include <netinet/in.h>
 #include <stdio.h>
+#include <time.h>
+#include <netinet/in.h>
 
 #include "logmessage.h"
 #include "xmalloc.h"
@@ -56,9 +57,6 @@ struct list {
 #endif
 
 #define TS_SIZE	12
-
-#define MIN_WD_TIMEOUT 3	/* Watchdog hardware timeout, must be 2 at least with interval=1, but testing shows 3 minimum. */
-#define MAX_WD_TIMEOUT 600	/* Watchdog hardware timeout. */
 
 /* === External variables === */
 /* From configfile.c */
