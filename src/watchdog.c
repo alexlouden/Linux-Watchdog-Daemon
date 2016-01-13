@@ -408,6 +408,11 @@ int main(int argc, char *const argv[])
 
 	read_config(configfile);
 
+	if (softboot) {
+		/* Result of zeroing time-out is immediate action to shut down on errors, rather like old softboot behaviour. */
+		retry_timeout = 0;
+	}
+
 	if (!force) {
 		check_parameters();
 	}
