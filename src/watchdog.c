@@ -201,8 +201,8 @@ static void wd_action(int result, char *rbinary, struct list *act)
 
 				if (tused > retry_timeout) {
 					log_message(LOG_WARNING, "Retry timed-out at %d seconds for %s", tused,
-						    act->name);
-				    timeout = 1;
+						act->name);
+					timeout = 1;
 				} else {
 					if (verbose)
 						log_message(LOG_DEBUG, "Retry at %d seconds for %s", tused, act->name);
