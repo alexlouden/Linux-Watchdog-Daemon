@@ -33,8 +33,5 @@ int check_file_table(void)
 		}
 	}
 
-	if (softboot)
-		return (err);
-
-	return (ENOERR);
+	return (err);
 }

@@ -113,72 +113,66 @@ int check_net(char *target, int sock_fp, struct sockaddr to, unsigned char *pack
 			/* if our kernel tells us the network is unreachable we are done */
 			if (err == ENETUNREACH) {
 				log_message(LOG_ERR, "network is unreachable (target: %s)", target);
-
-				return (ENETUNREACH);
-
 			} else {
 				log_message(LOG_ERR, "sendto gave error for target %s = %d = '%s'", target, err, strerror(err));
-
-				if (softboot)
-					return (err);
 			}
 
-		} else {
-			gettimeofday(&tstart, NULL);
-			/* set the timeout value */
-			timeradd(&tstart, &tmax, &timeout);
+			return (err);
+		}
 
-			/* wait for reply */
-			FD_ZERO(&fdmask);
-			FD_SET(sock_fp, &fdmask);
-			while (1) {
-				gettimeofday(&dtimeout, NULL);
-				timersub(&timeout, &dtimeout, &dtimeout);
-				/* Check if we have timed out waiting for a reply. */
-				if ((long)dtimeout.tv_sec < 0)
-					break;
+		gettimeofday(&tstart, NULL);
+		/* set the timeout value */
+		timeradd(&tstart, &tmax, &timeout);
+
+		/* wait for reply */
+		FD_ZERO(&fdmask);
+		FD_SET(sock_fp, &fdmask);
+		while (1) {
+			gettimeofday(&dtimeout, NULL);
+			timersub(&timeout, &dtimeout, &dtimeout);
+			/* Check if we have timed out waiting for a reply. */
+			if ((long)dtimeout.tv_sec < 0)
+				break;
 
 #if 0
-				if (verbose && logtick && ticker == 1)
-					log_message(LOG_DEBUG, "ping select timeout = %2ld.%06ld seconds",
-					       dtimeout.tv_sec, dtimeout.tv_usec);
+			if (verbose && logtick && ticker == 1)
+				log_message(LOG_DEBUG, "ping select timeout = %2ld.%06ld seconds",
+				       dtimeout.tv_sec, dtimeout.tv_usec);
 #endif
 
-				if (select(sock_fp + 1, &fdmask, NULL, NULL, &dtimeout) >= 1) {
-					/* read reply */
-					fromlen = sizeof(from);
-					if (recvfrom(sock_fp, packet, PKBUF_SIZE, 0, (struct sockaddr *)&from, &fromlen) < 0) {
-						int err = errno;
+			if (select(sock_fp + 1, &fdmask, NULL, NULL, &dtimeout) >= 1) {
+				/* read reply */
+				fromlen = sizeof(from);
+				if (recvfrom(sock_fp, packet, PKBUF_SIZE, 0, (struct sockaddr *)&from, &fromlen) < 0) {
+					int err = errno;
 
-						if (err != EINTR)
-							log_message(LOG_ERR, "recvfrom gave errno = %d = '%s'", err, strerror(err));
+					if (err != EINTR) {
+						log_message(LOG_ERR, "recvfrom gave errno = %d = '%s'", err, strerror(err));
+						return (err);
+					}
+				} else {
+					/* check if packet is our ECHO */
+					icp = (struct icmphdr *)(packet + (((struct ip *)packet)->ip_hl << 2));
 
-						if (softboot)
-							return (err);
-					} else {
-						/* check if packet is our ECHO */
-						icp = (struct icmphdr *)(packet + (((struct ip *)packet)->ip_hl << 2));
+					if (icp->type == ICMP_ECHOREPLY) {
+						int rcv_id  = ntohs(icp->un.echo.id);
+						int rcv_seq = ntohs(icp->un.echo.sequence);
 
-						if (icp->type == ICMP_ECHOREPLY) {
-							int rcv_id  = ntohs(icp->un.echo.id);
-							int rcv_seq = ntohs(icp->un.echo.sequence);
+						/* Have ping reply, but is it the one we just sent? */
+						if (rcv_id  == daemon_pid &&
+							rcv_seq == (i + 1) &&
+							from.sin_addr.s_addr == to_in->sin_addr.s_addr) {
 
-							/* Have ping reply, but is it the one we just sent? */
-							if (rcv_id  == daemon_pid &&
-								rcv_seq == (i + 1) &&
-								from.sin_addr.s_addr == to_in->sin_addr.s_addr) {
-
-								if (verbose && logtick && ticker == 1) {
-									/* Report time since tstart in milliseconds (like 'ping' program). */
-									double msec;
-									gettimeofday(&dtimeout, NULL);
-									timersub(&dtimeout, &tstart, &dtimeout);
-									msec = 1.0e3 * (dtimeout.tv_sec + 1.0e-6 * dtimeout.tv_usec);
-									log_message(LOG_DEBUG, "got answer on ping=%d from target %-15s time=%.3fms", i+1, target, msec);
-								}
-
-								return (ENOERR);
+							if (verbose && logtick && ticker == 1) {
+								/* Report time since tstart in milliseconds (like 'ping' program). */
+								double msec;
+								gettimeofday(&dtimeout, NULL);
+								timersub(&dtimeout, &tstart, &dtimeout);
+								msec = 1.0e3 * (dtimeout.tv_sec + 1.0e-6 * dtimeout.tv_usec);
+								log_message(LOG_DEBUG, "got answer on ping=%d from target %-15s time=%.3fms", i+1, target, msec);
 							}
+
+							return (ENOERR);
 						}
 					}
 				}

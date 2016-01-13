@@ -19,11 +19,7 @@ int check_iface(struct list *dev)
 	if (file == NULL) {
 		int err = errno;
 		log_message(LOG_ERR, "cannot open %s (errno = %d = '%s')", fname, err, strerror(err));
-
-		if (softboot)
-			return (err);
-
-		return (ENOERR);
+		return (err);
 	}
 
 	/* read the file line by line */
@@ -37,12 +33,8 @@ int check_iface(struct list *dev)
 			} else {
 				int err = errno;
 				log_message(LOG_ERR, "cannot read %s (errno = %d = '%s')", fname, err, strerror(err));
-
 				fclose(file);
-				if (softboot)
-					return (err);
-
-				return (ENOERR);
+				return (err);
 			}
 		} else {
 			int i = 0;
@@ -58,7 +50,6 @@ int check_iface(struct list *dev)
 				if (dev->parameter.iface.bytes == bytes) {
 					fclose(file);
 					log_message(LOG_ERR, "device %s did not receive anything since last check", dev->name);
-
 					return (ENETUNREACH);
 				} else {
 					dev->parameter.iface.bytes = bytes;
@@ -70,11 +61,7 @@ int check_iface(struct list *dev)
 	if (fclose(file) != 0) {
 		int err = errno;
 		log_message(LOG_ERR, "cannot close %s (errno = %d = '%s')", fname, err, strerror(err));
-
-		if (softboot)
-			return (err);
-
-		return (ENOERR);
+		return (err);
 	}
 
 	return (ENOERR);

@@ -182,10 +182,7 @@ int keep_alive(void)
 	   - easier and quicker to parse checkpoint information */
 	write_heartbeat();
 
-	if (softboot)
-		return (err);
-
-	return (ENOERR);
+	return (err);
 }
 
 /*

@@ -144,10 +144,7 @@ int check_temp(struct list *act)
 
 	err = read_temp_sensor(act->name, &temperature);
 	if (err != ENOERR) {
-		if (softboot)
-			return (err);
-
-		return (ENOERR);
+		return (err);
 	}
 
 	/* Print out warnings as we cross the 90/95/98 percent thresholds. */

@@ -21,9 +21,7 @@ int check_file_stat(struct list *file)
 	if (stat(file->name, &buf) == -1) {
 		int err = errno;
 		log_message(LOG_ERR, "cannot stat %s (errno = %d = '%s')", file->name, err, strerror(err));
-		/* on error ENETDOWN|ENETUNREACH we react as if we're in ping mode */
-		if (softboot || err == ENETDOWN || err == ENETUNREACH)
-			return (err);
+		return (err);
 	} else if (file->parameter.file.mtime != 0) {
 		int twait = (int)(time(NULL) - buf.st_mtime);
 

@@ -62,22 +62,14 @@ int check_load(void)
 	if (lseek(load_fd, 0, SEEK_SET) < 0) {
 		int err = errno;
 		log_message(LOG_ERR, "lseek %s gave errno = %d = '%s'", load_name, err, strerror(err));
-
-		if (softboot)
-			return (err);
-
-		return (ENOERR);
+		return (err);
 	}
 
 	/* read the line (there is only one) */
 	if ((n = read(load_fd, buf, sizeof(buf)-1)) < 0) {
 		int err = errno;
 		log_message(LOG_ERR, "read %s gave errno = %d = '%s'", load_name, err, strerror(err));
-
-		if (softboot)
-			return (err);
-
-		return (ENOERR);
+		return (err);
 	}
 	/* Force string to be nul-terminated. */
 	buf[n] = 0;
@@ -96,11 +88,7 @@ int check_load(void)
 		avg15 = atoi(ptr);
 	} else {
 		log_message(LOG_ERR, "%s does not contain any data (read = %s)", load_name, buf);
-
-		if (softboot)
-			return (ENOLOAD);
-
-		return (ENOERR);
+		return (ENOLOAD);
 	}
 
 	if (verbose && logtick && ticker == 1)

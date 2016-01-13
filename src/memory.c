@@ -76,22 +76,14 @@ int check_memory(void)
 	if (lseek(mem_fd, 0, SEEK_SET) < 0) {
 		int err = errno;
 		log_message(LOG_ERR, "lseek %s gave errno = %d = '%s'", mem_name, err, strerror(err));
-
-		if (softboot)
-			return (err);
-
-		return (ENOERR);
+		return (err);
 	}
 
 	/* read the file */
 	if ((n = read(mem_fd, buf, sizeof(buf)-1)) < 0) {
 		int err = errno;
 		log_message(LOG_ERR, "read %s gave errno = %d = '%s'", mem_name, err, strerror(err));
-
-		if (softboot)
-			return (err);
-
-		return (ENOERR);
+		return (err);
 	}
 	/* Force string to be nul-terminated. */
 	buf[n] = 0;
@@ -101,11 +93,7 @@ int check_memory(void)
 
 	if (!ptr1 || !ptr2) {
 		log_message(LOG_ERR, "%s contains invalid data (read = %s)", mem_name, buf);
-
-		if (softboot)
-			return (EINVMEM);
-
-		return (ENOERR);
+		return (EINVMEM);
 	}
 
 	/* we only care about integer values */
