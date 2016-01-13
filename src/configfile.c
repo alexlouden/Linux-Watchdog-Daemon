@@ -216,7 +216,7 @@ void read_config(char *configfile)
 		} else if (READ_ENUM(SOFTBOOT, &softboot) == 0) {
 		} else if (READ_ENUM(TEMPPOWEROFF, &temp_poweroff) == 0) {
 		} else if (READ_INT(SIGTERM_DELAY, &sigterm_delay) == 0) {
-		} else if (READ_INT(RETRYTIMEOUT, &retry_timeout) == 0) {		
+		} else if (READ_INT(RETRYTIMEOUT, &retry_timeout) == 0) {
 		} else {
 			log_message(LOG_WARNING, "Ignoring invalid option at line %d of config file: %s=%s", linecount, arg, val);
 		}

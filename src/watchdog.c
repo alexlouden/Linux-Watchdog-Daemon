@@ -269,6 +269,8 @@ static void print_info(int sync_it, int force)
 		log_message(LOG_INFO, "repair binary: program = %s", repair_bin);
 	}
 
+	log_message(LOG_INFO, "error retry time-out = %d seconds", retry_timeout);
+
 	log_message(LOG_INFO, "alive=%s heartbeat=%s to=%s no_act=%s force=%s",
 		    (devname == NULL) ? "[none]" : devname,
 		    (heartbeat == NULL) ? "[none]" : heartbeat,
