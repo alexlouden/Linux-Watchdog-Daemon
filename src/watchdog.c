@@ -152,6 +152,7 @@ static void wd_action(int result, char *rbinary, struct list *act)
 {
 	int version = 0;
 	char *name = NULL;
+	int timeout = 1;
 
 	/* If we have info about the version, use this to decide what to call
 	 * in order to repar the problem. Defalut is we use the global repair
@@ -169,8 +170,12 @@ static void wd_action(int result, char *rbinary, struct list *act)
 	/* Decide on repair or return based on error code. */
 	switch (result) {
 	case ENOERR:
+		/* No error, reset any time-out. */
+		if (act != NULL) {
+			act->last_time = 0;
+		}
 	case EDONTKNOW:
-		/* no error, keep on working */
+		/* Don't know, keep on working */
 		return;
 
 	case EREBOOT:
@@ -181,7 +186,34 @@ static void wd_action(int result, char *rbinary, struct list *act)
 
 	default:
 		/* error that might be repairable */
-		result = repair(rbinary, result, name, version);
+		if (act != NULL && retry_timeout > 0) {
+			/* timer possible and used to allow re-try */
+			time_t now = time(NULL);
+			timeout = 0;
+
+			if (act->last_time == 0) {
+				/* First offence, record time. */
+				act->last_time = now;
+			} else {
+				/* timer running */
+				int tused = (int)(now - act->last_time);
+
+				if (tused > retry_timeout) {
+					log_message(LOG_WARNING, "Retry timed-out at %d seconds for %s", tused,
+						    act->name);
+				    timeout = 1;
+				} else {
+					if (verbose)
+						log_message(LOG_DEBUG, "Retry at %d seconds for %s", tused, act->name);
+				}
+			}
+		}
+
+		if (timeout) {
+			result = repair(rbinary, result, name, version);
+		} else {
+			result = ENOERR;
+		}
 		break;
 	}
 
