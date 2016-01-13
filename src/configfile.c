@@ -291,7 +291,9 @@ static void add_test_binaries(const char *path)
 		if (!(sb.st_mode & S_IRUSR))
 			continue;
 
-		log_message(LOG_DEBUG, "adding %s to list of auto-repair binaries", fname);
+		if (verbose)
+			log_message(LOG_DEBUG, "adding %s to list of auto-repair binaries", fname);
+
 		add_list(&tr_bin_list, fname, 1);
 	} while (1);
 
