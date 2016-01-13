@@ -38,6 +38,7 @@ union wdog_options {
 struct list {
 	char *name;
 	int version;
+	time_t last_time;
 	union wdog_options parameter;
 	struct list *next;
 };
@@ -80,6 +81,7 @@ extern char *admin;
 extern int	test_timeout;		/* test-binary time out value. */
 extern int	repair_timeout;		/* repair-binary time out value. */
 extern int	dev_timeout;		/* Watchdog hardware time-out. */
+extern int	retry_timeout;		/* Retry on non-critical errors. */
 
 extern char *logdir;
 

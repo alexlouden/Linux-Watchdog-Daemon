@@ -56,6 +56,7 @@ static void add_test_binaries(const char *path);
 #define LOGDIR			"log-dir"
 #define TESTDIR			"test-directory"
 #define SIGTERM_DELAY	"sigterm-delay"
+#define RETRYTIMEOUT	"retry-timeout"
 
 #ifndef TESTBIN_PATH
 #define TESTBIN_PATH 		NULL
@@ -84,6 +85,7 @@ char *admin = "root";
 int test_timeout = TIMER_MARGIN;   /* test-binary time out value. */
 int repair_timeout = TIMER_MARGIN; /* repair-binary time out value. */
 int dev_timeout = TIMER_MARGIN;    /* Watchdog hardware time-out. */
+int retry_timeout = TIMER_MARGIN;  /* Retry on non-critical errors. */
 
 char *logdir = "/var/log/watchdog";
 
@@ -214,6 +216,7 @@ void read_config(char *configfile)
 		} else if (READ_ENUM(SOFTBOOT, &softboot) == 0) {
 		} else if (READ_ENUM(TEMPPOWEROFF, &temp_poweroff) == 0) {
 		} else if (READ_INT(SIGTERM_DELAY, &sigterm_delay) == 0) {
+		} else if (READ_INT(RETRYTIMEOUT, &retry_timeout) == 0) {		
 		} else {
 			log_message(LOG_WARNING, "Ignoring invalid option at line %d of config file: %s=%s", linecount, arg, val);
 		}
