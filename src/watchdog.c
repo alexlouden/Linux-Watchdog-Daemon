@@ -158,12 +158,12 @@ static void wd_action(int result, char *rbinary, struct list *act)
 	 * in order to repar the problem. Defalut is we use the global repair
 	 * call, but for V1 we use the same program with a different argument.
 	 */
-	if(act != NULL) {
+	if (act != NULL) {
 		name = act->name;
 		version = act->version;
 	}
 
-	if(version == 1) {
+	if (version == 1) {
 		rbinary = name;
 	}
 
