@@ -126,6 +126,10 @@ system.
 repair-timeout = <timeout in seconds>
 repair command may only run for <timeout> seconds. Set to 0 for unlimited.
 .TP
+retry-timeout = <timeout in seconds>
+Allow most error conditions to persist for <timeout> seconds. Set to 0 for
+immediate action (like softboot behaviour).
+.TP
 admin = <mail-address>
 Email address to send admin mail to. That is, who shall be notified that the
 machine is being halted or rebooted. Default is 'root'. If you want to disable

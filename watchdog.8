@@ -1,4 +1,4 @@
-.TH WATCHDOG 8 "June 2015"
+.TH WATCHDOG 8 "January 2016"
 .UC 4
 .SH NAME
 watchdog \- a software watchdog daemon
@@ -94,7 +94,8 @@ this does not apply to the opening of
 .I /dev/watchdog 
 and 
 .IR /proc/loadavg ,
-which are opened before the main loop starts.
+which are opened before the main loop starts. Now this is implemented by disabling the
+error re-try timer.
 .TP
 .BR \-F ", " \-\-foreground
 Run in foreground mode, useful for running under systemd (for example).
@@ -198,7 +199,8 @@ will try to
 the given files. Errors returned
 by stat will 
 .B not
-cause a reboot. For a reboot the stat call has to last at least one minute.
+cause a reboot. For a reboot the stat call has to last at least the re-try 
+time-out value (default 1 minute).
 This may happen if the file is located on an NFS mounted filesystem. If your
 system relies on an NFS mounted filesystem you might try this option.
 However, in such a case the 
@@ -259,6 +261,12 @@ If the machine is halted an email is sent to notify a human that
 the machine is going down. Starting with version 4.4 
 .B watchdog 
 will also notify the human in charge if the machine is rebooted.
+.PP
+The re-try timer applies to most errors, except reset/reboot calls and too hot.
+It allows a given error source to recover, and treats most tests in this way.
+Exceptions are file handle test, load averages, and system memory. If set to
+the minimum time of 1 second it will still allow a single re-try at any polling
+interval of the system.
 .SH "SOFT REBOOT"
 A soft reboot (i.e. controlled shutdown and reboot) is initiated for every
 error that is found. Since there might be no more processes available,
