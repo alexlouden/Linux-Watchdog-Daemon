@@ -160,6 +160,11 @@ sigterm-delay = <time in seconds>
 Set the time on shut down between first sending SIGTERM to all processes, and then
 sending SIGKILL. Default is 5 seconds which is generally enough, but systems with
 large databases or virtual machines might need longer.
+.TP
+verbose = <yes|no>
+This overrides the command line --verbose option. Generally the verbose mode is
+only enabled for debugging as it creates a lot of syslog chatter, so use this option
+with consideration.
 .SH FILES
 .TP
 .I /etc/watchdog.conf
