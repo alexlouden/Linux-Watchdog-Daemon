@@ -58,6 +58,7 @@ static void add_test_binaries(const char *path);
 #define SIGTERM_DELAY	"sigterm-delay"
 #define RETRYTIMEOUT	"retry-timeout"
 #define REPAIRMAX		"repair-maximum"
+#define VERBOSE			"verbose"
 
 #ifndef TESTBIN_PATH
 #define TESTBIN_PATH	NULL
@@ -220,6 +221,7 @@ void read_config(char *configfile)
 		} else if (READ_INT(SIGTERM_DELAY, &sigterm_delay) == 0) {
 		} else if (READ_INT(RETRYTIMEOUT, &retry_timeout) == 0) {
 		} else if (READ_INT(REPAIRMAX, &repair_max) == 0) {
+		} else if (READ_ENUM(VERBOSE, &verbose) == 0) {
 		} else {
 			log_message(LOG_WARNING, "Ignoring invalid option at line %d of config file: %s=%s", linecount, arg, val);
 		}
