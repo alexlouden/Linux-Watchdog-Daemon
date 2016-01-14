@@ -60,7 +60,7 @@ static void add_test_binaries(const char *path);
 #define REPAIRMAX		"repair-maximum"
 
 #ifndef TESTBIN_PATH
-#define TESTBIN_PATH 		NULL
+#define TESTBIN_PATH	NULL
 #endif
 static char *test_dir = TESTBIN_PATH;
 
