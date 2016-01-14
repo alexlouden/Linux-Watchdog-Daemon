@@ -330,7 +330,12 @@ static void print_info(int sync_it, int force)
 	}
 
 	log_message(LOG_INFO, "error retry time-out = %d seconds", retry_timeout);
-	log_message(LOG_INFO, "repair attempts = %d", repair_max);
+
+	if (repair_max > 0) {
+		log_message(LOG_INFO, "repair attempts = %d", repair_max);
+	} else {
+		log_message(LOG_INFO, "repair attempts = unlimited");
+	}
 
 	log_message(LOG_INFO, "alive=%s heartbeat=%s to=%s no_act=%s force=%s",
 		    (devname == NULL) ? "[none]" : devname,
