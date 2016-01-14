@@ -1,4 +1,4 @@
-.TH WATCHDOG.CONF 5 "June 2015"
+.TH WATCHDOG.CONF 5 "January 2016"
 .UC 4
 .SH NAME
 watchdog.conf \- configuration file for the watchdog daemon
@@ -83,10 +83,10 @@ disable temperature checking. Multiple sensors can be used by having repeated
 temperature-sensor entries.
 .TP
 file = <filename>
-Set file name for file mode. 
+Set file name for file mode.
 This option can be given as often as you like to check several files.
 .TP
-change = <mtime> 
+change = <mtime>
 Set the change interval time for file mode. This options
 always belongs to the active filename, that is when finding a 'change ='
 line watchdog assumes it belongs to the most recently read 'file =' line.
@@ -130,6 +130,12 @@ retry-timeout = <timeout in seconds>
 Allow most error conditions to persist for <timeout> seconds. Set to 0 for
 immediate action (like softboot behaviour).
 .TP
+repair-maximum = <count>
+This allows no more then <count> repair attempts against a given fault that
+report success (i.e. return 0), but fail to clear the fault, before a reboot
+is initiated anyway. If set to zero then a repairable fault can always be
+blocked by a repair program reporting success (previous daemon behaviour).
+.TP
 admin = <mail-address>
 Email address to send admin mail to. That is, who shall be notified that the
 machine is being halted or rebooted. Default is 'root'. If you want to disable
@@ -156,7 +162,7 @@ sending SIGKILL. Default is 5 seconds which is generally enough, but systems wit
 large databases or virtual machines might need longer.
 .SH FILES
 .TP
-.I /etc/watchdog.conf  
+.I /etc/watchdog.conf
 The watchdog configuration file
 .TP
 .I /etc/watchdog.d
