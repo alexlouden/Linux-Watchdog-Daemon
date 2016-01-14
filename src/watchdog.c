@@ -153,7 +153,7 @@ static void wd_action(int result, char *rbinary, struct list *act)
 {
 	int version = 0;
 	char *name = NULL;
-	int timeout = 1;
+	int timeout = TRUE;
 
 	/* If we have info about the version, use this to decide what to call
 	 * in order to repar the problem. Defalut is we use the global repair
@@ -190,7 +190,7 @@ static void wd_action(int result, char *rbinary, struct list *act)
 		if (act != NULL && retry_timeout > 0) {
 			/* timer possible and used to allow re-try */
 			time_t now = time(NULL);
-			timeout = 0;
+			timeout = FALSE;
 
 			if (act->last_time == 0) {
 				/* First offence, record time. */
@@ -202,7 +202,7 @@ static void wd_action(int result, char *rbinary, struct list *act)
 				if (tused > retry_timeout) {
 					log_message(LOG_WARNING, "Retry timed-out at %d seconds for %s", tused,
 						act->name);
-					timeout = 1;
+					timeout = TRUE;
 				} else {
 					if (verbose)
 						log_message(LOG_DEBUG, "Retry at %d seconds for %s", tused, act->name);
