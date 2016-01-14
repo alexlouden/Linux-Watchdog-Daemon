@@ -39,6 +39,7 @@ struct list {
 	char *name;
 	int version;
 	time_t last_time;
+	int repair_count;
 	union wdog_options parameter;
 	struct list *next;
 };
@@ -74,6 +75,7 @@ extern int maxtemp;
 extern int pingcount;
 extern int temp_poweroff;
 extern int sigterm_delay;
+extern int repair_max;
 
 extern char *devname;
 extern char *admin;
