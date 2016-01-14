@@ -258,15 +258,18 @@ static void add_test_binaries(const char *path)
 
 	if (!path)
 		return;
+
 	ret = stat(path, &sb);
 	if (ret < 0)
 		return;
+
 	if (!S_ISDIR(sb.st_mode))
 		return;
 
 	d = opendir(path);
 	if (!d)
 		return;
+
 	do {
 		ret = readdir_r(d, &dentry, &rdret);
 		if (ret)
