@@ -2,10 +2,6 @@
  *
  * Code for checking the system load averages.
  *
- * TO DO:
- *  The 'repair' option possible in the watchdog call must fail as these are averages and
- *  so take time to drop. Really need some timer before deciding a reboot is the best option.
- *  For the time being this timer has to be implemented in the repair script.
  */
 
 #ifdef HAVE_CONFIG_H
