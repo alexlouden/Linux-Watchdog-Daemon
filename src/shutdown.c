@@ -202,10 +202,10 @@ static int readproc()
 			continue;
 
 		/*
-                * Get a PROC struct. If this fails, which is likely if we have an
-                * out-of-memory error, we return gracefully with what we have managed
-                * so hopefully a 2nd call after killing some processes will give us more.
-                */
+		 * Get a PROC struct. If this fails, which is likely if we have an
+		 * out-of-memory error, we return gracefully with what we have managed
+		 * so hopefully a 2nd call after killing some processes will give us more.
+		 */
 		if ((p = (PROC *) calloc(1, sizeof(PROC))) == NULL) {
 			log_message(LOG_ERR, "out of memory");
 			closedir(dir);
@@ -459,13 +459,13 @@ void do_shutdown(int errorcode)
 		reboot(RB_AUTOBOOT);
 	} else {
 		if (temp_poweroff) {
-		        /* Tell system to power off if possible. */
-		        reboot(RB_POWER_OFF);
+			/* Tell system to power off if possible. */
+			reboot(RB_POWER_OFF);
 		} else {
-		        /* Turn on hard reboot, CTRL-ALT-DEL will reboot now. */
-		        reboot(RB_ENABLE_CAD);
-		        /* And perform the `halt' system call. */
-		        reboot(RB_HALT_SYSTEM);
+			/* Turn on hard reboot, CTRL-ALT-DEL will reboot now. */
+			reboot(RB_ENABLE_CAD);
+			/* And perform the `halt' system call. */
+			reboot(RB_HALT_SYSTEM);
 		}
 	}
 
