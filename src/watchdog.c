@@ -108,7 +108,7 @@ static int repair(char *rbinary, int result, char *name, int version)
 				execl(rbinary, rbinary, "repair", parm, name, NULL);
 		}
 
-		/* execl should only return in case of an error */
+		/* execl() should only return in case of an error */
 		/* so we return the reboot code */
 		return (errno);
 	} else if (child_pid < 0) {	/* fork failed */
@@ -156,7 +156,7 @@ static void wd_action(int result, char *rbinary, struct list *act)
 	int timeout = TRUE;
 
 	/* If we have info about the version, use this to decide what to call
-	 * in order to repar the problem. Defalut is we use the global repair
+	 * in order to repair the problem. Default is we use the global repair
 	 * call, but for V1 we use the same program with a different argument.
 	 */
 	if (act != NULL) {
