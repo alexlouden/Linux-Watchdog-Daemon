@@ -218,11 +218,18 @@ static void wd_action(int result, char *rbinary, struct list *act)
 		break;
 	}
 
-	/* if no-action flag set, do nothing */
-	/* if still error, reboot */
-	if (result != ENOERR && no_act == FALSE)
-		do_shutdown(result);
-
+	/* if still error, consider reboot */
+	if (result != ENOERR) {
+		/* if no-action flag set, do nothing */
+		if (no_act) {
+			if (verbose) {
+				log_message(LOG_DEBUG, "Shutdown blocked by --no-action (error %d = '%s')",
+					result, wd_strerror(result));
+			}
+		} else {
+			do_shutdown(result);
+		}
+	}
 }
 
 static void do_check(int res, char *rbinary, struct list *act)
