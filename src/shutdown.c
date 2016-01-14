@@ -11,7 +11,6 @@
 #include <mntent.h>
 #include <netdb.h>
 #include <paths.h>
-#include <setjmp.h>
 #include <signal.h>
 #include <string.h>
 #include <stdlib.h>
@@ -59,8 +58,6 @@ static struct mntent rootfs;
 
 extern volatile sig_atomic_t _running;	/* From watchdog.c */
 extern int dev_timeout;			/* From watchdog.c */
-
-jmp_buf ret2dog;
 
 /* Info about a process. */
 typedef struct _proc_ {
@@ -416,13 +413,12 @@ static void try_clean_shutdown(int errorcode)
 	mnt_off();
 
 	/* umount all partitions */
-	if (setjmp(ret2dog) == 0)
-		umount_all(NULL);
+	umount_all(NULL);
 
 #if 0
 	/* with the more recent version of mount code, this is not needed anymore */
 	/* remount / read-only */
-	if (setjmp(ret2dog) == 0)
+	//if (setjmp(ret2dog) == 0)
 		mount_one(rootfs.mnt_fsname, rootfs.mnt_dir, rootfs.mnt_type,
 			  rootfs.mnt_opts, rootfs.mnt_freq, rootfs.mnt_passno);
 #endif
