@@ -174,6 +174,7 @@ static void wd_action(int result, char *rbinary, struct list *act)
 		/* No error, reset any time-out. */
 		if (act != NULL) {
 			act->last_time = 0;
+			act->repair_count = 0;
 		}
 	case EDONTKNOW:
 		/* Don't know, keep on working */
@@ -211,7 +212,26 @@ static void wd_action(int result, char *rbinary, struct list *act)
 		}
 
 		if (timeout) {
-			result = repair(rbinary, result, name, version);
+			int try_repair = TRUE;
+			/* check for too many failed repair attempts */
+			if (act != NULL && repair_max > 0) {
+				if (++act->repair_count > repair_max) {
+					try_repair = FALSE;
+					log_message(LOG_WARNING, "Repair count exceeded (%d for %s)",
+						act->repair_count, act->name);
+				} else {
+					/* going to repair, reset re-try timer so same period for next try */
+					act->last_time = 0;
+					if (verbose) {
+						log_message(LOG_DEBUG, "Repair attempt %d for %s",
+							act->repair_count, act->name);
+					}
+				}
+			}
+
+			if (try_repair) {
+				result = repair(rbinary, result, name, version);
+			}
 		} else {
 			result = ENOERR;
 		}
