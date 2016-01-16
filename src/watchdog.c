@@ -37,7 +37,6 @@
 #include "extern.h"
 
 static int no_act = FALSE;
-volatile sig_atomic_t _running = 1;
 char *filename_buf;
 
 static void usage(char *progname)

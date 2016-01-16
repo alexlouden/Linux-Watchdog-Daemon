@@ -39,8 +39,6 @@
 #define TRUE  1
 #define FALSE 0
 
-volatile sig_atomic_t _running = 1;
-
 static void usage(char *progname)
 {
 	fprintf(stderr, "%s version %d.%d, usage:\n", progname, MAJOR_VERSION, MINOR_VERSION);
@@ -61,11 +59,6 @@ int write_heartbeat(void)
 static void close_all(void)
 {
 	close_watchdog();
-}
-
-void sigterm_handler(int arg)
-{
-	_running = 0;
 }
 
 /* on exit we close the device and log that we stop */

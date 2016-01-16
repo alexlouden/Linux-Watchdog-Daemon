@@ -2,6 +2,7 @@
 #define _EXTERN_H_
 
 #include <stdio.h>
+#include <signal.h>
 #include <time.h>
 #include <netinet/in.h>
 
@@ -190,5 +191,9 @@ void read_config(char *configfile);
 
 /** errorcodes.c **/
 const char *wd_strerror(int err);
+
+/** sigterm.c **/
+extern volatile sig_atomic_t _running;
+void sigterm_handler(int arg);
 
 #endif /*_EXTERN_H_*/

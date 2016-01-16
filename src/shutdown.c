@@ -56,7 +56,6 @@ extern int mount_one(char *, char *, char *, char *, int, int);
 static struct mntent rootfs;
 #endif
 
-extern volatile sig_atomic_t _running;	/* From watchdog.c */
 extern int dev_timeout;			/* From watchdog.c */
 
 /* Info about a process. */
@@ -75,14 +74,6 @@ static void close_all(void)
 	close_tempcheck();
 	close_heartbeat();
 	free_process();		/* What check_bin() was waiting to report. */
-}
-
-/*
- * Used to tell the main() code to exit gracefully.
- */
-void sigterm_handler(int arg)
-{
-	_running = 0;
 }
 
 /* on exit we close the device and log that we stop */
