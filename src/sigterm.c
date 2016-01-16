@@ -1,6 +1,6 @@
 /* > sigterm.c
  *
- * Used to tell the main() code to exit gracefully.Needed by both
+ * Used to tell the main() code to exit gracefully. Needed by both
  * the watchdog and wd_keepalive daemons.
  */
 
