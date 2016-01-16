@@ -56,8 +56,6 @@ extern int mount_one(char *, char *, char *, char *, int, int);
 static struct mntent rootfs;
 #endif
 
-extern int dev_timeout;			/* From watchdog.c */
-
 /* Info about a process. */
 typedef struct _proc_ {
 	pid_t pid;		/* Process ID.                    */
