@@ -104,7 +104,7 @@ static void panic(void)
 	exit(1);
 }
 
-static void mnt_off()
+static void mnt_off(void)
 {
 	FILE *fp;
 	struct mntent *mnt;
@@ -164,7 +164,7 @@ static void mnt_off()
 static PROC *plist;
 
 /* get a list of all processes */
-static int readproc()
+static int readproc(void)
 {
 	DIR *dir;
 	struct dirent *d;
@@ -339,15 +339,15 @@ static void try_clean_shutdown(int errorcode)
 	kill(1, SIGTSTP);
 
 	/* Kill all other processes. */
-	(void)killall5(SIGTERM);
+	killall5(SIGTERM);
 	safe_sleep(1);
 	/* Do this twice in case we have out-of-memory problems. */
-	(void)killall5(SIGTERM);
+	killall5(SIGTERM);
 	safe_sleep(sigterm_delay-1);
-	(void)killall5(SIGKILL);
+	killall5(SIGKILL);
 	keep_alive();
 	/* Out-of-memory safeguard again. */
-	(void)killall5(SIGKILL);
+	killall5(SIGKILL);
 	keep_alive();
 
 	/* Remove our PID file, as nothing should be capable of starting a 2nd daemon now. */
