@@ -124,7 +124,9 @@ Execute the given binary in case of a problem instead of shutting down the
 system.
 .TP
 repair-timeout = <timeout in seconds>
-repair command may only run for <timeout> seconds. Set to 0 for unlimited.
+repair command may only run for <timeout> seconds. Set to 0 for 'unlimited', but
+note that the hardware timer is not refreshed in this case so the system will
+hard-reset at some point.
 .TP
 retry-timeout = <timeout in seconds>
 Allow most error conditions to persist for <timeout> seconds. Set to 0 for
