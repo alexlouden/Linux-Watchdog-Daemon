@@ -58,7 +58,7 @@ binary-arch:	checkroot build
 	dh_gencontrol
 	dh_md5sums
 	dh_fixperms
-	dpkg --build debian/watchdog ..
+	dh_builddeb
 
 define checkdir
 	test -f debian/rules
