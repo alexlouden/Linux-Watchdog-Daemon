@@ -2,6 +2,7 @@ watchdog (5.14-4) UNRELEASED; urgency=medium
 
   * Updated Dutch translation. (Closes: #772760)
   * Updated Russian translation. (Closes: #776125)
+  * Added missing quote to systemd service file. (Closes: #783166, #798294)
 
  -- Michael Meskes <meskes@debian.org>  Thu, 21 Jan 2016 22:54:48 +0100
 
