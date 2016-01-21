@@ -1,3 +1,10 @@
+watchdog (5.14-4) UNRELEASED; urgency=medium
+
+  * Updated Dutch translation. (Closes: #772760)
+  * Updated Russian translation. (Closes: #776125)
+
+ -- Michael Meskes <meskes@debian.org>  Thu, 21 Jan 2016 22:54:48 +0100
+
 watchdog (5.14-3) unstable; urgency=medium
 
   * Updated Danish debconf translation.
