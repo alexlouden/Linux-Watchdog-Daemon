@@ -59,11 +59,6 @@ is disabled.  As with min-memory, the page size is taken from the system
 include files. This is an 'active' test and it works by attempting to
 memory-map a block of the configured size.
 .TP
-max-temperature = <temp>
-Set the maximal allowed temperature. Once this temperature is reached the
-system is halted. Default value is 90 C. Watchdog will issue warnings
-once the temperature increases 90%, 95% and 98% of this temperature.
-.TP
 watchdog-device = <device>
 Set the watchdog device name, typically /dev/watchdog. Default is to disable
 keep alive support. This should be tested by running the daemon from the
@@ -81,6 +76,15 @@ by the
 package, but take care as device enumeration may not be fixed. Default is to
 disable temperature checking. Multiple sensors can be used by having repeated
 temperature-sensor entries.
+.TP
+max-temperature = <temp>
+Set the maximal allowed temperature. Once this temperature is reached the
+system is stopped. Default value is 90 C. Watchdog will issue warnings
+once the temperature increases 90%, 95% and 98% of this temperature.
+.TP
+temp-power-off = <yes|no>
+Set the watchdog action on overheating. Yes option (default) is to power the
+machine off, no option is to halt machine and allow Ctrl-Alt-Del reboot.
 .TP
 file = <filename>
 Set file name for file mode.
@@ -124,7 +128,9 @@ Execute the given binary in case of a problem instead of shutting down the
 system.
 .TP
 repair-timeout = <timeout in seconds>
-repair command may only run for <timeout> seconds. Set to 0 for unlimited.
+repair command may only run for <timeout> seconds. Set to 0 for 'unlimited', but
+note that the hardware timer is not refreshed in this case so the system will
+hard-reset at some point.
 .TP
 retry-timeout = <timeout in seconds>
 Allow most error conditions to persist for <timeout> seconds. Set to 0 for
