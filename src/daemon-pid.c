@@ -144,8 +144,11 @@ int wd_daemon(int nochdir, int noclose)
 	/* and fork again to make sure we inherit all rights from init */
 	if ((child_pid = fork()) < 0) {
 		exit(1);
-	} else if (child_pid > 0)
+	} else if (child_pid > 0) {
+		/* fork was OK, give child time to write PID file. */
+		usleep(10000);
 		exit(0);
+	}
 	/* now we're free */
 
 	/* Okay, we're a daemon     */
