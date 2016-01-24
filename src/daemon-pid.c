@@ -129,6 +129,10 @@ int wd_daemon(int nochdir, int noclose)
 		}
 	}
 
+	/* flush any stdout/stderr message before we fork */
+	fflush(stdout);
+	fflush(stderr);
+
 	/* fork to go into the background */
 	if ((child_pid = fork()) < 0) {
 		return (-1);
@@ -136,18 +140,18 @@ int wd_daemon(int nochdir, int noclose)
 		/* fork was okay          */
 		/* wait for child to exit */
 		if (waitpid(child_pid, NULL, 0) != child_pid) {
-			exit(1);
+			_exit(1);
 		}
 		/* and exit myself */
-		exit(0);
+		_exit(0);
 	}
 	/* and fork again to make sure we inherit all rights from init */
 	if ((child_pid = fork()) < 0) {
-		exit(1);
+		_exit(1);
 	} else if (child_pid > 0) {
 		/* fork was OK, give child time to write PID file. */
 		usleep(10000);
-		exit(0);
+		_exit(0);
 	}
 	/* now we're free */
 
