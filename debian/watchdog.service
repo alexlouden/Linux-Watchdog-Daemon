@@ -12,3 +12,5 @@ ExecStart=/bin/sh -c '[ $run_watchdog != 1 ] || exec /usr/sbin/watchdog $watchdo
 ExecStopPost=/bin/sh -c '[ $run_wd_keepalive != 1 ] || false'
 
 [Install]
+WantedBy=default.target
+
