@@ -35,7 +35,7 @@ binary-indep:	checkroot build
 
 binary-arch:	checkroot build
 	$(checkdir)
-	dh_clean -k
+	dh_prep
 	dh_installdirs
 	dh_installdocs README* watchdog.lsm IAFA-PACKAGE  \
 		       include/watch_err.h
