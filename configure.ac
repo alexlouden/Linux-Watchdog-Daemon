@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 AC_INIT(include/extern.h)
 
 MAJOR_VERSION=5
-MINOR_VERSION=14
+MINOR_VERSION=15
 AM_INIT_AUTOMAKE(watchdog, $MAJOR_VERSION.$MINOR_VERSION)
 
 AC_PREFIX_DEFAULT(/usr)

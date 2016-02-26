@@ -1,5 +1,6 @@
-watchdog (5.14-4) UNRELEASED; urgency=medium
+watchdog (5.15-1) unstable; urgency=medium
 
+  * New upstream version.
   * Updated Dutch translation. (Closes: #772760)
   * Updated Russian translation. (Closes: #776125)
   * Updated Japanese translation. (Closes: #815857)
