@@ -26,6 +26,9 @@
 #include <sys/param.h>		/* For EXEC_PAGESIZE */
 #include <linux/oom.h>
 #include <linux/watchdog.h>
+#ifdef __linux__
+#include <linux/param.h>
+#endif
 #include <string.h>
 
 #include <libgen.h>
