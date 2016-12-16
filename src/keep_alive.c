@@ -29,7 +29,6 @@
 
 static int watchdog_fd = -1;
 static int timeout_used = TIMER_MARGIN;
-static int Refresh_using_ioctl = FALSE;
 
 /*
  * Open the watchdog timer (if name non-NULL) and set the time-out value (if non-zero).
@@ -68,16 +67,19 @@ int open_watchdog(char *name, int timeout)
 	/* The IT8728 on Gigabyte motherboard (and similar) would trip due to the normal
 	 * refresh in the device driver failing to reset the timer for no obvious reason
 	 * (though the normal operation used the Consumer IR sender to refresh via an
-	 * interrupt - also a non-obvious method!) so this work-around simply sets the
-	 * time-out every refresh operation.
+	 * interrupt - also a non-obvious method!) so let's warn users of these
+	 * watchdogs and direct them to a workaround option.
 	 *
-	 * See https://bugs.launchpad.net/ubuntu/+source/linux/+bug/932381
+	 * See https://bugs.launchpad.net/ubuntu/+source/linux/+bug/932381 and
+	 * https://bugzilla.kernel.org/show_bug.cgi?id=42801
 	 *
 	 */
-	Refresh_using_ioctl = FALSE;
-	if (strcmp("IT87 WDT", (char *)ident.identity) == 0) {
-		Refresh_using_ioctl = TRUE;
-		log_message(LOG_INFO, "Running IT87 module fix-up");
+	if (!refresh_use_settimeout && strcmp("IT87 WDT", (char *)ident.identity) == 0) {
+		log_message(LOG_INFO,
+			    "IT87 watchdog detected, if watchdog trips by itself when the first timeout interval elapses "
+			    "try updating to the latest kernel");
+		log_message(LOG_INFO, "if this does not help please report a kernel bug (not this package bug!) "
+			    "and try using watchdog-refresh-use-settimeout=yes config option as a workaround");
 	}
 
 	return rv;
@@ -163,7 +165,7 @@ int keep_alive(void)
 	if (watchdog_fd == -1)
 		return (ENOERR);
 
-	if (Refresh_using_ioctl) {
+	if (refresh_use_settimeout) {
 		int timeout = timeout_used;
 		if (ioctl(watchdog_fd, WDIOC_SETTIMEOUT, &timeout) < 0) {
 			err = errno;
