@@ -1,0 +1,38 @@
+# Ignore hidden/backup/compilation files
+
+.*
+*.o
+*~
+
+# However don't ignore this file
+
+!/.gitignore
+
+# Ignore the build programs
+
+src/watchdog
+src/wd_identify
+src/wd_keepalive
+
+# Ignore remaining files create/modified by the steps:
+# autoreconf -i
+# ./configure 
+# make
+
+Makefile
+Makefile.in
+aclocal.m4
+autom4te.cache/
+compile
+config.log
+config.status
+configure
+depcomp
+include/config.h
+include/config.h.in
+include/stamp-h1
+install-sh
+missing
+src/Makefile
+src/Makefile.in
+
