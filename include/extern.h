@@ -91,6 +91,7 @@ extern char *logdir;
 extern char *heartbeat;
 extern int hbstamps;
 
+extern int refresh_use_settimeout;
 extern int realtime;
 
 extern struct list *tr_bin_list;

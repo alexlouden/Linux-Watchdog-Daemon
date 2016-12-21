@@ -64,6 +64,12 @@ Set the watchdog device name, typically /dev/watchdog. Default is to disable
 keep alive support. This should be tested by running the daemon from the
 command line before configuring it to start automatically on booting.
 .TP
+watchdog-refresh-use-settimeout = <yes|no>
+Refresh watchdog timer by setting its timeout instead of using a normal watchdog
+refresh operation.
+Might help if your watchdog trips by itself when the first timeout interval
+elapses.
+.TP
 watchdog-timeout = <timeout>
 Set the watchdog device timeout during startup.  If not set, a default is used
 that should be set to the kernel timer margin at compile time.

@@ -28,6 +28,7 @@ static void add_test_binaries(const char *path);
 #define ADMIN			"admin"
 #define CHANGE			"change"
 #define DEVICE			"watchdog-device"
+#define DEVICE_USE_SETTIMEOUT	"watchdog-refresh-use-settimeout"
 #define DEVICE_TIMEOUT		"watchdog-timeout"
 #define	FILENAME		"file"
 #define INTERFACE		"interface"
@@ -95,6 +96,7 @@ char *logdir = "/var/log/watchdog";
 char *heartbeat = NULL;
 int hbstamps = 300;
 
+int refresh_use_settimeout = FALSE;
 int realtime = FALSE;
 
 /* Self-repairing binaries list */
@@ -206,6 +208,7 @@ void read_config(char *configfile)
 		} else if (READ_INT(LOGTICK, &logtick) == 0) {
 			ticker = logtick;
 		} else if (READ_STRING(DEVICE, &devname) == 0) {
+		} else if (READ_ENUM(DEVICE_USE_SETTIMEOUT, &refresh_use_settimeout) == 0) {
 		} else if (READ_INT(DEVICE_TIMEOUT, &dev_timeout) == 0) {
 		} else if (READ_LIST(TEMP, &temp_list) == 0) {
 		} else if (READ_INT(MAXTEMP, &maxtemp) == 0) {
