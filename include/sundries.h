@@ -9,8 +9,10 @@
 #include <signal.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#if HAVE_NFS
 #if !defined(bool_t) && !defined(__GLIBC__)
 #include <rpc/types.h>
+#endif
 #endif
 
 extern int mount_mount_quiet;
