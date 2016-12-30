@@ -128,7 +128,7 @@ READ_LIST_END()
 
 #define READ_INT(name, iv)		read_int_func(		 arg, val, name, 0, 0, iv)
 #define READ_STRING(name, str)	read_string_func(	 arg, val, name, Read_allow_blank, str)
-#define READ_ENUM(name, iv)		read_enumerated_func(arg, val, name, Yes_No_list, iv)
+#define READ_YESNO(name, iv)	read_enumerated_func(arg, val, name, Yes_No_list, iv)
 #define READ_LIST(name, list)	read_list_func(		 arg, val, name, 0, list)
 
 /*
@@ -195,7 +195,7 @@ void read_config(char *configfile)
 		} else if (READ_INT(PINGCOUNT, &pingcount) == 0) {
 		} else if (READ_LIST(PING, &target_list) == 0) {
 		} else if (READ_LIST(INTERFACE, &iface_list) == 0) {
-		} else if (READ_ENUM(REALTIME, &realtime) == 0) {
+		} else if (READ_YESNO(REALTIME, &realtime) == 0) {
 		} else if (READ_INT(PRIORITY, &schedprio) == 0) {
 		} else if (READ_STRING(REPAIRBIN, &repair_bin) == 0) {
 		} else if (READ_INT(REPAIRTIMEOUT, &repair_timeout) == 0) {
@@ -208,7 +208,7 @@ void read_config(char *configfile)
 		} else if (READ_INT(LOGTICK, &logtick) == 0) {
 			ticker = logtick;
 		} else if (READ_STRING(DEVICE, &devname) == 0) {
-		} else if (READ_ENUM(DEVICE_USE_SETTIMEOUT, &refresh_use_settimeout) == 0) {
+		} else if (READ_YESNO(DEVICE_USE_SETTIMEOUT, &refresh_use_settimeout) == 0) {
 		} else if (READ_INT(DEVICE_TIMEOUT, &dev_timeout) == 0) {
 		} else if (READ_LIST(TEMP, &temp_list) == 0) {
 		} else if (READ_INT(MAXTEMP, &maxtemp) == 0) {
@@ -219,12 +219,12 @@ void read_config(char *configfile)
 		} else if (READ_INT(ALLOCMEM, &minalloc) == 0) {
 		} else if (READ_STRING(LOGDIR, &logdir) == 0) {
 		} else if (READ_STRING(TESTDIR, &test_dir) == 0) {
-		} else if (READ_ENUM(SOFTBOOT, &softboot) == 0) {
-		} else if (READ_ENUM(TEMPPOWEROFF, &temp_poweroff) == 0) {
+		} else if (READ_YESNO(SOFTBOOT, &softboot) == 0) {
+		} else if (READ_YESNO(TEMPPOWEROFF, &temp_poweroff) == 0) {
 		} else if (READ_INT(SIGTERM_DELAY, &sigterm_delay) == 0) {
 		} else if (READ_INT(RETRYTIMEOUT, &retry_timeout) == 0) {
 		} else if (READ_INT(REPAIRMAX, &repair_max) == 0) {
-		} else if (READ_ENUM(VERBOSE, &verbose) == 0) {
+		} else if (READ_YESNO(VERBOSE, &verbose) == 0) {
 		} else {
 			log_message(LOG_WARNING, "Ignoring invalid option at line %d of config file: %s=%s", linecount, arg, val);
 		}
