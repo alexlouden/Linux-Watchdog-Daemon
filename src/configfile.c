@@ -96,7 +96,7 @@ char *logdir = "/var/log/watchdog";
 char *heartbeat = NULL;
 int hbstamps = 300;
 
-int refresh_use_settimeout = FALSE;
+int refresh_use_settimeout = ENUM_AUTO;
 int realtime = FALSE;
 
 /* Self-repairing binaries list */
@@ -120,6 +120,13 @@ READ_LIST_ADD("yes", 1)
 READ_LIST_END()
 };
 
+static const read_list_t YN_Auto_list[] = {
+READ_LIST_ADD("no",   ENUM_NO)
+READ_LIST_ADD("yes",  ENUM_YES)
+READ_LIST_ADD("auto", ENUM_AUTO)
+READ_LIST_END()
+};
+
 /* Use the macros below to simplify the parsing function. For now we don't use the
  * integer range checking (0=0 so not checked), and assume all strings can be blank and
  * enumerated choices are Yes/No, but in future we could add such settings to the #define'd
@@ -129,6 +136,7 @@ READ_LIST_END()
 #define READ_INT(name, iv)		read_int_func(		 arg, val, name, 0, 0, iv)
 #define READ_STRING(name, str)	read_string_func(	 arg, val, name, Read_allow_blank, str)
 #define READ_YESNO(name, iv)	read_enumerated_func(arg, val, name, Yes_No_list, iv)
+#define READ_YN_AUTO(name, iv)	read_enumerated_func(arg, val, name, YN_Auto_list, iv)
 #define READ_LIST(name, list)	read_list_func(		 arg, val, name, 0, list)
 
 /*
@@ -208,7 +216,7 @@ void read_config(char *configfile)
 		} else if (READ_INT(LOGTICK, &logtick) == 0) {
 			ticker = logtick;
 		} else if (READ_STRING(DEVICE, &devname) == 0) {
-		} else if (READ_YESNO(DEVICE_USE_SETTIMEOUT, &refresh_use_settimeout) == 0) {
+		} else if (READ_YN_AUTO(DEVICE_USE_SETTIMEOUT, &refresh_use_settimeout) == 0) {
 		} else if (READ_INT(DEVICE_TIMEOUT, &dev_timeout) == 0) {
 		} else if (READ_LIST(TEMP, &temp_list) == 0) {
 		} else if (READ_INT(MAXTEMP, &maxtemp) == 0) {

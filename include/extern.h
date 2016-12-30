@@ -59,6 +59,10 @@ struct list {
 #define FALSE 0
 #endif
 
+#define ENUM_NO   0
+#define ENUM_YES  1
+#define ENUM_AUTO 2
+
 #define TS_SIZE	12
 
 /* === External variables === */
