@@ -1,9 +1,10 @@
 #!/usr/bin/make -f
 
 SHELL = /bin/bash
-CFLAGS = $(shell dpkg-buildflags --get CFLAGS)
-CPPFLAGS = $(shell dpkg-buildflags --get CPPFLAGS)
-LDFLAGS = $(shell dpkg-buildflags --get LDFLAGS)
+export DEB_BUILD_MAINT_OPTIONS=hardening=+all
+CFLAGS = `dpkg-buildflags --get CFLAGS`
+CPPFLAGS = `dpkg-buildflags --get CPPFLAGS`
+LDFLAGS = `dpkg-buildflags --get LDFLAGS`
 
 build:	build-arch build-indep
 build-arch: build-stamp
@@ -14,7 +15,7 @@ build-stamp: Makefile
 	touch build
 
 Makefile:
-	CFLAGS="${CFLAGS}" CPPFLAGS="${CPPFLAGS}" LDFLAGS="${LDFLAGS}" ./configure --prefix=/usr \
+	CFLAGS="${CFLAGS}" CPPFLAGS="${CPPFLAGS}" LDFLAGS="${LDFLAGS}" dh_auto_configure -- \
 		--with-configfile=/etc/watchdog.conf
 
 clean:	Makefile
