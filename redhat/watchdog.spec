@@ -5,8 +5,8 @@ Release:          2%{?dist}
 License:          GPL+
 Group:            System Environment/Daemons
 
-URL:              http://sourceforge.net/projects/watchdog/
-Source0:          http://dl.sf.net/watchdog/watchdog-%{version}.tar.gz
+URL:              https://sourceforge.net/projects/watchdog/
+Source0:          https://downloads.sourceforge.net/project/watchdog/watchdog/%{version}/watchdog-%{version}.tar.gz
 Source1:          watchdog.init
 Source2:          README.watchdog.ipmi
 Source3:          README.Fedora
@@ -61,8 +61,6 @@ make %{?_smp_mflags}
 rm -Rf ${RPM_BUILD_ROOT}
 install -d -m0755 ${RPM_BUILD_ROOT}%{_sysconfdir}
 make DESTDIR=${RPM_BUILD_ROOT} install
-install -Dp -m0644 %{name}.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/watchdog
-install -Dp -m0755 %{SOURCE1} ${RPM_BUILD_ROOT}%{_initrddir}/watchdog
 
 %clean
 rm -Rf ${RPM_BUILD_ROOT}
@@ -91,7 +89,6 @@ fi
 %defattr(-, root, root, -)
 %doc AUTHORS ChangeLog COPYING examples/ IAFA-PACKAGE NEWS README TODO README.watchdog.ipmi README.Fedora
 %config(noreplace) %{_sysconfdir}/watchdog.conf
-%config(noreplace) %{_sysconfdir}/sysconfig/watchdog
 %{_sysconfdir}/rc.d/init.d/watchdog
 %{_sbindir}/watchdog
 %{_sbindir}/wd_keepalive
@@ -101,6 +98,10 @@ fi
 
 
 %changelog
+* Tue Dec 13 2016 Paul Crawford <psc@sat.dundee.ac.uk> - 5.15
+- Apply changes from Marcus Furlong to fix automated CentOS 7 build
+- Update URLs to https and fix download address from sourceforge
+
 * Thu Mar  5 2009 Richard W.M. Jones <rjones@redhat.com> - 5.5-2
 - Use '-' in defattr line instead of explicit file mode.
 
