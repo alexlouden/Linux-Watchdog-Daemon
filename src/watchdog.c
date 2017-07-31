@@ -84,16 +84,25 @@ static int repair(char *rbinary, int result, char *name, int version)
 
 	child_pid = fork();
 	if (!child_pid) {
+		int repair_stdout_fd, repair_stderr_fd;
+
 		/* Don't want the stdin and stdout of our repair program
 		 * to cause trouble.
 		 * So make stdout and stderr go to their respective files */
 		strcpy(filename_buf, logdir);
 		strcat(filename_buf, "/repair-bin.stdout");
-		if (!freopen(filename_buf, "a+", stdout))
+		repair_stdout_fd = open(filename_buf, O_WRONLY|O_CREAT|O_APPEND, S_IWUSR|S_IRUSR|S_IRGRP);
+		if (repair_stdout_fd == -1)
 			exit(errno);
+		if (dup2(repair_stdout_fd, fileno(stdout)) == -1)
+			exit(errno);
+
 		strcpy(filename_buf, logdir);
 		strcat(filename_buf, "/repair-bin.stderr");
-		if (!freopen(filename_buf, "a+", stderr))
+		repair_stderr_fd = open(filename_buf, O_WRONLY|O_CREAT|O_APPEND, S_IWUSR|S_IRUSR|S_IRGRP);
+		if (repair_stderr_fd == -1)
+			exit(errno);
+		if (dup2(repair_stderr_fd, fileno(stderr)) == -1)
 			exit(errno);
 
 		/* now start binary */

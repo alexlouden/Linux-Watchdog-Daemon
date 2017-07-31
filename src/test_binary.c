@@ -3,6 +3,7 @@
 #endif
 
 #include <errno.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -258,16 +259,24 @@ int check_bin(char *tbinary, int timeout, int version)
 
 	child_pid = fork();
 	if (!child_pid) {
+		int test_stdout_fd, test_stderr_fd;
 
 		/* Don't want the stdout and stderr of our test program
 		 * to cause trouble, so make them go to their respective files */
 		strcpy(filename_buf, logdir);
 		strcat(filename_buf, "/test-bin.stdout");
-		if (!freopen(filename_buf, "a+", stdout))
+		test_stdout_fd = open(filename_buf, O_WRONLY|O_CREAT|O_APPEND, S_IWUSR|S_IRUSR|S_IRGRP);
+		if (test_stdout_fd == -1)
 			exit(errno);
+		if (dup2(test_stdout_fd, fileno(stdout)) == -1)
+			exit(errno);
+
 		strcpy(filename_buf, logdir);
 		strcat(filename_buf, "/test-bin.stderr");
-		if (!freopen(filename_buf, "a+", stderr))
+		test_stderr_fd = open(filename_buf, O_WRONLY|O_CREAT|O_APPEND, S_IWUSR|S_IRUSR|S_IRGRP);
+		if (test_stderr_fd == -1)
+			exit(errno);
+		if (dup2(test_stderr_fd, fileno(stderr)) == -1)
 			exit(errno);
 
 		/* now start binary */
